@@ -1,0 +1,24 @@
+# Strands SDK Agent Service Requirements
+# Install with: pip install -r requirements-strands-sdk.txt
+
+# Core Flask dependencies (same as existing services)
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# Strands SDK - Official Python SDK
+# Note: This is the official Strands SDK from the GitHub repo
+# Install with: pip install strands-agents
+# For development, we're using mock implementations
+# strands-agents>=1.0.0
+
+# Database
+# sqlite3  # Built into Python
+
+# Utilities
+# uuid  # Built into Python
+# json  # Built into Python
+# time  # Built into Python
+# datetime  # Built into Python
+
+# Development dependencies
+requests>=2.31.0  # For testing API calls

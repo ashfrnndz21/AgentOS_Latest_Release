@@ -1,0 +1,151 @@
+📊 Agent Registry database initialized
+🔍 Health monitoring started
+🚀 Starting Agent Registry Service...
+📍 Port: 5010
+🔍 Health monitoring enabled
+✅ Agent registered: Calculator Agent at http://localhost:8001
+✅ Agent registered: Research Agent at http://localhost:8002
+✅ Agent registered: Coordinator Agent at http://localhost:8000
+ * Serving Flask app 'agent_registry'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5010
+ * Running on http://192.168.0.186:5010
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [18/Sep/2025 18:36:34] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:37:39] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:37:39] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:48:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:49:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:50:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:51:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:52:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:53:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:54:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:55:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:56:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:57:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:58:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:35] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:45] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:59:55] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 19:00:05] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 19:00:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 19:35:41] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 19:35:41] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 19:35:51] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 20:29:03] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 20:29:03] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:45:12] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:45:12] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:45:23] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:45:23] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:21] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:21] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:31] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:41] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:47:51] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:01] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:11] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:21] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:31] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:41] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 21:48:51] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:35:29] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:35:29] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:35:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:35:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:28] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:38] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:36:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:28] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:38] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:37:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:28] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:38] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:38:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:28] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:38] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:48] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:39:58] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:40:08] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:40:18] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:40:28] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:40:38] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 22:40:48] "GET /health HTTP/1.1" 200 -

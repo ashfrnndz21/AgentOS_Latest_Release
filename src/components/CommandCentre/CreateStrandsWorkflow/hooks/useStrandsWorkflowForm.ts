@@ -18,6 +18,17 @@ export const useStrandsWorkflowForm = (onOpenChange: (open: boolean) => void) =>
     description: '',
     model: '',
     provider: 'bedrock',
+    a2a_config: {
+      enabled: false,
+      collaboration_mode: 'participant',
+      max_concurrent_agents: 5,
+      communication_protocol: 'both',
+      auto_registration: true,
+      discovery_scope: 'local',
+      custom_agents: [],
+      conversation_tracing: true,
+      real_time_monitoring: true,
+    },
     reasoning_patterns: {
       chain_of_thought: true,
       tree_of_thought: false,
@@ -73,7 +84,7 @@ export const useStrandsWorkflowForm = (onOpenChange: (open: boolean) => void) =>
   }, [form, cleanup]);
 
   const nextStep = useCallback(() => {
-    setStep(prev => Math.min(prev + 1, 6)); // 6 steps for Strands workflow
+    setStep(prev => Math.min(prev + 1, 8)); // 8 steps for enhanced Strands workflow with A2A
   }, []);
 
   const prevStep = useCallback(() => {
@@ -139,6 +150,37 @@ export const useStrandsWorkflowForm = (onOpenChange: (open: boolean) => void) =>
       step.id === stepId ? { ...step, ...updates } : step
     );
     form.setValue('workflow_steps', newSteps);
+  }, [form]);
+
+  // A2A Configuration Handlers
+  const handleA2AToggle = useCallback((enabled: boolean) => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, enabled });
+  }, [form]);
+
+  const handleA2ACollaborationModeChange = useCallback((mode: 'orchestrator' | 'participant' | 'both') => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, collaboration_mode: mode });
+  }, [form]);
+
+  const handleA2AProtocolChange = useCallback((protocol: 'websocket' | 'rest' | 'both') => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, communication_protocol: protocol });
+  }, [form]);
+
+  const handleA2ADiscoveryScopeChange = useCallback((scope: 'local' | 'global' | 'custom') => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, discovery_scope: scope });
+  }, [form]);
+
+  const handleA2ACustomAgentsChange = useCallback((agents: string[]) => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, custom_agents: agents });
+  }, [form]);
+
+  const handleA2ASettingToggle = useCallback((setting: keyof A2AConfiguration, value: boolean) => {
+    const currentA2A = form.getValues('a2a_config');
+    form.setValue('a2a_config', { ...currentA2A, [setting]: value });
   }, [form]);
 
   const cancelSubmission = useCallback(() => {
@@ -243,6 +285,13 @@ export const useStrandsWorkflowForm = (onOpenChange: (open: boolean) => void) =>
     handleWorkflowStepAdd,
     handleWorkflowStepRemove,
     handleWorkflowStepUpdate,
+    // A2A Configuration Handlers
+    handleA2AToggle,
+    handleA2ACollaborationModeChange,
+    handleA2AProtocolChange,
+    handleA2ADiscoveryScopeChange,
+    handleA2ACustomAgentsChange,
+    handleA2ASettingToggle,
     onSubmit: form.handleSubmit(onSubmit),
     cancelSubmission
   };

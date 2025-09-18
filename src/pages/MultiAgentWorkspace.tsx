@@ -5,6 +5,7 @@ import { NetworkTwinWorkspace } from '@/components/MultiAgentWorkspace/NetworkTw
 import { BlankWorkspace } from '@/components/MultiAgentWorkspace/BlankWorkspace';
 import { StrandsBlankWorkspace } from '@/components/MultiAgentWorkspace/StrandsBlankWorkspace';
 import { MultiAgentProjectSelector } from '@/components/MultiAgentWorkspace/MultiAgentProjectSelector';
+import { A2AAgentRegistry } from '@/components/A2A/A2AAgentRegistry';
 // Industrial Technology Workspaces - Disabled again due to white screen
 // import { IndustrialProcurementWorkspace } from '@/components/MultiAgentWorkspace/IndustrialProcurementWorkspace';
 // import { IndustrialForecastingWorkspace } from '@/components/MultiAgentWorkspace/IndustrialForecastingWorkspace';
@@ -43,6 +44,10 @@ const MultiAgentWorkspace = () => {
 
   if (selectedProject === 'strands-workflow') {
     return <StrandsBlankWorkspace />;
+  }
+
+  if (selectedProject === 'a2a-registry') {
+    return <A2AAgentRegistry />;
   }
 
   if (selectedProject === 'new-workflow') {

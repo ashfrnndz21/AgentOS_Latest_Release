@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Streaming Operations</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .operation { margin: 10px 0; padding: 10px; border: 1px solid #444; background: #2a2a2a; border-radius: 5px; }
+        .step { font-weight: bold; color: #4ade80; }
+        .details { color: #9ca3af; font-size: 0.9em; margin-top: 5px; }
+        .timestamp { color: #6b7280; font-size: 0.8em; }
+        .status { padding: 2px 8px; border-radius: 3px; font-size: 0.8em; margin-left: 10px; }
+        .running { background: #3b82f6; }
+        .completed { background: #10b981; }
+        .error { background: #ef4444; }
+        #operations { max-height: 400px; overflow-y: auto; }
+        button { padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #6d28d9; }
+        .final-result { background: #065f46; border: 2px solid #10b981; margin-top: 20px; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Test Frontend Streaming Operations</h1>
+    <button onclick="testStreaming()">Test Real-Time Streaming</button>
+    <div id="operations"></div>
+    <div id="final-result"></div>
+    
+    <script>
+        let operationCount = 0;
+        
+        async function testStreaming() {
+            const operationsDiv = document.getElementById('operations');
+            const finalResultDiv = document.getElementById('final-result');
+            
+            // Clear previous results
+            operationsDiv.innerHTML = '<h2>Real-Time Operations Stream</h2>';
+            finalResultDiv.innerHTML = '';
+            operationCount = 0;
+            
+            try {
+                // First create a test agent
+                const agentResponse = await fetch('http://localhost:5006/api/strands-sdk/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Frontend Test Agent',
+                        description: 'Test agent for frontend streaming',
+                        model_id: 'llama3.2:latest',
+                        host: 'http://localhost:11434',
+                        system_prompt: 'You are a helpful assistant.',
+                        tools: ['calculator']
+                    })
+                });
+                
+                const agent = await agentResponse.json();
+                console.log('Agent created:', agent);
+                
+                // Start streaming execution
+                const response = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agent.id}/execute-stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: 'What is 12 * 7 + 18?'
+                    })
+                });
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                
+                                if (data.type === 'final_result') {
+                                    // Show final result
+                                    finalResultDiv.innerHTML = `
+                                        <div class="final-result">
+                                            <h3>Final Result</h3>
+                                            <p><strong>Response:</strong> ${data.response}</p>
+                                            <p><strong>Execution Time:</strong> ${data.execution_time.toFixed(2)}s</p>
+                                            <p><strong>Tools Used:</strong> ${data.tools_used.join(', ')}</p>
+                                        </div>
+                                    `;
+                                } else if (data.type === 'error') {
+                                    console.error('Stream error:', data.error);
+                                } else if (data.step) {
+                                    // Real-time progress update
+                                    operationCount++;
+                                    const opDiv = document.createElement('div');
+                                    opDiv.className = 'operation';
+                                    opDiv.innerHTML = `
+                                        <div class="step">
+                                            Step ${operationCount}: ${data.step}
+                                            <span class="status ${data.status}">${data.status}</span>
+                                        </div>
+                                        <div class="details">${data.details || 'No details'}</div>
+                                        <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+                                    `;
+                                    operationsDiv.appendChild(opDiv);
+                                    
+                                    // Auto-scroll to bottom
+                                    operationsDiv.scrollTop = operationsDiv.scrollHeight;
+                                }
+                            } catch (parseError) {
+                                console.warn('Failed to parse SSE data:', parseError);
+                            }
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Streaming test failed:', error);
+                operationsDiv.innerHTML += '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

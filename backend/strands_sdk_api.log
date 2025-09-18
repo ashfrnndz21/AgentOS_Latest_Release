@@ -1,0 +1,61 @@
+Could not import tavily: module 'strands_tools.tavily' has no attribute 'tavily'
+Could not import rss: No module named 'feedparser'
+Could not import exa: module 'strands_tools.exa' has no attribute 'exa'
+Could not import use_computer: No module named 'cv2'
+Could not import agent_core_memory: module 'strands_tools.agent_core_memory' has no attribute 'agent_core_memory'
+Could not import mem0_memory: No module named 'mem0'
+Could not import diagram: No module named 'graphviz'
+Could not import browser: No module named 'bedrock_agentcore'
+Could not import code_interpreter: No module named 'bedrock_agentcore'
+A2A tools not available: No module named 'a2a'
+Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+[Strands SDK] ✅ Official Strands SDK loaded successfully!
+[Strands SDK] ✅ A2A integration loaded successfully!
+[Official Strands Tools] ✅ Loaded 35 official tools
+[Official Strands Tools] Categories: ['ai', 'utility', 'web', 'file', 'code', 'system', 'multi_agent', 'database', 'media', 'communication', 'automation']
+[Strands SDK] ✅ Using 35 official tools
+[Strands Collaboration] ✅ Simplified multi-agent collaboration tools loaded successfully!
+[Strands Collaboration] Available tools: ['think', 'a2a_discover_agent', 'a2a_list_discovered_agents', 'a2a_send_message', 'coordinate_agents', 'agent_handoff']
+[Strands SDK] ✅ Using simplified think tool to prevent timeouts
+[Strands SDK] ✅ Added 6 collaboration tools
+[Strands SDK] Starting Strands SDK Agent Service...
+[Strands SDK] ✅ Using Official Strands SDK!
+[Strands SDK] Database initialized successfully
+[Strands SDK] 🚀 Starting server on port 5006...
+[Strands SDK] 🔗 WebSocket support enabled
+[Strands SDK] 📊 Database initialized
+ * Serving Flask app 'strands_sdk_api'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5006
+ * Running on http://192.168.0.186:5006
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [18/Sep/2025 18:37:07] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:37:39] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:37:39] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:37:43] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:37:43] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:37:56] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:37:56] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:37:56] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:37:56] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:38:04] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:38:04] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:38:33] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:38:33] "[35m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:38:34] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:40:32] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:40:34] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:42:52] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:42:52] "[35m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:42:54] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:43:54] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:44:04] "[35m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:44:19] "[35m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:44:26] "POST /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [18/Sep/2025 18:44:36] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:45:21] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:46:07] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:46:26] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -
+127.0.0.1 - - [18/Sep/2025 18:46:33] "[35m[1mGET /api/strands-sdk/agents HTTP/1.1[0m" 500 -

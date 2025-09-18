@@ -1,0 +1,1031 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { 
+  Bot, 
+  Plus, 
+  MessageSquare, 
+  Trash2, 
+  Play, 
+  BarChart3,
+  Clock,
+  Zap,
+  Cpu,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Settings,
+  Sparkles,
+  Info,
+  Eye,
+  Wrench
+} from 'lucide-react';
+import { ollamaAgentService, OllamaAgentConfig } from '@/lib/services/OllamaAgentService';
+import { ollamaService } from '@/lib/services/ollamaService';
+import { useToast } from '@/hooks/use-toast';
+import { OllamaAgentDialog } from '@/components/CommandCentre/CreateAgent/OllamaAgentDialog';
+import { OllamaAgentChat } from '@/components/OllamaAgentChat';
+import { AgentConfigDialog } from '@/components/AgentConfigDialog';
+import { StrandsSdkAgentDialog } from '@/components/MultiAgentWorkspace/StrandsSdkAgentDialog';
+import { strandsSdkService, StrandsSdkAgent } from '@/lib/services/StrandsSdkService';
+import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
+import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
+
+export const OllamaAgentDashboard: React.FC = () => {
+  const [agents, setAgents] = useState<OllamaAgentConfig[]>([]);
+  const [strandsAgents, setStrandsAgents] = useState<StrandsSdkAgent[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<OllamaAgentConfig | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showStrandsSdkDialog, setShowStrandsSdkDialog] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatAgent, setChatAgent] = useState<OllamaAgentConfig | null>(null);
+  const [showStrandsChat, setShowStrandsChat] = useState(false);
+  const [strandsChatAgent, setStrandsChatAgent] = useState<StrandsSdkAgent | null>(null);
+  const [analyticsAgent, setAnalyticsAgent] = useState<{ id: string; name: string } | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [chatLoading, setChatLoading] = useState<string | null>(null);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [configAgent, setConfigAgent] = useState<OllamaAgentConfig | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load both types of agents immediately
+    loadAgents();
+    loadStrandsAgents();
+    
+    // Load health status in background (non-blocking)
+    const healthTimeout = setTimeout(() => {
+      loadHealthStatus();
+    }, 100);
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadAgents();
+      loadHealthStatus();
+    }, 30000);
+
+    return () => {
+      clearTimeout(healthTimeout);
+      clearInterval(interval);
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  const loadAgents = async () => {
+    try {
+      // Load agents from API instead of localStorage to sync with Strands
+      const response = await fetch('/api/agents/ollama');
+      if (response.ok) {
+        const data = await response.json();
+        const apiAgents = data.agents || [];
+        
+        // Convert API format to OllamaAgentConfig format
+        const convertedAgents: OllamaAgentConfig[] = apiAgents.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          role: agent.role || '',
+          description: agent.description || '',
+          model: agent.model?.model_id || agent.model || '',
+          personality: agent.personality || '',
+          expertise: agent.expertise || '',
+          systemPrompt: agent.system_prompt || '',
+          temperature: agent.temperature || 0.7,
+          maxTokens: agent.max_tokens || 1000,
+          tools: [],
+          memory: {
+            shortTerm: false,
+            longTerm: false,
+            contextual: false
+          },
+          ragEnabled: false,
+          knowledgeBases: [],
+          guardrails: {
+            enabled: agent.guardrails?.enabled || false,
+            rules: agent.guardrails?.rules || [],
+            safetyLevel: agent.guardrails?.safetyLevel || 'medium',
+            contentFilters: agent.guardrails?.contentFilters || []
+          },
+          capabilities: {
+            conversation: true,
+            analysis: false,
+            creativity: false,
+            reasoning: false
+          },
+          behavior: {
+            response_style: 'helpful',
+            communication_tone: 'professional'
+          },
+          createdAt: agent.created_at || new Date().toISOString(),
+          updatedAt: agent.updated_at || new Date().toISOString(),
+          status: 'active'
+        }));
+        
+        setAgents(convertedAgents);
+      } else {
+        // Fallback to localStorage if API fails
+        const localAgents = ollamaAgentService.getAllAgents();
+        setAgents(localAgents);
+      }
+    } catch (error) {
+      console.error('Failed to load agents from API, falling back to localStorage:', error);
+      // Fallback to localStorage
+      try {
+        const localAgents = ollamaAgentService.getAllAgents();
+        setAgents(localAgents);
+      } catch (localError) {
+        toast({
+          title: "Failed to load agents",
+          description: localError instanceof Error ? localError.message : 'Unknown error',
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadHealthStatus = async () => {
+    try {
+      const status = await ollamaAgentService.healthCheck();
+      setHealthStatus(status);
+    } catch (error) {
+      console.error('Failed to load health status:', error);
+    }
+  };
+
+  const handleAgentCreated = async (agent: OllamaAgentConfig) => {
+    try {
+      // Create agent in API database to sync with Strands
+      const response = await fetch('/api/agents/ollama', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: agent.name,
+          role: agent.role,
+          description: agent.description,
+          systemPrompt: agent.systemPrompt,
+          model: agent.model,
+          temperature: agent.temperature,
+          maxTokens: agent.maxTokens,
+          guardrails: agent.guardrails
+        })
+      });
+
+      if (response.ok) {
+        // Reload agents from API to get the latest data
+        await loadAgents();
+        toast({
+          title: "Agent Created",
+          description: `${agent.name} is ready to use and synced with Strands!`,
+        });
+      } else {
+        // Fallback to local creation
+        setAgents(prev => [...prev, agent]);
+        toast({
+          title: "Agent Created Locally",
+          description: `${agent.name} is ready to use (local only)!`,
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create agent in API, using local only:', error);
+      // Fallback to local creation
+      setAgents(prev => [...prev, agent]);
+      toast({
+        title: "Agent Created Locally",
+        description: `${agent.name} is ready to use (local only)!`,
+        variant: "default"
+      });
+    }
+
+    // Refresh metrics after agent creation
+    setTimeout(() => {
+      loadHealthStatus();
+    }, 500);
+  };
+
+  const handleDeleteAgent = async (agentId: string) => {
+    try {
+      // Delete from API database first to sync with Strands
+      const apiResponse = await fetch(`/api/agents/ollama/${agentId}`, {
+        method: 'DELETE'
+      });
+
+      // Also delete from localStorage
+      const localSuccess = await ollamaAgentService.deleteAgent(agentId);
+
+      if (apiResponse.ok || localSuccess) {
+        setAgents(prev => prev.filter(agent => agent.id !== agentId));
+        if (selectedAgent?.id === agentId) {
+          setSelectedAgent(null);
+          setShowChat(false);
+        }
+        // Refresh health status after deletion
+        setTimeout(() => {
+          loadHealthStatus();
+        }, 500);
+        toast({
+          title: "Agent Deleted",
+          description: "Agent has been removed successfully from both local and API storage",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to delete agent",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive"
+      });
+    }
+  };
+
+  const loadStrandsAgents = async () => {
+    try {
+      const strandsAgentsList = await strandsSdkService.listAgents();
+      setStrandsAgents(strandsAgentsList);
+      console.log('[Dashboard] Loaded Strands SDK agents:', strandsAgentsList.length);
+    } catch (error) {
+      console.error('[Dashboard] Failed to load Strands agents:', error);
+      // Don't show error toast, just log it
+    }
+  };
+
+  const handleStrandsAgentCreated = () => {
+    // Reload both agent lists
+    loadAgents();
+    loadStrandsAgents();
+    toast({
+      title: "Strands Agent Created",
+      description: "Your Strands SDK agent has been created successfully!",
+    });
+  };
+
+  const handleChatWithStrandsAgent = async (agent: StrandsSdkAgent) => {
+    setChatLoading(agent.id!);
+    
+    try {
+      // First check if the Strands SDK service is healthy
+      const healthStatus = await strandsSdkService.checkHealth();
+      
+      if (healthStatus.status !== 'healthy') {
+        throw new Error('Strands SDK service is not available. Please check the service.');
+      }
+
+      // Open the Strands chat panel
+      setStrandsChatAgent(agent);
+      setShowStrandsChat(true);
+      
+      toast({
+        title: "Strands Chat Opened",
+        description: `Ready to chat with ${agent.name} using official Strands SDK`,
+      });
+
+    } catch (error) {
+      console.error('Strands chat failed:', error);
+      toast({
+        title: "Chat Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setChatLoading(null);
+    }
+  };
+
+  const handleOpenAnalytics = (agent: StrandsSdkAgent) => {
+    setAnalyticsAgent({ id: agent.id!, name: agent.name });
+    setShowAnalytics(true);
+  };
+
+  const handleDeleteStrandsAgent = async (agentId: string) => {
+    if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
+    
+    try {
+      await strandsSdkService.deleteAgent(agentId);
+      setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
+      toast({
+        title: "Agent Deleted",
+        description: "Strands SDK agent has been removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to delete agent",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleShowConfig = (agent: OllamaAgentConfig) => {
+    setConfigAgent(agent);
+    setShowConfigDialog(true);
+  };
+
+  const handleChatWithAgent = async (agent: OllamaAgentConfig) => {
+    setChatLoading(agent.id);
+    
+    try {
+      // First check if Ollama is running
+      const healthStatus = await ollamaAgentService.healthCheck();
+      
+      if (healthStatus.ollamaStatus !== 'running') {
+        throw new Error('Ollama is not running. Please start Ollama first.');
+      }
+
+      // Open the chat panel
+      setChatAgent(agent);
+      setShowChat(true);
+      
+      toast({
+        title: "Chat Opened",
+        description: `Ready to chat with ${agent.name}`,
+      });
+
+    } catch (error) {
+      console.error('Chat failed:', error);
+      toast({
+        title: "Chat Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setChatLoading(null);
+    }
+  };
+
+  const formatDuration = (ms: number): string => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Bot className="text-purple-400" />
+              Ollama Agent Management
+            </h1>
+            <p className="text-gray-400 mt-2">
+              Create, manage, and interact with your local AI agents powered by Ollama models
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={loadAgents}>
+              <RefreshCw size={16} className="mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if (confirm('⚠️ This will delete ALL agents and clear localStorage. Are you sure?')) {
+                  ollamaAgentService.clearAllAgents();
+                  setAgents([]);
+                  setSelectedAgent(null);
+                  setShowChat(false);
+                  toast({
+                    title: "All Agents Cleared",
+                    description: "All agents have been deleted. You can now create fresh agents.",
+                  });
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 size={16} className="mr-2" />
+              Clear All
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+              <Plus size={16} className="mr-2" />
+              Create Agent
+            </Button>
+            <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+              <Sparkles size={16} className="mr-2" />
+              Create Strands Agent
+            </Button>
+          </div>
+        </div>
+
+        {/* Health Status */}
+        {healthStatus && (
+          <Alert className={`border-${healthStatus.status === 'healthy' ? 'green' : healthStatus.status === 'degraded' ? 'yellow' : 'red'}-500 bg-${healthStatus.status === 'healthy' ? 'green' : healthStatus.status === 'degraded' ? 'yellow' : 'red'}-500/10`}>
+            {healthStatus.status === 'healthy' ? (
+              <CheckCircle className="h-4 w-4 text-green-400" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-400" />
+            )}
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>
+                  System Status: {healthStatus.status} • Ollama: {healthStatus.ollamaStatus} • 
+                  {healthStatus.agentCount} agents • {healthStatus.totalExecutions} total executions
+                </span>
+                {healthStatus.errors.length > 0 && (
+                  <span className="text-sm">
+                    {healthStatus.errors.length} error(s)
+                  </span>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Tabs defaultValue="agents" className="space-y-6">
+          <TabsList className="bg-gray-800">
+            <TabsTrigger value="agents" className="data-[state=active]:bg-purple-600">
+              <Bot className="h-4 w-4 mr-2" />
+              Agents ({agents.length})
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Agents Tab */}
+          <TabsContent value="agents">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
+                <p>Loading agents...</p>
+              </div>
+            ) : agents.length === 0 && strandsAgents.length === 0 ? (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="text-center py-12">
+                  <Bot size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">No Agents Created</h3>
+                  <p className="text-gray-400 mb-6">
+                    Create your first Ollama agent to get started with local AI conversations
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+                      <Plus size={16} className="mr-2" />
+                      Create Agent
+                    </Button>
+                    <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      <Sparkles size={16} className="mr-2" />
+                      Create Strands Agent
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Legacy Agents */}
+                {agents.map((agent) => {
+                  const metrics = ollamaAgentService.getAgentMetrics(agent.id);
+                  
+                  return (
+                    <Card key={agent.id} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <Bot className="text-purple-400" size={20} />
+                            {agent.name}
+                          </CardTitle>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleChatWithAgent(agent)}
+                              disabled={chatLoading === agent.id}
+                              title="Start Chat"
+                            >
+                              {chatLoading === agent.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                              ) : (
+                                <MessageSquare size={14} />
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleShowConfig(agent)}
+                              title="View Agent Configuration"
+                            >
+                              <Settings size={14} />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteAgent(agent.id)}
+                              title="Delete Agent"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                        <CardDescription>
+                          <div className="flex items-center gap-2">
+                            <Cpu size={14} />
+                            {agent.model ? (
+                              <>
+                                <span>{agent.model}</span>
+                                <Badge variant="secondary">Local</Badge>
+                                <Badge variant="default" className="bg-green-600 text-xs">✓ Model OK</Badge>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-red-400">No Model Configured</span>
+                                <Badge variant="destructive" className="text-xs">⚠️ Fix Needed</Badge>
+                              </>
+                            )}
+                          </div>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {/* System Prompt Preview */}
+                          <div>
+                            <p className="text-sm text-gray-400 mb-1">System Prompt:</p>
+                            <p className="text-sm text-gray-300 line-clamp-2">
+                              {agent.systemPrompt || 'No system prompt set'}
+                            </p>
+                          </div>
+
+                          {/* Configuration */}
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-gray-400">Temperature:</span>
+                              <span className="ml-2 text-white">{agent.temperature}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400">Max Tokens:</span>
+                              <span className="ml-2 text-white">{agent.maxTokens}</span>
+                            </div>
+                          </div>
+
+                          {/* Features */}
+                          <div className="flex flex-wrap gap-1">
+                            {agent.memory?.shortTerm && <Badge variant="outline" className="text-xs">Short Memory</Badge>}
+                            {agent.memory?.longTerm && <Badge variant="outline" className="text-xs">Long Memory</Badge>}
+                            {agent.ragEnabled && <Badge variant="outline" className="text-xs">RAG</Badge>}
+                            {agent.guardrails?.enabled && <Badge variant="outline" className="text-xs">Guardrails</Badge>}
+                          </div>
+
+                          {/* Metrics */}
+                          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-700">
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <MessageSquare size={12} className="text-blue-400" />
+                                <span className="text-xs text-gray-400">Chats</span>
+                              </div>
+                              <p className="text-sm font-semibold">{metrics.totalExecutions}</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Clock size={12} className="text-yellow-400" />
+                                <span className="text-xs text-gray-400">Avg</span>
+                              </div>
+                              <p className="text-sm font-semibold">
+                                {metrics.totalExecutions > 0 ? formatDuration(metrics.averageResponseTime) : '-'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Zap size={12} className="text-green-400" />
+                                <span className="text-xs text-gray-400">Success</span>
+                              </div>
+                              <p className="text-sm font-semibold">
+                                {metrics.totalExecutions > 0 ? 
+                                  `${Math.round((metrics.successfulExecutions / metrics.totalExecutions) * 100)}%` : 
+                                  '-'
+                                }
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <Button
+                            onClick={() => handleChatWithAgent(agent)}
+                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            size="sm"
+                            disabled={chatLoading === agent.id}
+                          >
+                            {chatLoading === agent.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Chatting...
+                              </>
+                            ) : (
+                              <>
+                                <Play size={14} className="mr-2" />
+                                Start Chat
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {/* Strands SDK Agents */}
+                {strandsAgents.map((agent) => (
+                  <Card key={`strands-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="text-purple-400" size={20} />
+                          {agent.name}
+                          
+                          {/* Configuration Tooltip */}
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-700">
+                                <Info className="h-3 w-3 text-gray-400 hover:text-purple-400" />
+                              </Button>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80 bg-gray-800 border-gray-700 text-white" side="right">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="h-4 w-4 text-purple-400" />
+                                  <h4 className="font-semibold text-purple-300">Agent Configuration</h4>
+                                </div>
+                                
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Model:</span>
+                                    <span className="text-white">{agent.model_id}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Host:</span>
+                                    <span className="text-white">{agent.host}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Temperature:</span>
+                                    <span className="text-white">
+                                      {(() => {
+                                        try {
+                                          const config = JSON.parse(agent.sdk_config || '{}');
+                                          return config?.ollama_config?.temperature || 0.7;
+                                        } catch {
+                                          return 0.7;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Max Tokens:</span>
+                                    <span className="text-white">
+                                      {(() => {
+                                        try {
+                                          const config = JSON.parse(agent.sdk_config || '{}');
+                                          return config?.ollama_config?.max_tokens || 1000;
+                                        } catch {
+                                          return 1000;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Tools Section */}
+                                  {agent.tools && agent.tools.length > 0 && (
+                                    <>
+                                      <div className="border-t border-gray-600 pt-2 mt-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Wrench className="h-3 w-3 text-purple-400" />
+                                          <span className="text-gray-400 font-medium">Tools ({agent.tools.length})</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                          {agent.tools.map((tool, index) => (
+                                            <Badge key={index} variant="outline" className="text-xs border-purple-400/30 text-purple-300">
+                                              {tool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                  
+                                  {/* System Prompt Preview */}
+                                  {agent.system_prompt && (
+                                    <div className="border-t border-gray-600 pt-2 mt-2">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <MessageSquare className="h-3 w-3 text-purple-400" />
+                                        <span className="text-gray-400 font-medium">System Prompt</span>
+                                      </div>
+                                      <p className="text-xs text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-600 max-h-20 overflow-y-auto">
+                                        {agent.system_prompt.length > 150 
+                                          ? `${agent.system_prompt.substring(0, 150)}...` 
+                                          : agent.system_prompt
+                                        }
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* SDK Info */}
+                                  <div className="border-t border-gray-600 pt-2 mt-2">
+                                    <div className="flex items-center gap-2">
+                                      <Sparkles className="h-3 w-3 text-purple-400" />
+                                      <span className="text-xs text-purple-300">Official Strands SDK Agent</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </CardTitle>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Strands SDK
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardDescription className="text-gray-400">
+                        {agent.description || 'Powered by official Strands SDK'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {/* Configuration Metadata - Same as Legacy Agents */}
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-400">Temperature:</span>
+                            <span className="ml-2 text-white">
+                              {(() => {
+                                try {
+                                  const config = JSON.parse(agent.sdk_config || '{}');
+                                  return config?.ollama_config?.temperature || 0.7;
+                                } catch {
+                                  return 0.7;
+                                }
+                              })()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Max Tokens:</span>
+                            <span className="ml-2 text-white">
+                              {(() => {
+                                try {
+                                  const config = JSON.parse(agent.sdk_config || '{}');
+                                  return config?.ollama_config?.max_tokens || 1000;
+                                } catch {
+                                  return 1000;
+                                }
+                              })()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Execution Metrics - Same as Legacy Agents */}
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <MessageSquare size={12} className="text-blue-400" />
+                              <span className="text-xs text-gray-400">Chats</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {agent.recent_executions?.length || 0}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock size={12} className="text-yellow-400" />
+                              <span className="text-xs text-gray-400">Avg</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {agent.recent_executions?.length > 0 
+                                ? `${(agent.recent_executions.reduce((sum, exec) => sum + (exec.execution_time || 0), 0) / agent.recent_executions.length).toFixed(1)}s`
+                                : '1.0s'
+                              }
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Zap size={12} className="text-green-400" />
+                              <span className="text-xs text-gray-400">Success</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {agent.recent_executions?.length > 0 
+                                ? `${Math.round((agent.recent_executions.filter(exec => exec.success).length / agent.recent_executions.length) * 100)}%`
+                                : '100%'
+                              }
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Model:</span>
+                          <Badge variant="outline" className="text-green-400 border-green-400">
+                            {agent.model_id}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-purple-600 hover:bg-purple-700"
+                            onClick={() => handleChatWithStrandsAgent(agent)}
+                            disabled={chatLoading === agent.id}
+                          >
+                            {chatLoading === agent.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2" />
+                                Starting...
+                              </>
+                            ) : (
+                              <>
+                                <MessageSquare size={14} className="mr-2" />
+                                Chat with Agent
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenAnalytics(agent)}
+                            title="View Analytics"
+                            className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                          >
+                            <BarChart3 size={14} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteStrandsAgent(agent.id!)}
+                            title="Delete Agent"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Bot className="text-purple-400" size={16} />
+                    Total Agents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{agents.length + strandsAgents.length}</div>
+                  <p className="text-xs text-gray-400">
+                    {agents.length} Legacy + {strandsAgents.length} Strands SDK
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <MessageSquare className="text-blue-400" size={16} />
+                    Total Conversations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(() => {
+                      const legacyTotal = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0);
+                      const strandsTotal = strandsAgents.reduce((sum, agent) => sum + (agent.recent_executions?.length || 0), 0);
+                      return legacyTotal + strandsTotal;
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-400">Across all agents</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="text-green-400" size={16} />
+                    Success Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(() => {
+                      // Legacy agents
+                      const legacyTotalExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0);
+                      const legacySuccessfulExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).successfulExecutions, 0);
+                      
+                      // Strands SDK agents
+                      const strandsTotalExecs = strandsAgents.reduce((sum, agent) => sum + (agent.recent_executions?.length || 0), 0);
+                      const strandsSuccessfulExecs = strandsAgents.reduce((sum, agent) => {
+                        return sum + (agent.recent_executions?.filter(exec => exec.success).length || 0);
+                      }, 0);
+                      
+                      const totalExecs = legacyTotalExecs + strandsTotalExecs;
+                      const successfulExecs = legacySuccessfulExecs + strandsSuccessfulExecs;
+                      
+                      return totalExecs > 0 ? `${Math.round((successfulExecs / totalExecs) * 100)}%` : '-';
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-400">Overall success rate</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <BarChart3 className="text-yellow-400" size={16} />
+                    Total Tokens
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(() => {
+                      // Legacy agents tokens
+                      const legacyTokens = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalTokensUsed, 0);
+                      
+                      // Strands SDK agents tokens (estimate from input/output length)
+                      const strandsTokens = strandsAgents.reduce((sum, agent) => {
+                        return sum + (agent.recent_executions?.reduce((execSum, exec) => {
+                          // Rough estimate: 1 token ≈ 4 characters
+                          const inputTokens = Math.ceil((exec.input_text?.length || 0) / 4);
+                          const outputTokens = Math.ceil((exec.output_text?.length || 0) / 4);
+                          return execSum + inputTokens + outputTokens;
+                        }, 0) || 0);
+                      }, 0);
+                      
+                      return (legacyTokens + strandsTokens).toLocaleString();
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-400">Tokens processed</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Legacy Chat Interface */}
+      {showChat && chatAgent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl h-[80vh]">
+            <OllamaAgentChat 
+              agent={chatAgent} 
+              onClose={() => {
+                setShowChat(false);
+                setChatAgent(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Strands SDK Chat Interface */}
+      {showStrandsChat && strandsChatAgent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl h-[80vh]">
+            <StrandsSdkAgentChat 
+              agent={strandsChatAgent} 
+              onClose={() => {
+                setShowStrandsChat(false);
+                setStrandsChatAgent(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Strands Agent Analytics */}
+      {analyticsAgent && (
+        <StrandsAgentAnalytics
+          open={showAnalytics}
+          onOpenChange={setShowAnalytics}
+          agentId={analyticsAgent.id}
+          agentName={analyticsAgent.name}
+        />
+      )}
+
+      {/* Create Agent Dialog */}
+      <OllamaAgentDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onAgentCreated={handleAgentCreated}
+      />
+
+      <StrandsSdkAgentDialog
+        open={showStrandsSdkDialog}
+        onOpenChange={setShowStrandsSdkDialog}
+        onAgentCreated={handleStrandsAgentCreated}
+      />
+
+      {/* Agent Configuration Dialog */}
+      <AgentConfigDialog
+        agent={configAgent}
+        open={showConfigDialog}
+        onOpenChange={setShowConfigDialog}
+      />
+    </div>
+  );
+};
+
+export default OllamaAgentDashboard;

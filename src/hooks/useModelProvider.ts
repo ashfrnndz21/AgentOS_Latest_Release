@@ -130,7 +130,7 @@ function getDefaultModel(provider: ModelProvider): string {
     case 'cohere':
       return 'command';
     case 'ollama':
-      return 'llama3';
+      return 'llama3.2:latest';
     default:
       return '';
   }

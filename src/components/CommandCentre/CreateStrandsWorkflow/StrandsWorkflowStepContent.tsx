@@ -1,8 +1,9 @@
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { StrandsWorkflowFormValues, StrandsModelOption, ReasoningPattern, StrandsTool, MemoryType } from './types';
+import { StrandsWorkflowFormValues, StrandsModelOption, ReasoningPattern, StrandsTool, MemoryType, A2AConfiguration } from './types';
 import { StrandsBasicInfo } from './steps/StrandsBasicInfo';
 import { StrandsModelConfig } from './steps/StrandsModelConfig';
+import { A2AConfigurationStep } from './A2AConfigurationStep';
 import { StrandsReasoningPatterns } from './steps/StrandsReasoningPatterns';
 import { StrandsMemoryConfig } from './steps/StrandsMemoryConfig';
 import { StrandsWorkflowSteps } from './steps/StrandsWorkflowSteps';
@@ -21,6 +22,13 @@ interface StrandsWorkflowStepContentProps {
   handleWorkflowStepAdd: () => void;
   handleWorkflowStepRemove: (stepId: string) => void;
   handleWorkflowStepUpdate: (stepId: string, updates: any) => void;
+  // A2A Configuration Handlers
+  handleA2AToggle: (enabled: boolean) => void;
+  handleA2ACollaborationModeChange: (mode: 'orchestrator' | 'participant' | 'both') => void;
+  handleA2AProtocolChange: (protocol: 'websocket' | 'rest' | 'both') => void;
+  handleA2ADiscoveryScopeChange: (scope: 'local' | 'global' | 'custom') => void;
+  handleA2ACustomAgentsChange: (agents: string[]) => void;
+  handleA2ASettingToggle: (setting: keyof A2AConfiguration, value: boolean) => void;
   StrandsModels: StrandsModelOption[];
   strandsTools: StrandsTool[];
   reasoningPatterns: ReasoningPattern[];
@@ -40,6 +48,13 @@ export const StrandsWorkflowStepContent: React.FC<StrandsWorkflowStepContentProp
   handleWorkflowStepAdd,
   handleWorkflowStepRemove,
   handleWorkflowStepUpdate,
+  // A2A Configuration Handlers
+  handleA2AToggle,
+  handleA2ACollaborationModeChange,
+  handleA2AProtocolChange,
+  handleA2ADiscoveryScopeChange,
+  handleA2ACustomAgentsChange,
+  handleA2ASettingToggle,
   StrandsModels,
   strandsTools,
   reasoningPatterns,
@@ -63,6 +78,19 @@ export const StrandsWorkflowStepContent: React.FC<StrandsWorkflowStepContentProp
     
     case 3:
       return (
+        <A2AConfigurationStep
+          a2aConfig={form.watch('a2a_config')}
+          onA2AToggle={handleA2AToggle}
+          onCollaborationModeChange={handleA2ACollaborationModeChange}
+          onProtocolChange={handleA2AProtocolChange}
+          onDiscoveryScopeChange={handleA2ADiscoveryScopeChange}
+          onCustomAgentsChange={handleA2ACustomAgentsChange}
+          onSettingToggle={handleA2ASettingToggle}
+        />
+      );
+    
+    case 4:
+      return (
         <StrandsReasoningPatterns
           form={form}
           handleReasoningPatternToggle={handleReasoningPatternToggle}
@@ -71,7 +99,7 @@ export const StrandsWorkflowStepContent: React.FC<StrandsWorkflowStepContentProp
         />
       );
     
-    case 4:
+    case 5:
       return (
         <StrandsMemoryConfig
           form={form}
@@ -80,7 +108,7 @@ export const StrandsWorkflowStepContent: React.FC<StrandsWorkflowStepContentProp
         />
       );
     
-    case 5:
+    case 6:
       return (
         <StrandsWorkflowSteps
           form={form}
@@ -90,13 +118,23 @@ export const StrandsWorkflowStepContent: React.FC<StrandsWorkflowStepContentProp
         />
       );
     
-    case 6:
+    case 7:
       return (
         <StrandsToolsGuardrails
           form={form}
           handleToolToggle={handleToolToggle}
           strandsTools={strandsTools}
         />
+      );
+    
+    case 8:
+      return (
+        <div className="space-y-4">
+          <div className="text-center text-white">
+            <h3 className="text-lg font-semibold mb-2">Performance & A2A Settings</h3>
+          </div>
+          {/* This step can be used for final performance configuration and A2A summary */}
+        </div>
       );
     
     default:

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Ollama Connection</title>
+</head>
+<body>
+    <h1>Ollama Connection Test</h1>
+    <button onclick="testStatus()">Test Ollama Status</button>
+    <button onclick="testGenerate()">Test Generate</button>
+    <div id="results"></div>
+
+    <script>
+        async function testStatus() {
+            try {
+                const response = await fetch('/api/ollama/status');
+                const data = await response.json();
+                document.getElementById('results').innerHTML = '<h3>Status Test:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<h3>Status Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+
+        async function testGenerate() {
+            try {
+                const response = await fetch('/api/ollama/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'llama3.2',
+                        prompt: 'Hello, how are you?',
+                        options: {
+                            temperature: 0.7
+                        }
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('results').innerHTML = '<h3>Generate Test:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<h3>Generate Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

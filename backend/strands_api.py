@@ -191,7 +191,7 @@ class StrandsLLMClient:
                     "prompt": prompt,
                     "stream": False,
                     "options": {
-                        "temperature": kwargs.get('temperature', 0.7),
+                        "temperature": kwargs.get('temperature', 0.7, timeout=30),
                         "num_predict": kwargs.get('max_tokens', 1000)
                     }
                 },
@@ -1118,4 +1118,4 @@ if __name__ == '__main__':
     print("🔗 Ollama integration configured")
     print("🌐 Server starting on port 5004...")
     
-    app.run(host='0.0.0.0', port=5004, debug=True)
+    app.run(host='0.0.0.0', port=5004, debug=False)

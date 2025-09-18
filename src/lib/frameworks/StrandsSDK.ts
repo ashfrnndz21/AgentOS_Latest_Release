@@ -14,6 +14,17 @@ export interface StrandsAgentConfig {
     temperature?: number;
     max_tokens?: number;
   };
+  a2a_config?: {
+    enabled: boolean;
+    collaboration_mode: 'orchestrator' | 'participant' | 'both';
+    max_concurrent_agents: number;
+    communication_protocol: 'websocket' | 'rest' | 'both';
+    auto_registration: boolean;
+    discovery_scope: 'local' | 'global' | 'custom';
+    custom_agents: string[];
+    conversation_tracing: boolean;
+    real_time_monitoring: boolean;
+  };
   reasoning_patterns: {
     chain_of_thought: boolean;
     tree_of_thought: boolean;
@@ -85,6 +96,7 @@ export class StrandsSDK {
       framework: 'strands',
       config: {
         model: config.model,
+        a2a_config: config.a2a_config,
         reasoning_patterns: config.reasoning_patterns,
         memory: config.memory,
         tools: config.tools,
@@ -112,14 +124,26 @@ export class StrandsSDK {
 
     console.log('StrandsSDK: Sending to backend:', strandsConfig);
 
-    // Call backend API
-    const response = await fetch(`${this.baseUrl}/agents`, {
+    // Call Strands SDK API (port 5006) for real A2A integration
+    const response = await fetch('http://localhost:5006/api/strands-sdk/agents', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` })
       },
-      body: JSON.stringify(strandsConfig)
+      body: JSON.stringify({
+        name: config.name,
+        description: config.description || '',
+        model_id: config.model.model_id,
+        host: 'http://localhost:11434', // Ollama host
+        system_prompt: `You are ${config.name}, an advanced AI agent with reasoning capabilities. ${config.description || ''}`,
+        tools: config.tools || [],
+        ollama_config: {
+          temperature: config.model.temperature || 0.7,
+          top_p: 0.9,
+          max_tokens: config.model.max_tokens || 4000
+        }
+      })
     });
 
     if (!response.ok) {
@@ -140,10 +164,56 @@ export class StrandsSDK {
     const result = await response.json();
     console.log('StrandsSDK: Backend response:', result);
     
+    // A2A registration is now handled by the backend automatically
+    if (result.a2a_registration) {
+      console.log('StrandsSDK: A2A registration result:', result.a2a_registration);
+      if (result.a2a_registration.status === 'success') {
+        console.log('StrandsSDK: ✅ Agent successfully registered with A2A service');
+      } else {
+        console.warn('StrandsSDK: ⚠️ A2A registration failed:', result.a2a_registration.error);
+      }
+    }
+
+    // Also register with main Ollama system (port 8000) for visibility in main UI
+    try {
+      console.log('StrandsSDK: Registering with main Ollama system...');
+      const mainSystemResponse = await fetch('http://localhost:5002/api/agents/ollama', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: config.name,
+          role: 'Strands AI Agent',
+          description: config.description || '',
+          model: config.model.model_id,
+          personality: 'Advanced reasoning and problem-solving',
+          expertise: config.tools?.join(', ') || 'General AI assistance',
+          system_prompt: `You are ${config.name}, an advanced AI agent with reasoning capabilities. ${config.description || ''}`,
+          temperature: config.model.temperature || 0.7,
+          max_tokens: config.model.max_tokens || 4000,
+          guardrails_enabled: config.guardrails?.enabled || false,
+          safety_level: config.guardrails?.safetyLevel || 'medium',
+          content_filters: JSON.stringify(config.guardrails?.contentFilters || []),
+          custom_rules: JSON.stringify(config.guardrails?.rules || [])
+        })
+      });
+
+      if (mainSystemResponse.ok) {
+        const mainSystemResult = await mainSystemResponse.json();
+        console.log('StrandsSDK: ✅ Agent registered with main Ollama system:', mainSystemResult.agent_id);
+      } else {
+        console.warn('StrandsSDK: ⚠️ Failed to register with main Ollama system:', mainSystemResponse.status);
+      }
+    } catch (error) {
+      console.warn('StrandsSDK: ⚠️ Error registering with main Ollama system:', error);
+      // Don't fail agent creation if main system registration fails
+    }
+    
     return {
-      id: result.agent_id,
+      id: result.id,
       name: config.name,
-      status: result.status === 'active' ? 'ready' : 'error',
+      status: result.sdk_validated ? 'ready' : 'error',
       config,
       metadata: {
         created_at: new Date().toISOString(),
@@ -158,6 +228,43 @@ export class StrandsSDK {
         }
       }
     };
+  }
+
+  /**
+   * Register agent with A2A system
+   */
+  private async registerWithA2A(agentId: string, config: StrandsAgentConfig): Promise<void> {
+    if (!config.a2a_config?.enabled) return;
+
+    const a2aConfig = {
+      agent_id: agentId,
+      name: config.name,
+      description: config.description,
+      collaboration_mode: config.a2a_config.collaboration_mode,
+      max_concurrent_agents: config.a2a_config.max_concurrent_agents,
+      communication_protocol: config.a2a_config.communication_protocol,
+      auto_registration: config.a2a_config.auto_registration,
+      discovery_scope: config.a2a_config.discovery_scope,
+      custom_agents: config.a2a_config.custom_agents,
+      conversation_tracing: config.a2a_config.conversation_tracing,
+      real_time_monitoring: config.a2a_config.real_time_monitoring,
+      capabilities: this.getReasoningCapabilities(config.reasoning_patterns),
+      memory_systems: this.getMemorySystems(config.memory),
+      tools: config.tools,
+      reasoning_patterns: config.reasoning_patterns
+    };
+
+    const response = await fetch('http://localhost:5008/api/a2a/agents', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(a2aConfig)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to register with A2A system: ${response.statusText}`);
+    }
   }
 
   /**

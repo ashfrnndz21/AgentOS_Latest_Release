@@ -1,0 +1,40 @@
+#!/bin/bash
+
+echo "🔧 Testing Industry Theming Fix for Multi-Agent Workspace"
+echo "========================================================="
+
+echo ""
+echo "✅ Changes Made:"
+echo "1. Updated MultiAgentProjectSelector.tsx to use industry context"
+echo "2. Updated ModernWorkspaceHeader.tsx to use industry context"
+echo "3. Dynamic titles based on current industry:"
+echo "   - Banking: 'Banking Agent OS'"
+echo "   - Telco: 'AWS Telco Agent OS'"
+echo "   - Industrial: 'Air Liquide Agent OS'"
+echo "   - Healthcare: 'AWS Healthcare Agent OS'"
+
+echo ""
+echo "🎯 Expected Results:"
+echo "- Banking industry should show 'Banking Agent OS' in workspace"
+echo "- Telco industry should show 'AWS Telco Agent OS' in workspace"
+echo "- Industrial industry should show 'Air Liquide Agent OS' in workspace"
+echo "- Descriptions should match industry context"
+
+echo ""
+echo "🧪 Test Instructions:"
+echo "1. Start the application: npm run dev"
+echo "2. Switch to Banking industry"
+echo "3. Navigate to Multi-Agent Workspace"
+echo "4. Verify title shows 'Banking Agent OS'"
+echo "5. Switch to Telco industry"
+echo "6. Verify title shows 'AWS Telco Agent OS'"
+echo "7. Switch to Industrial industry"
+echo "8. Verify title shows 'Air Liquide Agent OS'"
+
+echo ""
+echo "📋 Files Modified:"
+echo "- src/components/MultiAgentWorkspace/MultiAgentProjectSelector.tsx"
+echo "- src/components/MultiAgentWorkspace/ModernWorkspaceHeader.tsx"
+
+echo ""
+echo "✨ Industry Theming Fix Complete!"

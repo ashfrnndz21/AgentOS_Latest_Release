@@ -290,7 +290,11 @@ export const GeneralSettings = () => {
                   <Label className="text-white">Notifications</Label>
                   <p className="text-gray-400 text-sm">Enable or disable app notifications</p>
                 </div>
-                <Switch id="notifications" defaultChecked />
+                <Switch 
+                  id="notifications" 
+                  defaultChecked 
+                  className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-600"
+                />
               </div>
             </div>
             
@@ -302,7 +306,11 @@ export const GeneralSettings = () => {
                   <Label className="text-white">Analytics</Label>
                   <p className="text-gray-400 text-sm">Allow anonymous usage data collection</p>
                 </div>
-                <Switch id="analytics" defaultChecked />
+                <Switch 
+                  id="analytics" 
+                  defaultChecked 
+                  className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-600"
+                />
               </div>
             </div>
             
@@ -314,7 +322,10 @@ export const GeneralSettings = () => {
                   <Label className="text-white">Developer Mode</Label>
                   <p className="text-gray-400 text-sm">Enable advanced features for developers</p>
                 </div>
-                <Switch id="developer-mode" />
+                <Switch 
+                  id="developer-mode" 
+                  className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-600"
+                />
               </div>
             </div>
             

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Missing Agent Card</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test { margin: 20px 0; padding: 15px; background: #2a2a2a; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug: Missing Heath Agent Card</h1>
+    
+    <div class="test">
+        <h2>1. Testing Backend API</h2>
+        <p id="backend-test">Testing...</p>
+    </div>
+    
+    <div class="test">
+        <h2>2. Frontend Service Test</h2>
+        <p id="frontend-test">Testing...</p>
+    </div>
+    
+    <div class="test">
+        <h2>3. Possible Issues</h2>
+        <ul>
+            <li>✅ Backend API working (Heath Agent returned)</li>
+            <li>❓ Frontend service call failing</li>
+            <li>❓ React state not updating</li>
+            <li>❓ Component rendering issue</li>
+            <li>❓ Browser cache issue</li>
+        </ul>
+    </div>
+    
+    <div class="test">
+        <h2>4. Quick Fixes to Try</h2>
+        <ol>
+            <li><strong>Refresh the page</strong> (Ctrl+F5 or Cmd+Shift+R)</li>
+            <li><strong>Clear browser cache</strong></li>
+            <li><strong>Check browser console</strong> for errors</li>
+            <li><strong>Click "Refresh" button</strong> on the dashboard</li>
+        </ol>
+    </div>
+
+    <script>
+        // Test backend API
+        fetch('http://localhost:5006/api/strands-sdk/agents')
+            .then(response => response.json())
+            .then(data => {
+                const backendTest = document.getElementById('backend-test');
+                if (data && data.length > 0) {
+                    backendTest.innerHTML = `✅ Backend working: Found ${data.length} agents<br>` +
+                        `Heath Agent: ${data[0].name} (${data[0].recent_executions.length} executions)`;
+                } else {
+                    backendTest.innerHTML = '❌ Backend returning no agents';
+                }
+            })
+            .catch(error => {
+                document.getElementById('backend-test').innerHTML = `❌ Backend error: ${error}`;
+            });
+        
+        // Test frontend service (if available)
+        const frontendTest = document.getElementById('frontend-test');
+        frontendTest.innerHTML = '⚠️ Frontend service test requires dashboard context';
+        
+        // Add instructions
+        setTimeout(() => {
+            frontendTest.innerHTML += '<br><br><strong>To test frontend:</strong><br>' +
+                '1. Open browser console on dashboard<br>' +
+                '2. Run: <code>window.location.reload()</code><br>' +
+                '3. Check for console errors during load';
+        }, 1000);
+    </script>
+</body>
+</html>

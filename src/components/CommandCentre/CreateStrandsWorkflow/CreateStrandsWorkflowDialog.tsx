@@ -31,6 +31,13 @@ export const CreateStrandsWorkflowDialog: React.FC<CreateStrandsWorkflowDialogPr
     handleWorkflowStepAdd,
     handleWorkflowStepRemove,
     handleWorkflowStepUpdate,
+    // A2A Configuration Handlers
+    handleA2AToggle,
+    handleA2ACollaborationModeChange,
+    handleA2AProtocolChange,
+    handleA2ADiscoveryScopeChange,
+    handleA2ACustomAgentsChange,
+    handleA2ASettingToggle,
     onSubmit,
     cancelSubmission
   } = useStrandsWorkflowForm(onOpenChange);
@@ -82,6 +89,13 @@ export const CreateStrandsWorkflowDialog: React.FC<CreateStrandsWorkflowDialogPr
         handleWorkflowStepAdd={handleWorkflowStepAdd}
         handleWorkflowStepRemove={handleWorkflowStepRemove}
         handleWorkflowStepUpdate={handleWorkflowStepUpdate}
+        // A2A Configuration Handlers
+        handleA2AToggle={handleA2AToggle}
+        handleA2ACollaborationModeChange={handleA2ACollaborationModeChange}
+        handleA2AProtocolChange={handleA2AProtocolChange}
+        handleA2ADiscoveryScopeChange={handleA2ADiscoveryScopeChange}
+        handleA2ACustomAgentsChange={handleA2ACustomAgentsChange}
+        handleA2ASettingToggle={handleA2ASettingToggle}
         StrandsModels={StrandsModels}
         strandsTools={strandsTools}
         reasoningPatterns={reasoningPatterns}

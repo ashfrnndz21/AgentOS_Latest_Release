@@ -1,0 +1,46 @@
+#!/bin/bash
+
+echo "🔧 Testing Tool Compatibility Fix"
+echo "================================="
+
+echo ""
+echo "✅ What was fixed:"
+echo "1. Added model tool compatibility detection"
+echo "2. Shows warning when incompatible model + tools selected"
+echo "3. Provides quick fix buttons (Remove Tools / Switch Model)"
+echo "4. Prevents agent creation with tool conflicts"
+echo "5. Shows 'Tools' badge for compatible models in dropdown"
+
+echo ""
+echo "📋 Model Tool Support:"
+echo "✅ Supports Tools:"
+echo "  - llama3.1, llama3.1:8b, llama3.1:70b"
+echo "  - llama3, llama3:8b, llama3:70b"
+echo "  - mistral, codellama"
+echo "  - qwen2, qwen2.5"
+
+echo ""
+echo "❌ No Tool Support:"
+echo "  - phi3 (causes the error you saw)"
+echo "  - gemma"
+
+echo ""
+echo "🧪 Test Cases:"
+echo "1. Select phi3 + web_search tool → Should show yellow warning"
+echo "2. Click 'Remove Tools' → Warning disappears, can create agent"
+echo "3. Click 'Switch to llama3.1' → Changes model, keeps tools"
+echo "4. Models with tool support show 'Tools' badge in dropdown"
+
+echo ""
+echo "🎯 Solution for your error:"
+echo "The error 'phi3:latest does not support tools' is now handled by:"
+echo "- Detecting the incompatibility before creation"
+echo "- Showing clear warning with solutions"
+echo "- Preventing failed agent creation attempts"
+
+echo ""
+echo "💡 Recommended action:"
+echo "1. Keep phi3 model but remove web_search tool, OR"
+echo "2. Switch to llama3.1 model to keep web_search tool"
+echo ""
+echo "🚀 Ready to test! Open the Strands dialog and try the phi3 + tools combination."

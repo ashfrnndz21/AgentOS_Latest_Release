@@ -15,7 +15,7 @@ import { AgentMarketplace } from "./components/AgentMarketplace";
 import NetworkTwin from "./pages/NetworkTwin";
 import RiskAnalytics from "./pages/RiskAnalytics";
 import Auth from "./pages/Auth";
-import { GeneralSettings } from "./components/Settings/GeneralSettings";
+import Settings from "./pages/SettingsSimple";
 import { AgentControlPanel } from "./pages/AgentControlPanel";
 import MCPGateway from "./pages/MCPDashboard";
 import MCPGatewayTest from "./pages/MCPGatewayTest";
@@ -47,7 +47,7 @@ function App() {
           <Route path="/customer-insights" element={<Layout><CustomerValueManagement /></Layout>} />
           <Route path="/customer-analytics" element={<Layout><CustomerAnalytics /></Layout>} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/settings" element={<Layout><GeneralSettings /></Layout>} />
+          <Route path="/settings" element={<Layout><Settings /></Layout>} />
           <Route path="/agent-control" element={<Layout><AgentControlPanel /></Layout>} />
           <Route path="/mcp-dashboard" element={<Layout><MCPGateway /></Layout>} />
           <Route path="/mcp-test" element={<Layout><MCPGatewayTest /></Layout>} />

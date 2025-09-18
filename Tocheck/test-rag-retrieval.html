@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Retrieval Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        input, select, textarea {
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-family: monospace;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 RAG Retrieval Debug Test</h1>
+        <p>This tool tests the RAG document retrieval process to see why queries aren't returning document content.</p>
+
+        <!-- Test Query -->
+        <div class="section">
+            <h3>Test RAG Query</h3>
+            <div>
+                <label>Query:</label><br>
+                <textarea id="queryInput" placeholder="Enter your test query here...">Tell me what is this document about and what is Ashley's skills?</textarea>
+            </div>
+            <div>
+                <label>Model:</label>
+                <select id="modelSelect">
+                    <option value="mistral">mistral</option>
+                    <option value="llama3.2">llama3.2</option>
+                    <option value="phi3">phi3</option>
+                    <option value="codellama">codellama</option>
+                </select>
+            </div>
+            <button onclick="testRAGQuery()">🔍 Test RAG Query</button>
+            <button onclick="testDebugQuery()">🐛 Debug Query (Detailed)</button>
+        </div>
+
+        <div class="grid">
+            <!-- Regular Query Results -->
+            <div class="section">
+                <h3>Regular Query Results</h3>
+                <div id="regularResults" class="log"></div>
+            </div>
+
+            <!-- Debug Query Results -->
+            <div class="section">
+                <h3>Debug Query Results</h3>
+                <div id="debugResults" class="log"></div>
+            </div>
+        </div>
+
+        <!-- Document Status -->
+        <div class="section">
+            <h3>Document Status</h3>
+            <button onclick="checkDocuments()">📋 Check Ingested Documents</button>
+            <div id="documentStatus" class="log"></div>
+        </div>
+
+        <!-- RAG Status -->
+        <div class="section">
+            <h3>RAG System Status</h3>
+            <button onclick="checkRAGStatus()">⚙️ Check RAG Status</button>
+            <div id="ragStatus" class="log"></div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="section">
+            <h3>Analysis & Recommendations</h3>
+            <div id="analysis" class="debug-info">
+                Click the test buttons above to analyze the RAG retrieval process.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8000';
+        let documentIds = [];
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            element.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+
+        async function checkDocuments() {
+            clearLog('documentStatus');
+            log('documentStatus', 'Checking ingested documents...', 'info');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/rag/documents`);
+                const data = await response.json();
+                
+                if (response.ok && data.documents) {
+                    documentIds = data.documents.map(doc => doc.document_id);
+                    log('documentStatus', `Found ${data.documents.length} ingested documents:`, 'success');
+                    
+                    data.documents.forEach((doc, i) => {
+                        log('documentStatus', `  ${i+1}. ID: ${doc.document_id}`, 'info');
+                        log('documentStatus', `     File: ${doc.file_path || 'Unknown'}`, 'info');
+                        log('documentStatus', `     Chunks: ${doc.chunks_count}, Pages: ${doc.pages_count}`, 'info');
+                        log('documentStatus', `     Model: ${doc.model_name}`, 'info');
+                    });
+                } else {
+                    throw new Error(`Failed to get documents: ${data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                log('documentStatus', `Failed to check documents: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkRAGStatus() {
+            clearLog('ragStatus');
+            log('ragStatus', 'Checking RAG system status...', 'info');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/rag/status`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('ragStatus', `Status: ${data.status}`, data.status === 'available' ? 'success' : 'error');
+                    log('ragStatus', `Total Documents: ${data.stats?.total_documents || 0}`, 'info');
+                    log('ragStatus', `Total Chunks: ${data.stats?.total_chunks || 0}`, 'info');
+                    log('ragStatus', `Vector Stores: ${data.stats?.vector_stores || 0}`, 'info');
+                    log('ragStatus', `Active Chains: ${data.stats?.active_chains || 0}`, 'info');
+                    log('ragStatus', `LangChain Available: ${data.stats?.langchain_available}`, 'info');
+                } else {
+                    throw new Error(`RAG status check failed: ${data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                log('ragStatus', `Failed to check RAG status: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRAGQuery() {
+            clearLog('regularResults');
+            
+            const query = document.getElementById('queryInput').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            
+            if (!query) {
+                log('regularResults', 'Please enter a query', 'error');
+                return;
+            }
+            
+            if (documentIds.length === 0) {
+                log('regularResults', 'No document IDs available. Checking documents first...', 'warning');
+                await checkDocuments();
+                if (documentIds.length === 0) {
+                    log('regularResults', 'No documents found. Please ingest a document first.', 'error');
+                    return;
+                }
+            }
+            
+            log('regularResults', `Testing regular query: "${query}"`, 'info');
+            log('regularResults', `Using model: ${model}`, 'info');
+            log('regularResults', `Document IDs: ${documentIds.join(', ')}`, 'info');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/rag/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        document_ids: documentIds,
+                        model_name: model
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    log('regularResults', `✅ Query successful!`, 'success');
+                    log('regularResults', `Response: ${data.response}`, 'success');
+                    log('regularResults', `Chunks retrieved: ${data.chunks_retrieved}`, 'info');
+                    log('regularResults', `Sources: ${data.sources?.join(', ') || 'None'}`, 'info');
+                    
+                    if (data.relevant_chunks && data.relevant_chunks.length > 0) {
+                        log('regularResults', `\nRelevant chunks:`, 'info');
+                        data.relevant_chunks.forEach((chunk, i) => {
+                            log('regularResults', `  Chunk ${i+1}: ${chunk.substring(0, 200)}...`, 'info');
+                        });
+                    }
+                } else {
+                    throw new Error(`Query failed: ${data.message || data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                log('regularResults', `Query failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDebugQuery() {
+            clearLog('debugResults');
+            
+            const query = document.getElementById('queryInput').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            
+            if (!query) {
+                log('debugResults', 'Please enter a query', 'error');
+                return;
+            }
+            
+            if (documentIds.length === 0) {
+                log('debugResults', 'No document IDs available. Checking documents first...', 'warning');
+                await checkDocuments();
+                if (documentIds.length === 0) {
+                    log('debugResults', 'No documents found. Please ingest a document first.', 'error');
+                    return;
+                }
+            }
+            
+            log('debugResults', `Testing debug query: "${query}"`, 'info');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/rag/debug-query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        document_ids: documentIds,
+                        model_name: model
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    log('debugResults', `✅ Debug query successful!`, 'success');
+                    log('debugResults', `Response: ${data.response}`, 'success');
+                    log('debugResults', `\n🔍 Debug Information:`, 'info');
+                    log('debugResults', `Chunks retrieved: ${data.chunks_retrieved}`, 'info');
+                    log('debugResults', `Context length: ${data.context_length}`, 'info');
+                    log('debugResults', `Context overlap: ${data.context_overlap}`, 'info');
+                    
+                    if (data.debug_info) {
+                        log('debugResults', `Available documents: ${data.debug_info.available_documents?.join(', ')}`, 'info');
+                        log('debugResults', `Vector stores: ${data.debug_info.vector_stores_count}`, 'info');
+                        log('debugResults', `Retrievers: ${data.debug_info.retrievers_count}`, 'info');
+                        log('debugResults', `Chains: ${data.debug_info.chains_count}`, 'info');
+                        
+                        if (data.debug_info.context_preview) {
+                            log('debugResults', `\nContext preview:`, 'info');
+                            log('debugResults', data.debug_info.context_preview, 'info');
+                        }
+                        
+                        if (data.debug_info.formatted_prompt_preview) {
+                            log('debugResults', `\nPrompt preview:`, 'info');
+                            log('debugResults', data.debug_info.formatted_prompt_preview, 'info');
+                        }
+                    }
+                    
+                    // Analysis
+                    analyzeResults(data);
+                    
+                } else {
+                    throw new Error(`Debug query failed: ${data.message || data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                log('debugResults', `Debug query failed: ${error.message}`, 'error');
+            }
+        }
+
+        function analyzeResults(data) {
+            const analysisDiv = document.getElementById('analysis');
+            let analysis = '';
+            
+            analysis += `🔍 RAG Retrieval Analysis:\n\n`;
+            
+            // Check if chunks were retrieved
+            if (data.chunks_retrieved === 0) {
+                analysis += `❌ ISSUE: No chunks retrieved from vector database\n`;
+                analysis += `   - This means the similarity search found no relevant content\n`;
+                analysis += `   - Try lowering the similarity threshold or check if document was properly ingested\n\n`;
+            } else {
+                analysis += `✅ Retrieved ${data.chunks_retrieved} chunks from vector database\n\n`;
+            }
+            
+            // Check context length
+            if (data.context_length === 0) {
+                analysis += `❌ ISSUE: Empty context passed to model\n`;
+                analysis += `   - Even though chunks were retrieved, no content was passed to the model\n\n`;
+            } else if (data.context_length < 100) {
+                analysis += `⚠️ WARNING: Very short context (${data.context_length} chars)\n`;
+                analysis += `   - Context might be too brief for meaningful responses\n\n`;
+            } else {
+                analysis += `✅ Good context length: ${data.context_length} characters\n\n`;
+            }
+            
+            // Check context overlap
+            if (data.context_overlap < 3) {
+                analysis += `❌ ISSUE: Low context-response overlap (${data.context_overlap} keywords)\n`;
+                analysis += `   - The model's response doesn't seem to use the provided context\n`;
+                analysis += `   - This suggests the model is ignoring the document content\n\n`;
+            } else {
+                analysis += `✅ Good context usage: ${data.context_overlap} keyword overlap\n\n`;
+            }
+            
+            // Recommendations
+            analysis += `💡 Recommendations:\n`;
+            if (data.chunks_retrieved === 0) {
+                analysis += `   1. Check if document was properly ingested with content\n`;
+                analysis += `   2. Try a simpler, more direct query\n`;
+                analysis += `   3. Lower the similarity threshold in retriever settings\n`;
+            } else if (data.context_overlap < 3) {
+                analysis += `   1. Check the prompt template - model might not be following instructions\n`;
+                analysis += `   2. Try a different model that better follows context instructions\n`;
+                analysis += `   3. Verify the model is properly loaded and responding\n`;
+            } else {
+                analysis += `   1. RAG system appears to be working correctly\n`;
+                analysis += `   2. Try different queries to test various document sections\n`;
+            }
+            
+            analysisDiv.textContent = analysis;
+        }
+
+        // Auto-load documents on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkDocuments();
+                checkRAGStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -146,8 +146,15 @@ const StrandsAgentNode: React.FC<NodeProps<StrandsAgentNodeData>> = ({ data, sel
         <div className="flex items-center justify-between mb-3 p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
           <div className="flex items-center space-x-2">
             <Zap className="h-3 w-3 text-purple-400" />
-            <span className="text-xs text-purple-300 font-medium">Strands Powered</span>
+            <span className="text-xs text-purple-300 font-medium">
+              {data.agent?.sdkType === 'strands-sdk' ? 'Strands SDK' : 'Strands Powered'}
+            </span>
           </div>
+          {data.agent?.sdkType === 'strands-sdk' && data.agent?.tools && (
+            <span className="text-xs text-purple-400">
+              {data.agent.tools.length} tools
+            </span>
+          )}
           {data.strandsConfig?.reasoningPattern && (
             <span className="text-xs text-purple-400 capitalize">
               {data.strandsConfig.reasoningPattern}

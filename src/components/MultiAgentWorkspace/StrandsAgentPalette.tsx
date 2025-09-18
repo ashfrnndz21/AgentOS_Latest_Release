@@ -95,12 +95,14 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
 
   // Load Strands agents
   const loadStrandsAgents = async () => {
+    console.log('🔄 StrandsAgentPalette: Loading Strands agents...');
     setStrandsLoading(true);
     try {
       const agents = await strandsAgentService.getStrandsAgents();
+      console.log('✅ StrandsAgentPalette: Loaded agents:', agents);
       setStrandsAgents(agents);
     } catch (error) {
-      console.error('Failed to load Strands agents:', error);
+      console.error('❌ StrandsAgentPalette: Failed to load Strands agents:', error);
     } finally {
       setStrandsLoading(false);
     }
@@ -1154,8 +1156,8 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-400">API Key:</span>
-                          <span className={tool.requiresApiKey ? 'text-yellow-400' : 'text-green-400'}>
-                            {tool.requiresApiKey ? 'Required' : 'Not Required'}
+                          <span className={tool.requiresApi ? 'text-yellow-400' : 'text-green-400'}>
+                            {tool.requiresApi ? 'Required' : 'Not Required'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
@@ -1186,7 +1188,7 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                     <h3 className="text-sm font-medium text-white">{tool.name}</h3>
                     <p className="text-xs text-gray-400">{tool.description}</p>
                   </div>
-                  {tool.requiresApiKey && (
+                  {tool.requiresApi && (
                     <Key className="h-4 w-4 text-yellow-400" />
                   )}
                 </div>

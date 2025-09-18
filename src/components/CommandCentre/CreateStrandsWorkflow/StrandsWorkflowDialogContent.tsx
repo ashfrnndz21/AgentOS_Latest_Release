@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { StrandsWorkflowStepContent } from './StrandsWorkflowStepContent';
 import { StrandsWorkflowStepNavigation } from './StrandsWorkflowStepNavigation';
 import { UseFormReturn } from 'react-hook-form';
-import { StrandsWorkflowFormValues, StrandsModelOption, ReasoningPattern, StrandsTool, MemoryType } from './types';
+import { StrandsWorkflowFormValues, StrandsModelOption, ReasoningPattern, StrandsTool, MemoryType, A2AConfiguration } from './types';
 
 interface StrandsWorkflowDialogContentProps {
   open: boolean;
@@ -25,6 +25,13 @@ interface StrandsWorkflowDialogContentProps {
   handleWorkflowStepAdd: () => void;
   handleWorkflowStepRemove: (stepId: string) => void;
   handleWorkflowStepUpdate: (stepId: string, updates: any) => void;
+  // A2A Configuration Handlers
+  handleA2AToggle: (enabled: boolean) => void;
+  handleA2ACollaborationModeChange: (mode: 'orchestrator' | 'participant' | 'both') => void;
+  handleA2AProtocolChange: (protocol: 'websocket' | 'rest' | 'both') => void;
+  handleA2ADiscoveryScopeChange: (scope: 'local' | 'global' | 'custom') => void;
+  handleA2ACustomAgentsChange: (agents: string[]) => void;
+  handleA2ASettingToggle: (setting: keyof A2AConfiguration, value: boolean) => void;
   StrandsModels: StrandsModelOption[];
   strandsTools: StrandsTool[];
   reasoningPatterns: ReasoningPattern[];
@@ -34,10 +41,12 @@ interface StrandsWorkflowDialogContentProps {
 const stepTitles = [
   'Basic Information',
   'Model & Provider',
+  'A2A Configuration',
   'Reasoning Patterns',
   'Memory Configuration',
   'Workflow Steps',
-  'Tools & Guardrails'
+  'Tools & Guardrails',
+  'Performance & A2A Settings'
 ];
 
 export const StrandsWorkflowDialogContent: React.FC<StrandsWorkflowDialogContentProps> = ({
@@ -59,6 +68,13 @@ export const StrandsWorkflowDialogContent: React.FC<StrandsWorkflowDialogContent
   handleWorkflowStepAdd,
   handleWorkflowStepRemove,
   handleWorkflowStepUpdate,
+  // A2A Configuration Handlers
+  handleA2AToggle,
+  handleA2ACollaborationModeChange,
+  handleA2AProtocolChange,
+  handleA2ADiscoveryScopeChange,
+  handleA2ACustomAgentsChange,
+  handleA2ASettingToggle,
   StrandsModels,
   strandsTools,
   reasoningPatterns,
@@ -95,6 +111,13 @@ export const StrandsWorkflowDialogContent: React.FC<StrandsWorkflowDialogContent
           handleWorkflowStepAdd={handleWorkflowStepAdd}
           handleWorkflowStepRemove={handleWorkflowStepRemove}
           handleWorkflowStepUpdate={handleWorkflowStepUpdate}
+          // A2A Configuration Handlers
+          handleA2AToggle={handleA2AToggle}
+          handleA2ACollaborationModeChange={handleA2ACollaborationModeChange}
+          handleA2AProtocolChange={handleA2AProtocolChange}
+          handleA2ADiscoveryScopeChange={handleA2ADiscoveryScopeChange}
+          handleA2ACustomAgentsChange={handleA2ACustomAgentsChange}
+          handleA2ASettingToggle={handleA2ASettingToggle}
           StrandsModels={StrandsModels}
           strandsTools={strandsTools}
           reasoningPatterns={reasoningPatterns}

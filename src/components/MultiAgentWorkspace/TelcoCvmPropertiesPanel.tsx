@@ -122,15 +122,7 @@ const agentIcons: Record<string, any> = {
   'candidate-database': Users,
   'skills-matcher': Target,
   'document-processor': FileText,
-  // Recruitment agent types
-  'talent-sourcing-specialist': Search,
-  'ai-screening-specialist': UserCheck,
-  'interview-coordination-specialist': MessageSquare,
-  'onboarding-specialist': UserCheck,
-  'career-development-specialist': TrendingUp,
   'performance-analytics-specialist': BarChart3,
-  'talent-orchestrator': Bot,
-  'skills-matcher': Target,
   'culture-fit-analyzer': Shield,
   'compensation-advisor': DollarSign,
   'default': Bot
@@ -198,15 +190,7 @@ export const TelcoCvmPropertiesPanel: React.FC<TelcoCvmPropertiesPanelProps> = (
       'candidate-database': 'You are a Candidate Database managing candidate profiles and application data. Maintain comprehensive candidate records and enable efficient talent pool management.',
       'skills-matcher': 'You are a Skills Matching Engine matching candidate skills with job requirements. Use advanced algorithms to identify best-fit candidates for specific roles.',
       'document-processor': 'You are a Document Processor handling resumes, applications, and HR documents. Extract key information, standardize formats, and enable efficient document management.',
-      // Recruitment agent prompts
-      'talent-sourcing-specialist': 'You are a Talent Sourcing Specialist identifying and sourcing top talent from multiple channels. Use advanced search techniques, social media, and professional networks to find qualified candidates.',
-      'ai-screening-specialist': 'You are an AI Screening Specialist performing automated resume screening and candidate evaluation. Analyze qualifications, experience, and skills to identify the best matches for positions.',
-      'interview-coordination-specialist': 'You are an Interview Coordination Specialist managing interview scheduling and coordination. Optimize schedules, coordinate with multiple stakeholders, and ensure smooth interview processes.',
-      'onboarding-specialist': 'You are an Onboarding Specialist streamlining new employee onboarding processes. Create personalized onboarding experiences and ensure successful integration into the organization.',
-      'career-development-specialist': 'You are a Career Development Specialist managing career paths and skill development. Design personalized development plans and track employee growth and progression.',
       'performance-analytics-specialist': 'You are a Performance Analytics Specialist analyzing employee performance and engagement. Track metrics, identify trends, and provide insights for talent management decisions.',
-      'talent-orchestrator': 'You are a Talent Management Orchestrator coordinating all talent management and recruitment tasks. Manage workflow between specialists and ensure comprehensive talent lifecycle management.',
-      'skills-matcher': 'You are a Skills Matching Engine that matches candidate skills with job requirements. Analyze skill gaps, competency levels, and role requirements for optimal candidate-job fit.',
       'culture-fit-analyzer': 'You are a Culture Fit Analyzer evaluating cultural alignment and team fit. Assess personality traits, values, and work styles to ensure cultural compatibility.',
       'compensation-advisor': 'You are a Compensation Advisor providing market-based compensation recommendations. Analyze market data, internal equity, and performance metrics to suggest competitive compensation packages.'
     };
@@ -253,15 +237,7 @@ export const TelcoCvmPropertiesPanel: React.FC<TelcoCvmPropertiesPanelProps> = (
       'candidate-database': ['Profile Management', 'Data Storage', 'Search & Filter', 'Record Maintenance'],
       'skills-matcher': ['Skills Analysis', 'Job Matching', 'Compatibility Scoring', 'Recommendation Engine'],
       'document-processor': ['Document Parser', 'Data Extraction', 'Format Standardization', 'Content Analysis'],
-      // Recruitment agent tools
-      'talent-sourcing-specialist': ['LinkedIn Sourcing', 'Boolean Search', 'Social Media Mining', 'Talent Database'],
-      'ai-screening-specialist': ['Resume Parser', 'Skills Analyzer', 'Qualification Matcher', 'Bias Detection'],
-      'interview-coordination-specialist': ['Calendar Integration', 'Scheduling Optimizer', 'Interview Tracker', 'Feedback Collector'],
-      'onboarding-specialist': ['Onboarding Workflows', 'Document Manager', 'Training Scheduler', 'Progress Tracker'],
-      'career-development-specialist': ['Skills Assessment', 'Career Planner', 'Learning Paths', 'Goal Tracker'],
       'performance-analytics-specialist': ['Performance Metrics', 'Engagement Surveys', 'Analytics Dashboard', 'Trend Analysis'],
-      'talent-orchestrator': ['Workflow Coordination', 'Task Management', 'Process Optimization', 'Quality Control'],
-      'skills-matcher': ['Skills Database', 'Competency Mapping', 'Gap Analysis', 'Match Scoring'],
       'culture-fit-analyzer': ['Personality Assessment', 'Culture Mapping', 'Team Dynamics', 'Fit Scoring'],
       'compensation-advisor': ['Market Data', 'Salary Benchmarking', 'Equity Analysis', 'Compensation Modeling']
     };
@@ -308,15 +284,7 @@ export const TelcoCvmPropertiesPanel: React.FC<TelcoCvmPropertiesPanelProps> = (
       'candidate-database': ['Data Privacy', 'Information Security', 'Access Control', 'Record Integrity'],
       'skills-matcher': ['Matching Fairness', 'Algorithm Transparency', 'Bias Prevention', 'Scoring Ethics'],
       'document-processor': ['Document Privacy', 'Processing Security', 'Data Accuracy', 'Content Protection'],
-      // Recruitment agent guardrails
-      'talent-sourcing-specialist': ['Privacy Compliance', 'GDPR Adherence', 'Sourcing Ethics', 'Data Protection'],
-      'ai-screening-specialist': ['Bias Prevention', 'Fair Assessment', 'Equal Opportunity', 'Discrimination Protection'],
-      'interview-coordination-specialist': ['Scheduling Fairness', 'Process Consistency', 'Candidate Experience', 'Time Management'],
-      'onboarding-specialist': ['Process Standardization', 'Compliance Tracking', 'Experience Quality', 'Documentation Standards'],
-      'career-development-specialist': ['Development Equity', 'Growth Opportunities', 'Skill Validation', 'Progress Fairness'],
       'performance-analytics-specialist': ['Performance Fairness', 'Metric Accuracy', 'Privacy Protection', 'Bias Monitoring'],
-      'talent-orchestrator': ['Process Integrity', 'Quality Assurance', 'Workflow Consistency', 'Compliance Oversight'],
-      'skills-matcher': ['Matching Accuracy', 'Skill Validation', 'Bias Prevention', 'Fair Assessment'],
       'culture-fit-analyzer': ['Cultural Sensitivity', 'Bias Prevention', 'Diversity Inclusion', 'Fair Evaluation'],
       'compensation-advisor': ['Pay Equity', 'Market Fairness', 'Compensation Transparency', 'Legal Compliance']
     };

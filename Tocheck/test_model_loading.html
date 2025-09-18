@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Model Loading</title>
+</head>
+<body>
+    <h1>Testing Model Loading</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testModelLoading() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test backend health
+                console.log('Testing backend health...');
+                const healthResponse = await fetch('http://localhost:8000/health');
+                const healthData = await healthResponse.json();
+                results.innerHTML += `<p>✅ Backend Health: ${JSON.stringify(healthData)}</p>`;
+                
+                // Test Ollama models endpoint
+                console.log('Testing Ollama models endpoint...');
+                const modelsResponse = await fetch('http://localhost:8000/api/ollama/models');
+                const modelsData = await modelsResponse.json();
+                results.innerHTML += `<p>✅ Models Response: Found ${modelsData.models?.length || 0} models</p>`;
+                
+                if (modelsData.models) {
+                    const modelNames = modelsData.models.map(m => m.name);
+                    results.innerHTML += `<p>📋 Model Names: ${modelNames.join(', ')}</p>`;
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error('Test failed:', error);
+            }
+        }
+        
+        // Run test when page loads
+        testModelLoading();
+    </script>
+</body>
+</html>

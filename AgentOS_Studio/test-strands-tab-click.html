@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Strands Tab Click</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+        .success { color: #4ade80; }
+        .error { color: #ef4444; }
+        .info { color: #60a5fa; }
+        button { padding: 8px 16px; margin: 5px; background: #374151; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Strands Tab Click Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Navigate to <strong>/agent-command</strong> in your browser</li>
+            <li>Open browser developer tools (F12)</li>
+            <li>Copy and paste the script below into the console</li>
+            <li>Press Enter to run the test</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Script (Copy this to browser console):</h3>
+        <textarea readonly style="width: 100%; height: 300px; background: #111; color: #0f0; font-family: monospace; padding: 10px;">
+// 🔍 Strands Tab Click Test Script
+console.log('🚀 Starting Strands Tab Test...');
+
+// Test 1: Check if we're on the right page
+const isCommandCentre = window.location.pathname.includes('agent-command');
+console.log('✅ On Command Centre page:', isCommandCentre);
+
+// Test 2: Find the Strands button
+const strandsButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+    btn.textContent && btn.textContent.toLowerCase().includes('strands')
+);
+
+console.log('🔍 Found Strands buttons:', strandsButtons.length);
+strandsButtons.forEach((btn, i) => {
+    console.log(`Button ${i + 1}:`, {
+        text: btn.textContent?.trim(),
+        classes: btn.className,
+        disabled: btn.disabled,
+        onclick: btn.onclick ? 'Has onclick' : 'No onclick'
+    });
+});
+
+if (strandsButtons.length > 0) {
+    const strandsBtn = strandsButtons[0];
+    
+    // Test 3: Check button state before click
+    console.log('🔍 Button state before click:', {
+        isActive: strandsBtn.className.includes('bg-gradient-to-r'),
+        isDisabled: strandsBtn.disabled
+    });
+    
+    // Test 4: Try clicking the button
+    console.log('🖱️ Clicking Strands button...');
+    strandsBtn.click();
+    
+    // Test 5: Check for content after click (wait a bit)
+    setTimeout(() => {
+        console.log('🔍 Checking for Strands content...');
+        
+        // Look for success message
+        const successMsg = Array.from(document.querySelectorAll('*')).find(el => 
+            el.textContent && el.textContent.includes('Strands Intelligence Traceability')
+        );
+        
+        if (successMsg) {
+            console.log('✅ SUCCESS: Strands content found!', successMsg);
+        } else {
+            console.log('❌ FAILED: No Strands content found');
+            
+            // Check what content is actually showing
+            const activeContent = document.querySelector('[class*="space-y-6"], [class*="glass-panel"]');
+            if (activeContent) {
+                console.log('🔍 Current active content:', activeContent.textContent?.substring(0, 200) + '...');
+            }
+        }
+        
+        // Check button state after click
+        console.log('🔍 Button state after click:', {
+            isActive: strandsBtn.className.includes('bg-gradient-to-r'),
+            text: strandsBtn.textContent?.trim()
+        });
+        
+    }, 1000);
+    
+} else {
+    console.log('❌ No Strands button found!');
+    
+    // List all available buttons
+    const allButtons = Array.from(document.querySelectorAll('button'));
+    console.log('🔍 All buttons found:', allButtons.map(btn => btn.textContent?.trim()));
+}
+
+console.log('🏁 Test script completed. Check results above.');
+        </textarea>
+    </div>
+
+    <div class="test-section">
+        <h3>Expected Results:</h3>
+        <ul>
+            <li class="success">✅ Should find 1 Strands button</li>
+            <li class="success">✅ Button should be clickable (not disabled)</li>
+            <li class="success">✅ After click, should find "Strands Intelligence Traceability" text</li>
+            <li class="success">✅ Button should show active state (gradient background)</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h3>If Test Fails:</h3>
+        <ul>
+            <li class="error">❌ No button found = Import/export issue</li>
+            <li class="error">❌ Button found but no content = Component error</li>
+            <li class="error">❌ Button not clickable = Event handler issue</li>
+        </ul>
+    </div>
+
+    <button onclick="window.open('/agent-command', '_blank')">🚀 Open Command Centre</button>
+</body>
+</html>

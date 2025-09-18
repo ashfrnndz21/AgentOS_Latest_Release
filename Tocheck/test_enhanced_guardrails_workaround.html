@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Guardrails Workaround Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">Enhanced Guardrails Workaround Test</h1>
+        
+        <div class="bg-red-800/20 border border-red-600 p-6 rounded-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-red-400">🚨 Backend Limitation Identified</h2>
+            <div class="space-y-3 text-gray-300">
+                <p><strong>Issue:</strong> The backend is not saving or returning enhanced guardrails data.</p>
+                <p><strong>Root Cause:</strong> Backend API doesn't support the enhancedGuardrails field.</p>
+                <p><strong>Impact:</strong> Enhanced guardrails configurations are lost after agent creation.</p>
+            </div>
+        </div>
+        
+        <div class="bg-blue-800/20 border border-blue-600 p-6 rounded-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">🔧 Workaround Implemented</h2>
+            <div class="space-y-3 text-gray-300">
+                <p><strong>Solution:</strong> Frontend-only storage of enhanced guardrails data.</p>
+                <p><strong>Method:</strong> Separate localStorage key for enhanced guardrails.</p>
+                <p><strong>Storage Key:</strong> <code class="bg-gray-700 px-2 py-1 rounded">ollama-enhanced-guardrails</code></p>
+                <p><strong>Data Flow:</strong></p>
+                <ol class="list-decimal list-inside ml-4 space-y-1">
+                    <li>Enhanced guardrails saved to separate localStorage during creation</li>
+                    <li>Basic agent data saved to backend (without enhanced guardrails)</li>
+                    <li>When loading agents, enhanced guardrails merged from localStorage</li>
+                    <li>Agent Configuration dialog displays complete data</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Test Instructions -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">📋 Test Instructions</h2>
+                <div class="space-y-4 text-gray-300">
+                    <p><strong>Step 1:</strong> Create a new agent with enhanced guardrails</p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Go to Command Centre → Create Agent</li>
+                        <li>Fill in basic information</li>
+                        <li>Go to Guardrails tab</li>
+                        <li>Enable content filters</li>
+                        <li>Add blocked keywords: "spam", "scam", "fraud"</li>
+                        <li>Add blocked phrases: "click here now"</li>
+                        <li>Create a custom rule</li>
+                        <li>Save the agent</li>
+                    </ul>
+                    
+                    <p><strong>Step 2:</strong> Verify workaround is working</p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Open browser DevTools (F12)</li>
+                        <li>Go to Application → Local Storage</li>
+                        <li>Look for "ollama-enhanced-guardrails" key</li>
+                        <li>Verify your agent ID and data are stored</li>
+                    </ul>
+                    
+                    <p><strong>Step 3:</strong> Test configuration display</p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Go to Ollama Agent Management</li>
+                        <li>Click on your agent</li>
+                        <li>Go to Guardrails tab</li>
+                        <li>Verify enhanced guardrails are displayed</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Expected Results -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">✅ Expected Results</h2>
+                <div class="space-y-4 text-gray-300">
+                    <div>
+                        <h3 class="text-lg font-medium mb-2 text-green-400">LocalStorage Check</h3>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Key: "ollama-enhanced-guardrails" exists</li>
+                            <li>Value: JSON object with agent IDs as keys</li>
+                            <li>Your agent ID present with full enhanced data</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium mb-2 text-blue-400">Configuration Dialog</h3>
+                        <ul class="list-disc list-inside ml-4 space-y-1">
+                            <li>Debug info shows "Enhanced as property: Yes"</li>
+                            <li>Enhanced Guardrails section visible</li>
+                            <li>Blocked keywords displayed as red badges</li>
+                            <li>Blocked phrases displayed as red badges</li>
+                            <li>Custom rules with descriptions shown</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Workaround Details -->
+        <div class="mt-8 bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">🔄 Workaround Technical Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-purple-400">Storage Methods</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>• <code>storeEnhancedGuardrails()</code> - Saves to localStorage</li>
+                        <li>• <code>loadEnhancedGuardrails()</code> - Loads and merges data</li>
+                        <li>• Separate storage key prevents conflicts</li>
+                        <li>• Automatic merging on agent load</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-orange-400">Data Flow</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>• Creation: Enhanced data → localStorage</li>
+                        <li>• Backend: Basic agent data only</li>
+                        <li>• Loading: Merge localStorage data</li>
+                        <li>• Display: Complete enhanced data</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Limitations -->
+        <div class="mt-8 bg-yellow-800/20 border border-yellow-600 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4 text-yellow-400">⚠️ Workaround Limitations</h2>
+            <div class="space-y-3 text-gray-300">
+                <p><strong>Browser-Specific:</strong> Enhanced guardrails only available in the browser where agent was created.</p>
+                <p><strong>No Server Sync:</strong> Enhanced guardrails won't sync across different browsers/devices.</p>
+                <p><strong>Manual Backup:</strong> Enhanced guardrails not included in server-side backups.</p>
+                <p><strong>Temporary Solution:</strong> This is a workaround until backend support is added.</p>
+            </div>
+        </div>
+        
+        <!-- Future Solution -->
+        <div class="mt-8 bg-green-800/20 border border-green-600 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4 text-green-400">🚀 Future Backend Solution</h2>
+            <div class="space-y-3 text-gray-300">
+                <p><strong>Backend Updates Needed:</strong></p>
+                <ol class="list-decimal list-inside ml-4 space-y-2">
+                    <li>Add <code>enhanced_guardrails</code> field to agent database schema</li>
+                    <li>Update agent creation API to accept and store enhanced guardrails</li>
+                    <li>Update agent retrieval API to return enhanced guardrails</li>
+                    <li>Add migration script to preserve existing enhanced guardrails</li>
+                </ol>
+                <p class="mt-4"><strong>When backend is updated:</strong> The workaround can be removed and data will sync properly.</p>
+            </div>
+        </div>
+        
+        <!-- Debug Commands -->
+        <div class="mt-8 bg-gray-800 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">🐛 Debug Commands</h2>
+            <div class="bg-gray-700 p-4 rounded">
+                <p class="text-gray-300 mb-2">Open browser console and run these commands:</p>
+                <div class="space-y-2 text-sm font-mono">
+                    <div><span class="text-blue-400">// Check enhanced guardrails storage</span></div>
+                    <div><span class="text-green-400">localStorage.getItem('ollama-enhanced-guardrails')</span></div>
+                    
+                    <div class="mt-3"><span class="text-blue-400">// Check regular agent storage</span></div>
+                    <div><span class="text-green-400">localStorage.getItem('ollama-agents')</span></div>
+                    
+                    <div class="mt-3"><span class="text-blue-400">// Get all agents with enhanced data</span></div>
+                    <div><span class="text-green-400">ollamaAgentService.getAllAgents()</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

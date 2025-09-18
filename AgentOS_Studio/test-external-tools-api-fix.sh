@@ -1,0 +1,46 @@
+#!/bin/bash
+
+echo "🔧 Testing External Tools API Key Requirement Fix"
+echo "================================================="
+
+echo ""
+echo "✅ Issue Fixed:"
+echo "- Property name mismatch: 'requiresApiKey' vs 'requiresApi'"
+echo "- Updated StrandsAgentPalette.tsx to use correct property name"
+
+echo ""
+echo "🎯 Expected Results After Fix:"
+echo "External Tools should now show:"
+echo "- Tavily Search: API Key Required ⚠️"
+echo "- Exa Search: API Key Required ⚠️"
+echo "- Mem0 Memory: API Key Required ⚠️"
+echo "- Agent Core Memory: API Key Required ⚠️"
+echo "- Slack Integration: API Key Required ⚠️"
+echo "- Email Sender: API Key Required ⚠️"
+echo "- AWS Services: API Key Required ⚠️"
+echo "- Text-to-Speech: API Key Required ⚠️"
+echo "- Image Generator: API Key Required ⚠️"
+echo "- Analytics Tracker: API Key Required ⚠️"
+
+echo ""
+echo "🧪 Test Instructions:"
+echo "1. Start the application: npm run dev"
+echo "2. Navigate to Multi-Agent Workspace"
+echo "3. Click on 'External' tab in Agent Palette"
+echo "4. Verify all external tools show 'API Key: Required'"
+echo "5. Verify yellow key icons appear next to tool names"
+
+echo ""
+echo "📋 Files Modified:"
+echo "- src/components/MultiAgentWorkspace/StrandsAgentPalette.tsx"
+echo "  * Fixed: tool.requiresApiKey → tool.requiresApi"
+echo "  * Fixed: Icon condition for API key requirement"
+
+echo ""
+echo "🔍 Root Cause:"
+echo "The useStrandsNativeTools hook defines external tools with 'requiresApi: true'"
+echo "But the component was checking for 'requiresApiKey' property"
+echo "This mismatch caused all external tools to show 'Not Required'"
+
+echo ""
+echo "✨ External Tools API Key Fix Complete!"

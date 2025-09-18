@@ -3,6 +3,7 @@ export interface StrandsWorkflowFormValues {
   description: string;
   model: string;
   provider: 'bedrock' | 'openai' | 'anthropic';
+  a2a_config: A2AConfiguration;
   reasoning_patterns: {
     chain_of_thought: boolean;
     tree_of_thought: boolean;
@@ -91,4 +92,65 @@ export interface MemoryType {
   persistence: 'session' | 'permanent';
   retrieval_methods: string[];
   consolidation_support: boolean;
+}
+
+// A2A Configuration Types
+export interface A2AConfiguration {
+  enabled: boolean;
+  collaboration_mode: 'orchestrator' | 'participant' | 'both';
+  max_concurrent_agents: number;
+  communication_protocol: 'websocket' | 'rest' | 'both';
+  auto_registration: boolean;
+  discovery_scope: 'local' | 'global' | 'custom';
+  custom_agents: string[];
+  conversation_tracing: boolean;
+  real_time_monitoring: boolean;
+}
+
+export interface A2AAgent {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive' | 'busy' | 'error';
+  capabilities: string[];
+  last_seen: string;
+  port: number;
+  collaboration_mode: 'orchestrator' | 'participant' | 'both';
+}
+
+// Conversation Tracing Types
+export interface A2AConversationTrace {
+  id: string;
+  session_id: string;
+  user_query: string;
+  agents_involved: string[];
+  conversation_flow: ConversationStep[];
+  final_output: string;
+  timestamp: string;
+  duration_ms: number;
+  success: boolean;
+}
+
+export interface ConversationStep {
+  id: string;
+  agent_id: string;
+  agent_name: string;
+  step_type: 'reasoning' | 'tool_use' | 'memory_retrieval' | 'agent_communication' | 'validation' | 'output_generation';
+  input: string;
+  output: string;
+  reasoning: string;
+  tools_used: string[];
+  memory_accessed: string[];
+  timestamp: string;
+  duration_ms: number;
+  parent_step_id?: string;
+  child_step_ids: string[];
+}
+
+export interface A2AConversationUIProps {
+  conversationTrace: A2AConversationTrace | null;
+  isLive: boolean;
+  onAgentClick: (agentId: string) => void;
+  onStepClick: (stepId: string) => void;
+  selectedStep: string | null;
+  selectedAgent: string | null;
 }

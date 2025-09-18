@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Agent Chat Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { margin: 5px; padding: 10px 15px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>Agent Chat Frontend Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Agent Endpoint</h2>
+        <button onclick="testAgents()">Load Document-Ready Agents</button>
+        <div id="agents-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Frontend Component Check</h2>
+        <p>Check if the AgentDocumentChat component is loaded in the Document Workspace:</p>
+        <ol>
+            <li>Go to the Document Chat tab</li>
+            <li>Look for "Chat Mode" selection with "Direct LLM" and "Agent Chat" buttons</li>
+            <li>If you see agent selection dropdown, the component is loaded</li>
+            <li>If not, there might be a compilation or import issue</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Browser Console Check</h2>
+        <p>Open browser developer tools (F12) and check for:</p>
+        <ul>
+            <li>JavaScript errors in Console tab</li>
+            <li>Failed network requests in Network tab</li>
+            <li>React component errors</li>
+        </ul>
+        <button onclick="checkConsole()">Log Test Message</button>
+    </div>
+
+    <script>
+        async function testAgents() {
+            const resultDiv = document.getElementById('agents-result');
+            resultDiv.innerHTML = '<p>🔍 Loading agents...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/agents/document-ready');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>✅ Agents Loaded Successfully</h3>
+                            <p><strong>Total Agents:</strong> ${data.total}</p>
+                            <p><strong>Predefined:</strong> ${data.predefined}</p>
+                            <p><strong>User Created:</strong> ${data.user_created}</p>
+                            <h4>Available Agents:</h4>
+                            <ul>
+                                ${data.agents.map(agent => `
+                                    <li><strong>${agent.name}</strong> - ${agent.role} (${agent.model})</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="result">❌ Error: ${data.detail || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+        
+        function checkConsole() {
+            console.log('🧪 Agent Chat Frontend Test - Console Check');
+            console.log('✅ If you see this message, JavaScript is working');
+            console.log('🔍 Check for any React/TypeScript errors above this message');
+            alert('Check the browser console (F12) for test messages and any errors');
+        }
+        
+        // Auto-load agents on page load
+        window.onload = function() {
+            testAgents();
+        };
+    </script>
+</body>
+</html>

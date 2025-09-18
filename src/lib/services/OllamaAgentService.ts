@@ -12,6 +12,7 @@ export interface OllamaAgentConfig {
   temperature: number;
   maxTokens: number;
   tools: string[];
+  sdkType?: 'ollama' | 'strands-sdk';
   memory: {
     shortTerm: boolean;
     longTerm: boolean;

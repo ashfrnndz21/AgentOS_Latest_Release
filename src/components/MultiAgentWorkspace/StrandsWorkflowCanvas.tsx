@@ -33,6 +33,7 @@ import StrandsGuardrailNode from './nodes/StrandsGuardrailNode';
 import StrandsAggregatorNode from './nodes/StrandsAggregatorNode';
 import StrandsMonitorNode from './nodes/StrandsMonitorNode';
 import { ChatInterfaceNode } from './nodes/ChatInterfaceNode';
+import { A2AConnectionNode } from './nodes/A2AConnectionNode';
 
 // Custom edge components
 import StrandsEdge from './edges/StrandsEdge';
@@ -56,6 +57,7 @@ const nodeTypes = {
   'strands-aggregator': StrandsAggregatorNode,
   'strands-monitor': StrandsMonitorNode,
   'strands-chat-interface': ChatInterfaceNode,
+  'a2a-connection': A2AConnectionNode,
 };
 
 // Edge types mapping
@@ -225,6 +227,37 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
         const agent = dragData.agent;
         newNode = orchestrator.createAgentNode(agent, position);
         console.log('🤖 Created Strands agent node:', newNode);
+      } else if (dragData.type === 'strands-sdk-agent') {
+        // Handle Strands SDK agent drop
+        console.log('🎯 Canvas: Received Strands SDK agent drop:', dragData.agent.name);
+        const agent = dragData.agent;
+        
+        // Convert StrandsSdkAgent to PaletteAgent format
+        const paletteAgent = {
+          id: agent.id || `strands-sdk-${Date.now()}`,
+          name: agent.name,
+          role: 'Strands SDK Agent',
+          description: agent.description,
+          model: agent.model_id,
+          systemPrompt: agent.system_prompt || 'You are a helpful assistant.',
+          temperature: 0.7,
+          maxTokens: 1000,
+          capabilities: agent.tools || [],
+          created_at: agent.created_at || new Date().toISOString(),
+          icon: '🤖',
+          guardrails: true,
+          sdkType: 'strands-sdk',
+          sdkPowered: true,
+          tools: agent.tools || [],
+          host: agent.host,
+          model_provider: agent.model_provider,
+          sdk_config: agent.sdk_config,
+          sdk_version: agent.sdk_version,
+          status: agent.status || 'active'
+        };
+        
+        newNode = orchestrator.createAgentNode(paletteAgent, position);
+        console.log('🤖 Created Strands SDK agent node:', newNode);
       } else if (dragData.type === 'ollama-agent') {
         // Handle Ollama agent drop (convert to Strands format)
         const agent = dragData.agent;
@@ -277,8 +310,32 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
       } else if (dragData.type === 'strands-tool') {
         // Handle Strands native tool drop
         const tool = dragData.tool;
-        newNode = orchestrator.createStrandsToolNode(tool, position);
-        console.log('🔧 Created Strands tool node:', newNode);
+        
+        // Check if it's an A2A tool
+        if (tool.isA2ATool) {
+          // Create A2A connection node
+          newNode = {
+            id: `a2a-conn-${Date.now()}`,
+            type: 'a2a-connection',
+            position,
+            data: {
+              id: `a2a-conn-${Date.now()}`,
+              fromAgentId: '',
+              toAgentId: '',
+              messageTemplate: '',
+              connectionType: tool.id === 'a2a_send_message' ? 'message' : 
+                            tool.id === 'agent_handoff' ? 'handoff' : 
+                            tool.id === 'coordinate_agents' ? 'coordinate' : 'message',
+              isConfigured: false,
+              isActive: false
+            }
+          };
+          console.log('🔗 Created A2A connection node:', newNode);
+        } else {
+          // Regular tool node
+          newNode = orchestrator.createStrandsToolNode(tool, position);
+          console.log('🔧 Created Strands tool node:', newNode);
+        }
       } else if (dragData.type === 'external-tool') {
         // Handle external tool drop
         const tool = dragData.tool;

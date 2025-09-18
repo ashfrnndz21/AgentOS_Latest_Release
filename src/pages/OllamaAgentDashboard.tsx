@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { 
   Bot, 
   Plus, 
@@ -17,49 +18,81 @@ import {
   RefreshCw,
   AlertCircle,
   CheckCircle,
-  Loader2,
-  Settings
+  Settings,
+  Sparkles,
+  Info,
+  Eye,
+  Wrench,
+  Network
 } from 'lucide-react';
 import { ollamaAgentService, OllamaAgentConfig } from '@/lib/services/OllamaAgentService';
-import { ollamaService } from '@/lib/services/ollamaService';
+import { ollamaService } from '@/lib/services/OllamaService';
 import { useToast } from '@/hooks/use-toast';
 import { OllamaAgentDialog } from '@/components/CommandCentre/CreateAgent/OllamaAgentDialog';
 import { OllamaAgentChat } from '@/components/OllamaAgentChat';
 import { AgentConfigDialog } from '@/components/AgentConfigDialog';
+import { StrandsSdkAgentDialog } from '@/components/MultiAgentWorkspace/StrandsSdkAgentDialog';
+import { strandsSdkService, StrandsSdkAgent } from '@/lib/services/StrandsSdkService';
+import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
+import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
+import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
+import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
+import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
 export const OllamaAgentDashboard: React.FC = () => {
   const [agents, setAgents] = useState<OllamaAgentConfig[]>([]);
+  const [strandsAgents, setStrandsAgents] = useState<StrandsSdkAgent[]>([]);
+  const [a2aAgents, setA2aAgents] = useState<StrandsSdkAgent[]>([]);
+  const [a2aStatuses, setA2aStatuses] = useState<Record<string, A2AStatus>>({});
   const [selectedAgent, setSelectedAgent] = useState<OllamaAgentConfig | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showStrandsSdkDialog, setShowStrandsSdkDialog] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [chatAgent, setChatAgent] = useState<OllamaAgentConfig | null>(null);
+  const [showStrandsChat, setShowStrandsChat] = useState(false);
+  const [strandsChatAgent, setStrandsChatAgent] = useState<StrandsSdkAgent | null>(null);
+  const [analyticsAgent, setAnalyticsAgent] = useState<{ id: string; name: string } | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [healthStatus, setHealthStatus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState<string | null>(null);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [configAgent, setConfigAgent] = useState<OllamaAgentConfig | null>(null);
+  const [showA2ARegistrationDialog, setShowA2ARegistrationDialog] = useState(false);
+  const [a2aRegistrationAgent, setA2aRegistrationAgent] = useState<StrandsSdkAgent | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load agents immediately (synchronous)
-    loadAgents();
+    // Load all types of agents and health status
+    const loadAllData = async () => {
+      await Promise.all([
+        loadAgents(),
+        loadStrandsAgents(),
+        loadA2AAgents()
+      ]);
+    };
     
-    // Load health status in background (non-blocking)
-    const healthTimeout = setTimeout(() => {
-      loadHealthStatus();
-    }, 100);
+    loadAllData();
     
     // Refresh every 30 seconds
     const interval = setInterval(() => {
       loadAgents();
+      loadStrandsAgents();
+      loadA2AAgents();
       loadHealthStatus();
     }, 30000);
 
     return () => {
-      clearTimeout(healthTimeout);
       clearInterval(interval);
     };
   }, []); // Empty dependency array - only run once on mount
+
+  // Load health status when agents change
+  useEffect(() => {
+    if (agents.length > 0 || strandsAgents.length > 0) {
+      loadHealthStatus();
+    }
+  }, [agents, strandsAgents]);
 
   const loadAgents = async () => {
     try {
@@ -134,10 +167,86 @@ export const OllamaAgentDashboard: React.FC = () => {
     }
   };
 
+  const loadA2AAgents = async () => {
+    try {
+      // Load A2A-enabled Strands agents
+      const response = await fetch('http://localhost:5006/api/strands-sdk/agents');
+      if (response.ok) {
+        const data = await response.json();
+        const allStrandsAgents = data.agents || [];
+        
+        // Convert to StrandsSdkAgent format
+        const convertedAgents = allStrandsAgents.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          description: agent.description || '',
+          model: agent.model_id || agent.model || 'llama3.2:latest',
+          systemPrompt: agent.system_prompt || '',
+          tools: agent.tools || [],
+          temperature: agent.sdk_config?.ollama_config?.temperature || 0.7,
+          maxTokens: agent.sdk_config?.ollama_config?.max_tokens || 1000,
+          status: agent.status || 'active',
+          createdAt: agent.created_at || new Date().toISOString(),
+          updatedAt: agent.updated_at || new Date().toISOString(),
+          recent_executions: agent.recent_executions || []
+        }));
+        
+        setA2aAgents(convertedAgents);
+        
+        // Load A2A statuses for each agent
+        const statusPromises = convertedAgents.map(async (agent) => {
+          try {
+            const a2aStatus = await a2aService.getAgentA2AStatus(agent.id!);
+            return { agentId: agent.id!, status: a2aStatus };
+          } catch (error) {
+            console.error(`Failed to load A2A status for agent ${agent.id}:`, error);
+            return { agentId: agent.id!, status: { registered: false, a2a_status: 'error' } };
+          }
+        });
+        
+        const statuses = await Promise.all(statusPromises);
+        const statusMap = statuses.reduce((acc, { agentId, status }) => {
+          acc[agentId] = status;
+          return acc;
+        }, {} as Record<string, A2AStatus>);
+        
+        setA2aStatuses(statusMap);
+        console.log('[Dashboard] Loaded A2A agents:', convertedAgents.length);
+      } else {
+        console.error('[Dashboard] Failed to fetch A2A agents:', response.status);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Failed to load A2A agents:', error);
+    }
+  };
+
   const loadHealthStatus = async () => {
     try {
       const status = await ollamaAgentService.healthCheck();
-      setHealthStatus(status);
+      
+      // Use the actual loaded agents count - a2aAgents are the same as strandsAgents, so don't double count
+      const totalAgentCount = agents.length + strandsAgents.length;
+      
+      // Calculate total executions from all sources
+      const strandsExecutions = strandsAgents.reduce((sum, agent) => sum + ((agent as any).recent_executions?.length || 0), 0);
+      const totalExecutions = status.totalExecutions + strandsExecutions;
+      
+      console.log('[Health Status] Debug counts:', {
+        ollamaAgents: agents.length,
+        strandsSdkAgents: strandsAgents.length,
+        a2aAgents: a2aAgents.length,
+        totalAgents: totalAgentCount,
+        ollamaExecutions: status.totalExecutions,
+        strandsSdkExecutions: strandsExecutions,
+        totalExecutions: totalExecutions
+      });
+      
+      // Update the health status with combined counts
+      setHealthStatus({
+        ...status,
+        agentCount: totalAgentCount,
+        totalExecutions: totalExecutions
+      });
     } catch (error) {
       console.error('Failed to load health status:', error);
     }
@@ -230,9 +339,126 @@ export const OllamaAgentDashboard: React.FC = () => {
     }
   };
 
+  const loadStrandsAgents = async () => {
+    try {
+      // Direct call to Strands SDK service (bypass proxy)
+      const response = await fetch('http://localhost:5006/api/strands-sdk/agents');
+      if (response.ok) {
+        const data = await response.json();
+        const strandsAgentsList = data.agents || [];
+        
+        // Convert to StrandsSdkAgent format
+        const convertedAgents = strandsAgentsList.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          description: agent.description || '',
+          model: agent.model_id || agent.model || 'llama3.2:latest',
+          systemPrompt: agent.system_prompt || '',
+          tools: agent.tools || [],
+          temperature: agent.sdk_config?.ollama_config?.temperature || 0.7,
+          maxTokens: agent.sdk_config?.ollama_config?.max_tokens || 1000,
+          status: agent.status || 'active',
+          createdAt: agent.created_at || new Date().toISOString(),
+          updatedAt: agent.updated_at || new Date().toISOString(),
+          recent_executions: agent.recent_executions || []
+        }));
+        
+        setStrandsAgents(convertedAgents);
+        console.log('[Dashboard] Loaded Strands SDK agents:', convertedAgents.length);
+      } else {
+        console.error('[Dashboard] Failed to fetch Strands agents:', response.status);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Failed to load Strands agents:', error);
+      // Don't show error toast, just log it
+    }
+  };
+
+
+  const handleStrandsAgentCreated = () => {
+    // Reload all agent lists
+    loadAgents();
+    loadStrandsAgents();
+    loadA2AAgents();
+    toast({
+      title: "Strands Agent Created",
+      description: "Your Strands SDK agent has been created successfully!",
+    });
+  };
+
+  const handleChatWithStrandsAgent = async (agent: StrandsSdkAgent) => {
+    setChatLoading(agent.id!);
+    
+    try {
+      // First check if the Strands SDK service is healthy
+      const healthStatus = await strandsSdkService.checkHealth();
+      
+      if (healthStatus.status !== 'healthy') {
+        throw new Error('Strands SDK service is not available. Please check the service.');
+      }
+
+      // Open the Strands chat panel
+      setStrandsChatAgent(agent);
+      setShowStrandsChat(true);
+      
+      toast({
+        title: "Strands Chat Opened",
+        description: `Ready to chat with ${agent.name} using official Strands SDK`,
+      });
+
+    } catch (error) {
+      console.error('Strands chat failed:', error);
+      toast({
+        title: "Chat Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
+      });
+    } finally {
+      setChatLoading(null);
+    }
+  };
+
+  const handleOpenAnalytics = (agent: StrandsSdkAgent) => {
+    setAnalyticsAgent({ id: agent.id!, name: agent.name });
+    setShowAnalytics(true);
+  };
+
+  const handleDeleteStrandsAgent = async (agentId: string) => {
+    if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
+    
+    try {
+      await strandsSdkService.deleteAgent(agentId);
+      setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
+      toast({
+        title: "Agent Deleted",
+        description: "Strands SDK agent has been removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to delete agent",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleShowConfig = (agent: OllamaAgentConfig) => {
     setConfigAgent(agent);
     setShowConfigDialog(true);
+  };
+
+  const handleRegisterA2A = (agent: StrandsSdkAgent) => {
+    setA2aRegistrationAgent(agent);
+    setShowA2ARegistrationDialog(true);
+  };
+
+  const handleA2ARegistered = () => {
+    // Reload A2A agents and statuses
+    loadA2AAgents();
+    toast({
+      title: "A2A Registration Complete",
+      description: "Agent has been registered for A2A communication!",
+    });
   };
 
   const handleChatWithAgent = async (agent: OllamaAgentConfig) => {
@@ -314,6 +540,10 @@ export const OllamaAgentDashboard: React.FC = () => {
               <Plus size={16} className="mr-2" />
               Create Agent
             </Button>
+            <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+              <Sparkles size={16} className="mr-2" />
+              Create Strands Agent
+            </Button>
           </div>
         </div>
 
@@ -345,7 +575,11 @@ export const OllamaAgentDashboard: React.FC = () => {
           <TabsList className="bg-gray-800">
             <TabsTrigger value="agents" className="data-[state=active]:bg-purple-600">
               <Bot className="h-4 w-4 mr-2" />
-              Agents ({agents.length})
+              Agents ({agents.length + strandsAgents.length})
+            </TabsTrigger>
+            <TabsTrigger value="a2a" className="data-[state=active]:bg-purple-600">
+              <Network className="h-4 w-4 mr-2" />
+              A2A Agents ({a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length})
             </TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -360,7 +594,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
                 <p>Loading agents...</p>
               </div>
-            ) : agents.length === 0 ? (
+            ) : agents.length === 0 && strandsAgents.length === 0 ? (
               <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="text-center py-12">
                   <Bot size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
@@ -368,14 +602,21 @@ export const OllamaAgentDashboard: React.FC = () => {
                   <p className="text-gray-400 mb-6">
                     Create your first Ollama agent to get started with local AI conversations
                   </p>
-                  <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
-                    <Plus size={16} className="mr-2" />
-                    Create Your First Agent
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+                      <Plus size={16} className="mr-2" />
+                      Create Agent
+                    </Button>
+                    <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      <Sparkles size={16} className="mr-2" />
+                      Create Strands Agent
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Legacy Agents */}
                 {agents.map((agent) => {
                   const metrics = ollamaAgentService.getAgentMetrics(agent.id);
                   
@@ -523,6 +764,392 @@ export const OllamaAgentDashboard: React.FC = () => {
                     </Card>
                   );
                 })}
+
+                {/* Strands SDK Agents */}
+                {strandsAgents.map((agent) => (
+                  <Card key={`strands-sdk-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="text-purple-400" size={20} />
+                          {agent.name}
+                          
+                          {/* Configuration Tooltip */}
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-700">
+                                <Info className="h-3 w-3 text-gray-400 hover:text-purple-400" />
+                              </Button>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80 bg-gray-800 border-gray-700 text-white" side="right">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="h-4 w-4 text-purple-400" />
+                                  <h4 className="font-semibold text-purple-300">Agent Configuration</h4>
+                                </div>
+                                
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Model:</span>
+                                    <span className="text-white">{(agent as any).model_id}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Host:</span>
+                                    <span className="text-white">{(agent as any).host}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Temperature:</span>
+                                    <span className="text-white">
+                                      {(() => {
+                                        try {
+                                          const config = JSON.parse((agent as any).sdk_config || '{}');
+                                          return config?.ollama_config?.temperature || 0.7;
+                                        } catch {
+                                          return 0.7;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-400">Max Tokens:</span>
+                                    <span className="text-white">
+                                      {(() => {
+                                        try {
+                                          const config = JSON.parse((agent as any).sdk_config || '{}');
+                                          return config?.ollama_config?.max_tokens || 1000;
+                                        } catch {
+                                          return 1000;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Tools Section */}
+                                  {agent.tools && agent.tools.length > 0 && (
+                                    <>
+                                      <div className="border-t border-gray-600 pt-2 mt-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Wrench className="h-3 w-3 text-purple-400" />
+                                          <span className="text-gray-400 font-medium">Tools ({agent.tools.length})</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                          {agent.tools.map((tool, index) => (
+                                            <Badge key={index} variant="outline" className="text-xs border-purple-400/30 text-purple-300">
+                                              {tool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                  
+                                  {/* System Prompt Preview */}
+                                  {(agent as any).system_prompt && (
+                                    <div className="border-t border-gray-600 pt-2 mt-2">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <MessageSquare className="h-3 w-3 text-purple-400" />
+                                        <span className="text-gray-400 font-medium">System Prompt</span>
+                                      </div>
+                                      <p className="text-xs text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-600 max-h-20 overflow-y-auto">
+                                        {(agent as any).system_prompt.length > 150 
+                                          ? `${(agent as any).system_prompt.substring(0, 150)}...` 
+                                          : (agent as any).system_prompt
+                                        }
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* SDK Info */}
+                                  <div className="border-t border-gray-600 pt-2 mt-2">
+                                    <div className="flex items-center gap-2">
+                                      <Sparkles className="h-3 w-3 text-purple-400" />
+                                      <span className="text-xs text-purple-300">Official Strands SDK Agent</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </CardTitle>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Strands SDK
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardDescription className="text-gray-400">
+                        {agent.description || 'Powered by official Strands SDK'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {/* Configuration Metadata - Same as Legacy Agents */}
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-400">Temperature:</span>
+                            <span className="ml-2 text-white">
+                              {(() => {
+                                try {
+                                  const config = JSON.parse((agent as any).sdk_config || '{}');
+                                  return config?.ollama_config?.temperature || 0.7;
+                                } catch {
+                                  return 0.7;
+                                }
+                              })()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Max Tokens:</span>
+                            <span className="ml-2 text-white">
+                              {(() => {
+                                try {
+                                  const config = JSON.parse((agent as any).sdk_config || '{}');
+                                  return config?.ollama_config?.max_tokens || 1000;
+                                } catch {
+                                  return 1000;
+                                }
+                              })()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Execution Metrics - Same as Legacy Agents */}
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <MessageSquare size={12} className="text-blue-400" />
+                              <span className="text-xs text-gray-400">Chats</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {(agent as any).recent_executions?.length || 0}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Clock size={12} className="text-yellow-400" />
+                              <span className="text-xs text-gray-400">Avg</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {(agent as any).recent_executions?.length > 0 
+                                ? `${((agent as any).recent_executions.reduce((sum: number, exec: any) => sum + (exec.execution_time || 0), 0) / (agent as any).recent_executions.length).toFixed(1)}s`
+                                : '1.0s'
+                              }
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Zap size={12} className="text-green-400" />
+                              <span className="text-xs text-gray-400">Success</span>
+                            </div>
+                            <p className="text-sm font-semibold">
+                              {(agent as any).recent_executions?.length > 0 
+                                ? `${Math.round(((agent as any).recent_executions.filter((exec: any) => exec.success).length / (agent as any).recent_executions.length) * 100)}%`
+                                : '100%'
+                              }
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Model:</span>
+                          <Badge variant="outline" className="text-green-400 border-green-400">
+                            {(agent as any).model_id}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-purple-600 hover:bg-purple-700"
+                            onClick={() => handleChatWithStrandsAgent(agent)}
+                            disabled={chatLoading === agent.id}
+                          >
+                            {chatLoading === agent.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2" />
+                                Starting...
+                              </>
+                            ) : (
+                              <>
+                                <MessageSquare size={14} className="mr-2" />
+                                Chat with Agent
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenAnalytics(agent)}
+                            title="View Analytics"
+                            className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                          >
+                            <BarChart3 size={14} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteStrandsAgent(agent.id!)}
+                            title="Delete Agent"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+              </div>
+            )}
+          </TabsContent>
+
+          {/* A2A Agents Tab */}
+          <TabsContent value="a2a">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
+                <p>Loading A2A agents...</p>
+              </div>
+            ) : a2aAgents.length === 0 ? (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="text-center py-12">
+                  <Network size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">No A2A Agents Available</h3>
+                  <p className="text-gray-400 mb-6">
+                    A2A-enabled agents will appear here when they are created and registered for agent-to-agent communication
+                  </p>
+                  <div className="flex gap-3">
+                    <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      <Sparkles size={16} className="mr-2" />
+                      Create Strands Agent
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {/* Registered A2A Agents */}
+                {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Network className="h-5 w-5 text-green-400" />
+                      Registered A2A Agents ({a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {a2aAgents
+                        .filter(agent => a2aStatuses[agent.id!]?.registered)
+                        .map((agent) => (
+                          <A2AAgentCard
+                            key={`a2a-registered-${agent.id}`}
+                            agent={agent}
+                            onChat={handleChatWithStrandsAgent}
+                            onAnalytics={handleOpenAnalytics}
+                            onDelete={handleDeleteStrandsAgent}
+                            chatLoading={chatLoading}
+                            a2aStatus={a2aStatuses[agent.id!]}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Unregistered Agents */}
+                {a2aAgents.filter(agent => !a2aStatuses[agent.id!]?.registered).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-orange-400" />
+                      Available for A2A Registration ({a2aAgents.filter(agent => !a2aStatuses[agent.id!]?.registered).length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {a2aAgents
+                        .filter(agent => !a2aStatuses[agent.id!]?.registered)
+                        .map((agent) => (
+                          <Card key={`a2a-unregistered-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-orange-500 transition-colors">
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                  <Sparkles className="text-purple-400" size={20} />
+                                  {agent.name}
+                                  <Badge variant="outline" className="border-orange-400 text-orange-400">
+                                    <Network className="h-3 w-3 mr-1" />
+                                    Not Registered
+                                  </Badge>
+                                </CardTitle>
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  Strands SDK
+                                </Badge>
+                              </div>
+                              <CardDescription className="text-gray-400">
+                                {agent.description || 'Powered by official Strands SDK'}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-4">
+                                <div className="bg-orange-900/20 p-3 rounded-lg border border-orange-500/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Network className="h-4 w-4 text-orange-400" />
+                                    <span className="text-sm font-medium text-orange-300">A2A Registration Available</span>
+                                  </div>
+                                  <p className="text-xs text-orange-200 mb-3">
+                                    This agent can be registered for agent-to-agent communication
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleRegisterA2A(agent)}
+                                    className="w-full bg-orange-600 hover:bg-orange-700"
+                                  >
+                                    <Network className="h-3 w-3 mr-2" />
+                                    Register for A2A
+                                  </Button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <span className="text-gray-400">Model:</span>
+                                    <span className="ml-2 text-white">{(agent as any).model_id}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Tools:</span>
+                                    <span className="ml-2 text-white">{agent.tools?.length || 0}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 bg-purple-600 hover:bg-purple-700"
+                                    onClick={() => handleChatWithStrandsAgent(agent)}
+                                    disabled={chatLoading === agent.id}
+                                  >
+                                    {chatLoading === agent.id ? (
+                                      <>
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2" />
+                                        Starting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <MessageSquare size={14} className="mr-2" />
+                                        Chat
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDeleteStrandsAgent(agent.id!)}
+                                    title="Delete Agent"
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
@@ -538,8 +1165,10 @@ export const OllamaAgentDashboard: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{agents.length}</div>
-                  <p className="text-xs text-gray-400">Active local agents</p>
+                  <div className="text-2xl font-bold">{agents.length + strandsAgents.length}</div>
+                  <p className="text-xs text-gray-400">
+                    {agents.length} Legacy + {strandsAgents.length} Strands SDK
+                  </p>
                 </CardContent>
               </Card>
 
@@ -552,7 +1181,11 @@ export const OllamaAgentDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0)}
+                    {(() => {
+                      const legacyTotal = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0);
+                      const strandsTotal = strandsAgents.reduce((sum, agent) => sum + ((agent as any).recent_executions?.length || 0), 0);
+                      return legacyTotal + strandsTotal;
+                    })()}
                   </div>
                   <p className="text-xs text-gray-400">Across all agents</p>
                 </CardContent>
@@ -568,8 +1201,19 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {(() => {
-                      const totalExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0);
-                      const successfulExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).successfulExecutions, 0);
+                      // Legacy agents
+                      const legacyTotalExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalExecutions, 0);
+                      const legacySuccessfulExecs = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).successfulExecutions, 0);
+                      
+                      // Strands SDK agents
+                      const strandsTotalExecs = strandsAgents.reduce((sum, agent) => sum + ((agent as any).recent_executions?.length || 0), 0);
+                      const strandsSuccessfulExecs = strandsAgents.reduce((sum, agent) => {
+                        return sum + (((agent as any).recent_executions?.filter((exec: any) => exec.success).length || 0));
+                      }, 0);
+                      
+                      const totalExecs = legacyTotalExecs + strandsTotalExecs;
+                      const successfulExecs = legacySuccessfulExecs + strandsSuccessfulExecs;
+                      
                       return totalExecs > 0 ? `${Math.round((successfulExecs / totalExecs) * 100)}%` : '-';
                     })()}
                   </div>
@@ -586,7 +1230,22 @@ export const OllamaAgentDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalTokensUsed, 0).toLocaleString()}
+                    {(() => {
+                      // Legacy agents tokens
+                      const legacyTokens = agents.reduce((sum, agent) => sum + ollamaAgentService.getAgentMetrics(agent.id).totalTokensUsed, 0);
+                      
+                      // Strands SDK agents tokens (estimate from input/output length)
+                      const strandsTokens = strandsAgents.reduce((sum, agent) => {
+                        return sum + (((agent as any).recent_executions?.reduce((execSum: number, exec: any) => {
+                          // Rough estimate: 1 token ≈ 4 characters
+                          const inputTokens = Math.ceil((exec.input_text?.length || 0) / 4);
+                          const outputTokens = Math.ceil((exec.output_text?.length || 0) / 4);
+                          return execSum + inputTokens + outputTokens;
+                        }, 0) || 0));
+                      }, 0);
+                      
+                      return (legacyTokens + strandsTokens).toLocaleString();
+                    })()}
                   </div>
                   <p className="text-xs text-gray-400">Tokens processed</p>
                 </CardContent>
@@ -596,7 +1255,7 @@ export const OllamaAgentDashboard: React.FC = () => {
         </Tabs>
       </div>
 
-      {/* Chat Interface */}
+      {/* Legacy Chat Interface */}
       {showChat && chatAgent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-4xl h-[80vh]">
@@ -611,6 +1270,31 @@ export const OllamaAgentDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Strands SDK Chat Interface */}
+      {showStrandsChat && strandsChatAgent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl h-[80vh]">
+            <StrandsSdkAgentChat 
+              agent={strandsChatAgent} 
+              onClose={() => {
+                setShowStrandsChat(false);
+                setStrandsChatAgent(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Strands Agent Analytics */}
+      {analyticsAgent && (
+        <StrandsAgentAnalytics
+          open={showAnalytics}
+          onOpenChange={setShowAnalytics}
+          agentId={analyticsAgent.id}
+          agentName={analyticsAgent.name}
+        />
+      )}
+
       {/* Create Agent Dialog */}
       <OllamaAgentDialog
         open={showCreateDialog}
@@ -618,11 +1302,25 @@ export const OllamaAgentDashboard: React.FC = () => {
         onAgentCreated={handleAgentCreated}
       />
 
+      <StrandsSdkAgentDialog
+        open={showStrandsSdkDialog}
+        onOpenChange={setShowStrandsSdkDialog}
+        onAgentCreated={handleStrandsAgentCreated}
+      />
+
       {/* Agent Configuration Dialog */}
       <AgentConfigDialog
         agent={configAgent}
         open={showConfigDialog}
         onOpenChange={setShowConfigDialog}
+      />
+
+      {/* A2A Registration Dialog */}
+      <A2AAgentRegistrationDialog
+        open={showA2ARegistrationDialog}
+        onOpenChange={setShowA2ARegistrationDialog}
+        agent={a2aRegistrationAgent}
+        onRegistered={handleA2ARegistered}
       />
     </div>
   );

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Support Triage System - Test Interface</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e293b, #3730a3);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .workflow-simulator {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .execute-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .execute-btn:hover {
+            background: #2563eb;
+        }
+        .workflow-progress {
+            margin-top: 20px;
+        }
+        .progress-step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #64748b;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+        .progress-step.active {
+            opacity: 1;
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.2);
+        }
+        .progress-step.completed {
+            opacity: 1;
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.2);
+        }
+        .progress-step.escalated {
+            opacity: 1;
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+        }
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .step-response {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .scenario-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .scenario-card:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #3b82f6;
+        }
+        .scenario-type {
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        .scenario-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .workflow-diagram {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .node {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 5px;
+            border: 2px solid #64748b;
+            font-size: 12px;
+        }
+        .agent-node { border-color: #10b981; }
+        .decision-node { border-color: #f59e0b; }
+        .memory-node { border-color: #8b5cf6; }
+        .handoff-node { border-color: #ef4444; }
+        .human-node { border-color: #06b6d4; }
+        .arrow { color: #64748b; margin: 0 10px; }
+        .results-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .final-result {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Tech Support Triage System</h1>
+            <p>Test Interface for Multi-Agent Workflow</p>
+        </div>
+
+        <div class="workflow-diagram">
+            <h3>📊 Workflow Architecture</h3>
+            <div>
+                <span class="node agent-node">Triage Agent</span>
+                <span class="arrow">→</span>
+                <span class="node decision-node">Decision Node</span>
+                <span class="arrow">→</span>
+                <span class="node agent-node">Specialists</span>
+                <span class="arrow">→</span>
+                <span class="node memory-node">Memory</span>
+                <span class="arrow">→</span>
+                <span class="node handoff-node">Handoff</span>
+                <span class="arrow">→</span>
+                <span class="node human-node">Human Expert</span>
+            </div>
+        </div>
+
+        <div class="workflow-simulator">
+            <h2>🚀 Workflow Simulator</h2>
+            
+            <div class="input-section">
+                <h3>Submit Your Tech Issue</h3>
+                <textarea 
+                    id="techIssue" 
+                    class="input-field" 
+                    rows="3" 
+                    placeholder="Describe your technical problem in detail..."
+                ></textarea>
+                <button class="execute-btn" onclick="executeWorkflow()">
+                    🔄 Execute Tech Support Workflow
+                </button>
+            </div>
+
+            <div class="workflow-progress" id="workflowProgress">
+                <div class="progress-step" id="step1">
+                    <div class="step-title">1. 🤖 Triage Agent Analysis</div>
+                    <div>Analyzing and categorizing your technical issue...</div>
+                    <div class="step-response" id="triageResponse" style="display: none;"></div>
+                </div>
+                
+                <div class="progress-step" id="step2">
+                    <div class="step-title">2. 🔀 Decision Routing</div>
+                    <div>Routing to appropriate technical specialist...</div>
+                    <div class="step-response" id="routingResponse" style="display: none;"></div>
+                </div>
+                
+                <div class="progress-step" id="step3">
+                    <div class="step-title">3. 👨‍💻 Specialist Support</div>
+                    <div>Technical specialist providing solution...</div>
+                    <div class="step-response" id="specialistResponse" style="display: none;"></div>
+                </div>
+                
+                <div class="progress-step" id="step4">
+                    <div class="step-title">4. 🧠 Context Storage</div>
+                    <div>Storing issue context and resolution steps...</div>
+                    <div class="step-response" id="memoryResponse" style="display: none;"></div>
+                </div>
+                
+                <div class="progress-step" id="step5" style="display: none;">
+                    <div class="step-title">5. 🤝 Human Escalation</div>
+                    <div>Escalating to human technical expert...</div>
+                    <div class="step-response" id="escalationResponse" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h3>📋 Resolution Summary</h3>
+                <div class="final-result" id="finalResult"></div>
+            </div>
+        </div>
+
+        <div class="workflow-simulator">
+            <h2>🧪 Quick Test Scenarios</h2>
+            <p>Click any scenario to test the workflow:</p>
+            
+            <div class="test-scenarios">
+                <div class="scenario-card" onclick="loadScenario('hardware')">
+                    <div class="scenario-type">🔧 Hardware Issue</div>
+                    <div class="scenario-text">
+                        "My laptop won't turn on. The power button doesn't respond and there are no lights."
+                    </div>
+                </div>
+                
+                <div class="scenario-card" onclick="loadScenario('software')">
+                    <div class="scenario-type">💻 Software Issue</div>
+                    <div class="scenario-text">
+                        "My email application keeps crashing when I try to send attachments."
+                    </div>
+                </div>
+                
+                <div class="scenario-card" onclick="loadScenario('network')">
+                    <div class="scenario-type">🌐 Network Issue</div>
+                    <div class="scenario-text">
+                        "I can't connect to WiFi. It shows connected but no internet access."
+                    </div>
+                </div>
+                
+                <div class="scenario-card" onclick="loadScenario('complex')">
+                    <div class="scenario-type">⚠️ Complex Issue</div>
+                    <div class="scenario-text">
+                        "My computer randomly shuts down, makes weird noises, and I'm losing important files."
+                    </div>
+                </div>
+                
+                <div class="scenario-card" onclick="loadScenario('account')">
+                    <div class="scenario-type">👤 Account Issue</div>
+                    <div class="scenario-text">
+                        "I can't log into my work account. Password reset isn't working."
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = {
+            hardware: {
+                text: "My laptop won't turn on. The power button doesn't respond and there are no lights.",
+                category: "HARDWARE_ISSUE",
+                severity: "HIGH",
+                specialist: "Hardware Specialist",
+                escalate: false
+            },
+            software: {
+                text: "My email application keeps crashing when I try to send attachments.",
+                category: "SOFTWARE_ISSUE", 
+                severity: "MEDIUM",
+                specialist: "Software Specialist",
+                escalate: false
+            },
+            network: {
+                text: "I can't connect to WiFi. It shows connected but no internet access.",
+                category: "NETWORK_ISSUE",
+                severity: "MEDIUM", 
+                specialist: "Hardware Specialist",
+                escalate: false
+            },
+            complex: {
+                text: "My computer randomly shuts down, makes weird noises, and I'm losing important files.",
+                category: "HARDWARE_ISSUE",
+                severity: "HIGH",
+                specialist: "Hardware Specialist", 
+                escalate: true
+            },
+            account: {
+                text: "I can't log into my work account. Password reset isn't working.",
+                category: "ACCOUNT_ISSUE",
+                severity: "MEDIUM",
+                specialist: "Software Specialist",
+                escalate: false
+            }
+        };
+
+        function loadScenario(type) {
+            const scenario = scenarios[type];
+            document.getElementById('techIssue').value = scenario.text;
+        }
+
+        function executeWorkflow() {
+            const issue = document.getElementById('techIssue').value.trim();
+            
+            if (!issue) {
+                alert('Please describe your technical issue first!');
+                return;
+            }
+
+            // Reset workflow
+            resetWorkflow();
+            
+            // Determine scenario type
+            const scenarioType = detectScenarioType(issue);
+            const scenario = scenarios[scenarioType] || scenarios.software;
+            
+            // Execute workflow steps
+            setTimeout(() => executeTriageStep(issue, scenario), 500);
+        }
+
+        function resetWorkflow() {
+            // Reset all steps
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('active', 'completed', 'escalated');
+                step.style.display = 'block';
+            });
+            
+            // Hide responses
+            document.querySelectorAll('.step-response').forEach(response => {
+                response.style.display = 'none';
+            });
+            
+            // Hide results
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('step5').style.display = 'none';
+        }
+
+        function detectScenarioType(issue) {
+            const lowerIssue = issue.toLowerCase();
+            
+            if (lowerIssue.includes('won\'t turn on') || lowerIssue.includes('power') || lowerIssue.includes('hardware') || lowerIssue.includes('noise')) {
+                if (lowerIssue.includes('noise') || lowerIssue.includes('losing files') || lowerIssue.includes('shut down')) {
+                    return 'complex';
+                }
+                return 'hardware';
+            }
+            
+            if (lowerIssue.includes('wifi') || lowerIssue.includes('network') || lowerIssue.includes('internet')) {
+                return 'network';
+            }
+            
+            if (lowerIssue.includes('login') || lowerIssue.includes('account') || lowerIssue.includes('password')) {
+                return 'account';
+            }
+            
+            return 'software';
+        }
+
+        function executeTriageStep(issue, scenario) {
+            const step1 = document.getElementById('step1');
+            step1.classList.add('active');
+            
+            setTimeout(() => {
+                step1.classList.remove('active');
+                step1.classList.add('completed');
+                
+                const response = `Classification: ${scenario.category} | Severity: ${scenario.severity} | Issue involves ${scenario.category.toLowerCase().replace('_', ' ')} requiring ${scenario.specialist.toLowerCase()} expertise.`;
+                
+                document.getElementById('triageResponse').textContent = response;
+                document.getElementById('triageResponse').style.display = 'block';
+                
+                executeRoutingStep(scenario);
+            }, 2000);
+        }
+
+        function executeRoutingStep(scenario) {
+            const step2 = document.getElementById('step2');
+            step2.classList.add('active');
+            
+            setTimeout(() => {
+                step2.classList.remove('active');
+                step2.classList.add('completed');
+                
+                const response = `Routing to ${scenario.specialist} based on ${scenario.category} classification. This specialist has expertise in ${scenario.category.toLowerCase().replace('_', ' ')}.`;
+                
+                document.getElementById('routingResponse').textContent = response;
+                document.getElementById('routingResponse').style.display = 'block';
+                
+                executeSpecialistStep(scenario);
+            }, 1500);
+        }
+
+        function executeSpecialistStep(scenario) {
+            const step3 = document.getElementById('step3');
+            step3.classList.add('active');
+            
+            setTimeout(() => {
+                step3.classList.remove('active');
+                step3.classList.add('completed');
+                
+                let response;
+                if (scenario.specialist === 'Hardware Specialist') {
+                    response = "Hardware diagnosis complete. Recommended steps: 1) Check power connections 2) Test with different power outlet 3) Remove battery and hold power button for 30 seconds 4) Check for hardware indicator lights. ";
+                } else {
+                    response = "Software analysis complete. Recommended steps: 1) Update the application 2) Clear application cache 3) Check file size limits 4) Try safe mode operation 5) Reinstall if necessary. ";
+                }
+                
+                if (scenario.escalate) {
+                    response += "⚠️ Issue complexity requires human expert intervention.";
+                }
+                
+                document.getElementById('specialistResponse').textContent = response;
+                document.getElementById('specialistResponse').style.display = 'block';
+                
+                executeMemoryStep(scenario);
+            }, 3000);
+        }
+
+        function executeMemoryStep(scenario) {
+            const step4 = document.getElementById('step4');
+            step4.classList.add('active');
+            
+            setTimeout(() => {
+                step4.classList.remove('active');
+                step4.classList.add('completed');
+                
+                const response = `Context stored: Issue type (${scenario.category}), Severity (${scenario.severity}), Specialist assigned (${scenario.specialist}), Troubleshooting steps provided, Resolution status tracked.`;
+                
+                document.getElementById('memoryResponse').textContent = response;
+                document.getElementById('memoryResponse').style.display = 'block';
+                
+                if (scenario.escalate) {
+                    executeEscalationStep(scenario);
+                } else {
+                    showFinalResults(scenario, false);
+                }
+            }, 1500);
+        }
+
+        function executeEscalationStep(scenario) {
+            const step5 = document.getElementById('step5');
+            step5.style.display = 'block';
+            step5.classList.add('active');
+            
+            setTimeout(() => {
+                step5.classList.remove('active');
+                step5.classList.add('escalated');
+                
+                const response = `Escalation triggered due to HIGH severity and potential data loss. Human expert notified with full context: issue details, troubleshooting attempts, and urgency level. Expert will contact you within 15 minutes.`;
+                
+                document.getElementById('escalationResponse').textContent = response;
+                document.getElementById('escalationResponse').style.display = 'block';
+                
+                showFinalResults(scenario, true);
+            }, 2000);
+        }
+
+        function showFinalResults(scenario, escalated) {
+            setTimeout(() => {
+                const resultsSection = document.getElementById('resultsSection');
+                const finalResult = document.getElementById('finalResult');
+                
+                let resultText;
+                if (escalated) {
+                    resultText = `🚨 ESCALATED TO HUMAN EXPERT\n\nYour ${scenario.category.toLowerCase().replace('_', ' ')} has been escalated due to its complexity and potential data loss risk. A senior technical expert will contact you shortly with advanced diagnostic tools and solutions.\n\nNext Steps:\n• Human expert will call within 15 minutes\n• Remote diagnostic session may be scheduled\n• Hardware replacement authorized if needed\n• Data recovery assistance available`;
+                } else {
+                    resultText = `✅ ISSUE RESOLVED BY AI SPECIALIST\n\nYour ${scenario.category.toLowerCase().replace('_', ' ')} has been successfully diagnosed by our ${scenario.specialist}. Follow the provided troubleshooting steps to resolve the issue.\n\nNext Steps:\n• Follow the step-by-step instructions provided\n• Contact support if steps don't resolve the issue\n• Reference ticket #TS-${Date.now().toString().slice(-6)} for follow-up\n• Satisfaction survey will be sent via email`;
+                }
+                
+                finalResult.textContent = resultText;
+                resultsSection.style.display = 'block';
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }, 1000);
+        }
+
+        // Initialize
+        console.log('🎯 Tech Support Triage System Test Interface Loaded');
+        console.log('📋 Use this interface to test the Multi-Agent Workflow');
+    </script>
+</body>
+</html>

@@ -20,7 +20,9 @@ import {
 } from 'lucide-react';
 import { ollamaAgentService, OllamaAgentConfig, AgentMessage, AgentExecution } from '@/lib/services/OllamaAgentService';
 import { ollamaService } from '@/lib/services/ollamaService';
+import { strandsSdkService } from '@/lib/services/StrandsSdkService';
 import { useToast } from '@/hooks/use-toast';
+import { RealTimeAgentMonitor } from './MultiAgentWorkspace/RealTimeAgentMonitor';
 
 interface OllamaAgentChatProps {
   agent: OllamaAgentConfig;
@@ -39,6 +41,7 @@ const OllamaAgentChatComponent: React.FC<OllamaAgentChatProps> = ({ agent, onClo
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
+  const [showMonitor, setShowMonitor] = useState(false);
 
   // Initialize conversation and load models once
   useEffect(() => {
@@ -174,7 +177,43 @@ const OllamaAgentChatComponent: React.FC<OllamaAgentChatProps> = ({ agent, onClo
       
       console.log('Calling Ollama with model:', modelToUse);
       
-      // Call Ollama directly
+      // Check if this is a Strands SDK agent
+      if (agent.sdkType === 'strands-sdk') {
+        console.log('Using Strands SDK service for agent execution');
+        
+        // Use Strands SDK service with real-time progress
+        const execution = await strandsSdkService.executeAgentWithProgress(
+          agent.id,
+          messageText,
+          (step: string, details: string, status: string) => {
+            console.log('[Strands SDK] Progress:', step, details);
+            // The real-time monitor will handle the progress display
+          }
+        );
+        
+        if (abortControllerRef.current?.signal.aborted) {
+          return; // Request was cancelled
+        }
+        
+        const assistantMessage: AgentMessage = {
+          id: `msg-${Date.now() + 1}`,
+          role: 'assistant',
+          content: execution.response || 'No response received',
+          timestamp: new Date(),
+          metadata: {
+            model: modelToUse,
+            tokens: 0, // Strands SDK doesn't provide token count
+            duration: 0, // execution time not available in current response
+            tools_used: [] // tools_used not available in current response
+          }
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        loadExecutions();
+        return;
+      }
+      
+      // Call Ollama directly for regular agents
       const response = await ollamaService.generateResponse(modelToUse, prompt, {
         temperature: agent.temperature || 0.7,
         max_tokens: agent.maxTokens || 1000
@@ -317,6 +356,15 @@ const OllamaAgentChatComponent: React.FC<OllamaAgentChatProps> = ({ agent, onClo
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMonitor(!showMonitor)}
+              className="text-xs"
+            >
+              <Zap className="w-3 h-3 mr-1" />
+              {showMonitor ? 'Hide Monitor' : 'Show Monitor'}
+            </Button>
             <Badge variant="outline" className="text-xs">
               <MessageSquare className="w-3 h-3 mr-1" />
               {messages.length} messages
@@ -507,6 +555,13 @@ const OllamaAgentChatComponent: React.FC<OllamaAgentChatProps> = ({ agent, onClo
           )}
         </div>
       </CardContent>
+      
+      {/* Real-time Agent Monitor */}
+      <RealTimeAgentMonitor
+        agentId={agent.id}
+        isVisible={showMonitor}
+        onClose={() => setShowMonitor(false)}
+      />
     </Card>
   );
 };

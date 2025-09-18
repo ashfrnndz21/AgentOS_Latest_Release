@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+
+"""
+Debug: Strands Drag & Drop Issues
+Creates a debug guide to help identify why utility nodes aren't draggable
+"""
+
+import json
+import os
+import sys
+
+def create_debug_html():
+    """Create debug HTML for drag and drop testing"""
+    
+    html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strands Drag & Drop Debug</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .debug-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .success { color: #22c55e; }
+        .warning { color: #eab308; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        
+        .btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="debug-section">
+            <h1>🐛 Strands Drag & Drop Debug Guide</h1>
+            <p>Debug guide to identify and fix utility node drag & drop issues</p>
+        </div>
+
+        <div class="debug-section">
+            <h2>🔍 Debug Steps</h2>
+            <ol style="line-height: 1.8;">
+                <li><strong>Open Browser Console:</strong> Press F12 or right-click → Inspect → Console</li>
+                <li><strong>Navigate to Strands Workflow:</strong> Go to Multi-Agent Workspace → Strands Intelligent Workflow</li>
+                <li><strong>Try Dragging Utilities:</strong> Go to Utilities tab and try dragging each node</li>
+                <li><strong>Check Console Messages:</strong> Look for the debug messages we added</li>
+            </ol>
+        </div>
+
+        <div class="debug-section">
+            <h2>🎯 Expected Console Messages</h2>
+            
+            <h3 class="info">When Starting Drag (from AgentPalette):</h3>
+            <div class="code-block">
+🚀 Starting drag for utility node: {
+  type: "utility-node",
+  nodeType: "decision", // or handoff, human, etc.
+  nodeData: { name: "Decision", description: "...", ... }
+}
+            </div>
+            
+            <h3 class="success">When Dropping on Canvas (from StrandsWorkflowCanvas):</h3>
+            <div class="code-block">
+🎯 Drop data received: {
+  type: "utility-node",
+  nodeType: "decision",
+  nodeData: { ... }
+}
+✅ Creating utility node: decision
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>❌ Common Issues & Solutions</h2>
+            
+            <h3 class="error">Issue 1: No drag start message</h3>
+            <p><strong>Problem:</strong> Utility nodes are not draggable</p>
+            <p><strong>Solution:</strong> Check if draggable="true" is set on utility nodes</p>
+            
+            <h3 class="warning">Issue 2: Drag starts but no drop message</h3>
+            <p><strong>Problem:</strong> Drop zone not accepting drops</p>
+            <p><strong>Solution:</strong> Check onDragOver and onDrop handlers</p>
+            
+            <h3 class="error">Issue 3: Drop message but no node creation</h3>
+            <p><strong>Problem:</strong> Node creation methods failing</p>
+            <p><strong>Solution:</strong> Check orchestrator methods and node type mapping</p>
+            
+            <h3 class="warning">Issue 4: Node created but not visible</h3>
+            <p><strong>Problem:</strong> Node component not rendering</p>
+            <p><strong>Solution:</strong> Check node types mapping and component imports</p>
+        </div>
+
+        <div class="debug-section">
+            <h2>🔧 Quick Fixes Applied</h2>
+            
+            <h3 class="success">✅ Fixed Decision Node Design</h3>
+            <div class="code-block">
+// Changed from diamond shape to rectangular
+// Removed transform rotate-45 styling
+// Standardized with other utility nodes
+            </div>
+            
+            <h3 class="info">🐛 Added Debug Logging</h3>
+            <div class="code-block">
+// AgentPalette.tsx - Added drag start logging
+console.log('🚀 Starting drag for utility node:', dragData);
+
+// StrandsWorkflowCanvas.tsx - Added drop logging  
+console.log('🎯 Drop data received:', dragData);
+console.log('✅ Creating utility node:', dragData.nodeType);
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🧪 Manual Testing Checklist</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="info">Decision Node</h3>
+                    <ul>
+                        <li>✅ Should be rectangular (not diamond)</li>
+                        <li>✅ Should be draggable</li>
+                        <li>✅ Should create on drop</li>
+                        <li>✅ Should have Yes/No outputs</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="warning">Handoff Node</h3>
+                    <ul>
+                        <li>❓ Should be draggable</li>
+                        <li>❓ Should create on drop</li>
+                        <li>❓ Should show context transfer</li>
+                        <li>❓ Should have input/output handles</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="error">Human Node</h3>
+                    <ul>
+                        <li>❓ Should be draggable</li>
+                        <li>❓ Should create on drop</li>
+                        <li>❓ Should show "Awaiting Input"</li>
+                        <li>❓ Should have input/output handles</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="success">Memory Node</h3>
+                    <ul>
+                        <li>❓ Should be draggable</li>
+                        <li>❓ Should create on drop</li>
+                        <li>❓ Should show "Context Storage"</li>
+                        <li>❓ Should have multiple handles</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="error">Guardrail Node</h3>
+                    <ul>
+                        <li>❓ Should be draggable</li>
+                        <li>❓ Should create on drop</li>
+                        <li>❓ Should show Pass/Block outputs</li>
+                        <li>❓ Should have safety indicators</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px;">
+                    <h3 class="warning">Other Nodes</h3>
+                    <ul>
+                        <li>❓ Aggregator - multiple inputs</li>
+                        <li>❓ Monitor - observing status</li>
+                        <li>❓ All should be draggable</li>
+                        <li>❓ All should create properly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🚀 Next Steps</h2>
+            <ol style="line-height: 1.8;">
+                <li><strong>Test with Console Open:</strong> Try dragging each utility node</li>
+                <li><strong>Check Debug Messages:</strong> Verify drag start and drop messages appear</li>
+                <li><strong>Identify Failing Nodes:</strong> Note which nodes don't work</li>
+                <li><strong>Report Issues:</strong> Share console output for failing nodes</li>
+            </ol>
+            
+            <button class="btn" onclick="window.open('/multi-agent-workspace', '_blank')">
+                🧪 Test Drag & Drop Now
+            </button>
+        </div>
+    </div>
+
+    <script>
+        console.log('🐛 Strands Drag & Drop Debug Guide Loaded');
+        console.log('📋 Follow the steps above to debug utility node drag & drop issues');
+        console.log('🔍 Check console for drag start and drop messages');
+    </script>
+</body>
+</html>"""
+    
+    return html_content
+
+def main():
+    """Main debug execution"""
+    print("🐛 Creating Strands Drag & Drop Debug Guide...")
+    
+    # Create debug HTML
+    html_content = create_debug_html()
+    
+    # Write debug file
+    debug_file = "debug_strands_drag_drop.html"
+    with open(debug_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    print(f"✅ Debug file created: {debug_file}")
+    print("\n🔧 Quick Fixes Applied:")
+    print("- ✅ Fixed Decision Node design (rectangular instead of diamond)")
+    print("- 🐛 Added debug logging to AgentPalette and StrandsWorkflowCanvas")
+    print("- 📝 Created comprehensive debug guide")
+    
+    print(f"\n🧪 Debug Steps:")
+    print("1. Open the debug guide in your browser")
+    print("2. Follow the testing checklist")
+    print("3. Check browser console for debug messages")
+    print("4. Report which utility nodes are not working")
+    
+    print(f"\n🚀 Open {debug_file} in your browser to start debugging")
+    
+    return True
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Processing Logs Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log-entry { margin: 10px 0; padding: 10px; border-left: 4px solid #ccc; }
+        .info { border-color: #2196F3; background: #E3F2FD; }
+        .success { border-color: #4CAF50; background: #E8F5E9; }
+        .warning { border-color: #FF9800; background: #FFF3E0; }
+        .error { border-color: #F44336; background: #FFEBEE; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Processing Logs Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Processing Logs Endpoint</h2>
+        <button onclick="testProcessingLogs()">Fetch Processing Logs</button>
+        <div id="logs-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Document Upload with Logs</h2>
+        <input type="file" id="file-input" accept=".pdf" />
+        <button onclick="testDocumentUpload()">Upload Document</button>
+        <div id="upload-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Real-time Log Monitoring</h2>
+        <button onclick="startLogMonitoring()">Start Monitoring</button>
+        <button onclick="stopLogMonitoring()">Stop Monitoring</button>
+        <div id="monitoring-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Processing Logs Display</h2>
+        <div id="logs-display"></div>
+    </div>
+
+    <script>
+        let monitoringInterval = null;
+        
+        async function testProcessingLogs() {
+            const resultDiv = document.getElementById('logs-result');
+            resultDiv.innerHTML = '<p>🔍 Fetching processing logs...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/processing-logs');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p>✅ Processing logs fetched successfully!</p>
+                    <p>📊 Total logs: ${data.total}</p>
+                    <p>🔄 Real-time: ${data.real_time}</p>
+                `;
+                
+                displayLogs(data.logs);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testDocumentUpload() {
+            const fileInput = document.getElementById('file-input');
+            const resultDiv = document.getElementById('upload-result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<p>⚠️ Please select a PDF file first</p>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            resultDiv.innerHTML = '<p>📤 Uploading document...</p>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('model_name', 'mistral');
+                
+                const response = await fetch('http://localhost:8000/api/rag/ingest', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p>✅ Document uploaded successfully!</p>
+                        <p>📄 Document ID: ${result.document_id}</p>
+                        <p>📊 Chunks created: ${result.chunks_created}</p>
+                        <p>📄 Pages processed: ${result.pages_processed}</p>
+                    `;
+                    
+                    // Fetch updated logs
+                    setTimeout(testProcessingLogs, 1000);
+                } else {
+                    resultDiv.innerHTML = `<p>❌ Upload failed: ${result.detail || 'Unknown error'}</p>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        function startLogMonitoring() {
+            const resultDiv = document.getElementById('monitoring-result');
+            resultDiv.innerHTML = '<p>🔄 Starting real-time log monitoring...</p>';
+            
+            monitoringInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('http://localhost:8000/api/processing-logs');
+                    const data = await response.json();
+                    
+                    resultDiv.innerHTML = `
+                        <p>🔄 Monitoring active - Last check: ${new Date().toLocaleTimeString()}</p>
+                        <p>📊 Current logs: ${data.total}</p>
+                    `;
+                    
+                    displayLogs(data.logs);
+                    
+                } catch (error) {
+                    resultDiv.innerHTML = `<p>❌ Monitoring error: ${error.message}</p>`;
+                }
+            }, 2000); // Check every 2 seconds (same as frontend hook)
+        }
+        
+        function stopLogMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                document.getElementById('monitoring-result').innerHTML = '<p>⏹️ Monitoring stopped</p>';
+            }
+        }
+        
+        function displayLogs(logs) {
+            const displayDiv = document.getElementById('logs-display');
+            
+            if (!logs || logs.length === 0) {
+                displayDiv.innerHTML = '<p>📋 No processing logs available</p>';
+                return;
+            }
+            
+            const logsHtml = logs.map(log => {
+                const typeClass = log.type || 'info';
+                const icon = {
+                    'info': 'ℹ️',
+                    'success': '✅',
+                    'warning': '⚠️',
+                    'error': '❌'
+                }[log.type] || 'ℹ️';
+                
+                return `
+                    <div class="log-entry ${typeClass}">
+                        <strong>${icon} [${log.stage}]</strong> ${log.message}
+                        <br>
+                        <small>
+                            📅 ${log.timestamp} 
+                            ${log.document_name ? `• 📄 ${log.document_name}` : ''}
+                            ${log.document_id ? `• 🆔 ${log.document_id.substring(0, 8)}...` : ''}
+                        </small>
+                    </div>
+                `;
+            }).join('');
+            
+            displayDiv.innerHTML = `
+                <h3>📋 Processing Logs (${logs.length} entries)</h3>
+                ${logsHtml}
+            `;
+        }
+        
+        // Auto-fetch logs on page load
+        window.onload = function() {
+            testProcessingLogs();
+        };
+    </script>
+</body>
+</html>

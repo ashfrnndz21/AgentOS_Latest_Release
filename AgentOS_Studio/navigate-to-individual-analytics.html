@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navigate to Individual Agent Analytics</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .step { margin: 20px 0; padding: 15px; background: #2a2a2a; border-radius: 8px; }
+        .highlight { background: #3a3a3a; padding: 5px; border-radius: 4px; }
+        .button { background: #4a90e2; color: white; padding: 8px 16px; border-radius: 4px; display: inline-block; }
+        .analytics-button { background: #2563eb; color: white; padding: 8px 16px; border-radius: 4px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h1>🎯 How to Access Individual Agent Analytics</h1>
+    
+    <div class="step">
+        <h2>Step 1: You're Currently Here ❌</h2>
+        <p>You're viewing the <span class="highlight">"Analytics" tab</span> which shows <strong>aggregated data</strong>:</p>
+        <ul>
+            <li>Total Agents: 2</li>
+            <li>Total Conversations: 1</li>
+            <li>Success Rate: 100%</li>
+            <li>Total Tokens: 166</li>
+        </ul>
+        <p><strong>This is NOT individual agent analytics!</strong></p>
+    </div>
+
+    <div class="step">
+        <h2>Step 2: Click "Agents (1)" Tab ✅</h2>
+        <p>Look at the top of the page and click: <span class="button">Agents (1)</span></p>
+        <p>This will switch from aggregated analytics to individual agent cards.</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 3: Scroll Down to Find Agent Cards ✅</h2>
+        <p>After clicking "Agents (1)", scroll down to see individual agent cards.</p>
+        <p>Look for a card that says:</p>
+        <div style="border: 1px solid #444; padding: 10px; margin: 10px 0; background: #333;">
+            <strong>✨ Heath Agent</strong><br>
+            <small>Powered by official Strands SDK</small><br><br>
+            <span class="button">💬 Chat with Agent</span>
+            <span class="analytics-button">📊</span>
+            <span style="background: #dc2626; color: white; padding: 8px 16px; border-radius: 4px; display: inline-block;">🗑️</span>
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>Step 4: Click the Blue Analytics Button ✅</h2>
+        <p>On the Heath Agent card, click the blue <span class="analytics-button">📊</span> button.</p>
+        <p>This will open the <strong>individual agent analytics</strong> with 4 tabs:</p>
+        <ul>
+            <li><strong>Overview</strong>: Agent info + key metrics for Heath Agent only</li>
+            <li><strong>Performance</strong>: Execution stats for Heath Agent only</li>
+            <li><strong>Tools</strong>: Tool usage for Heath Agent only</li>
+            <li><strong>History</strong>: Recent conversations for Heath Agent only</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🔍 Quick Visual Guide</h2>
+        <p><strong>Current View (Wrong):</strong></p>
+        <p>📊 Analytics Tab → Shows aggregated data across all agents</p>
+        
+        <p><strong>Correct View (What You Want):</strong></p>
+        <p>👥 Agents Tab → Individual agent cards → 📊 Analytics button → Individual analytics</p>
+    </div>
+
+    <script>
+        // Test if the analytics endpoint is working
+        fetch('http://localhost:5006/api/strands-sdk/agents/b5699369-54f7-491e-b6f3-42a71abaceb2/analytics')
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Individual analytics endpoint working:', data);
+                document.body.innerHTML += `
+                    <div class="step">
+                        <h2>✅ Backend Confirmation</h2>
+                        <p>Individual analytics are working! Heath Agent has:</p>
+                        <ul>
+                            <li>Total Executions: ${data.execution_stats.total_executions}</li>
+                            <li>Success Rate: ${data.execution_stats.success_rate}%</li>
+                            <li>Avg Time: ${data.execution_stats.avg_execution_time}s</li>
+                        </ul>
+                        <p><strong>Now just navigate to the UI to see this data!</strong></p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('❌ Analytics endpoint error:', error);
+            });
+    </script>
+</body>
+</html>

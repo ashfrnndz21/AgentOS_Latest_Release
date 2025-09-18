@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .tab-container { margin: 20px 0; }
+        .tab-list { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-trigger { 
+            padding: 10px 20px; 
+            border: 1px solid #ccc; 
+            background: #f5f5f5; 
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .tab-trigger.active { background: #007bff; color: white; }
+        .tab-content { padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .tab-content.hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Tab Functionality Test</h1>
+    
+    <div class="tab-container">
+        <div class="tab-list">
+            <div class="tab-trigger active" data-tab="dashboard">Dashboard</div>
+            <div class="tab-trigger" data-tab="traceability">Traceability</div>
+            <div class="tab-trigger" data-tab="tools">Tools</div>
+            <div class="tab-trigger" data-tab="data">Data</div>
+            <div class="tab-trigger" data-tab="governance">Governance</div>
+            <div class="tab-trigger" data-tab="cost">Cost</div>
+            <div class="tab-trigger" data-tab="monitoring">Monitor</div>
+        </div>
+        
+        <div class="tab-content" id="dashboard">
+            <h2>Dashboard Content</h2>
+            <p>This is the dashboard tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="traceability">
+            <h2>Traceability Content</h2>
+            <p>This is the traceability tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="tools">
+            <h2>Tools Content</h2>
+            <p>This is the tools tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="data">
+            <h2>Data Content</h2>
+            <p>This is the data tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="governance">
+            <h2>Governance Content</h2>
+            <p>This is the governance tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="cost">
+            <h2>Cost Content</h2>
+            <p>This is the cost tab content.</p>
+        </div>
+        
+        <div class="tab-content hidden" id="monitoring">
+            <h2>Monitor Content</h2>
+            <p>This is the monitor tab content.</p>
+        </div>
+    </div>
+
+    <script>
+        // Simple tab functionality
+        document.querySelectorAll('.tab-trigger').forEach(trigger => {
+            trigger.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                console.log('Tab clicked:', tabId);
+                
+                // Remove active class from all triggers
+                document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked trigger
+                this.classList.add('active');
+                
+                // Hide all content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                
+                // Show selected content
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+        
+        console.log('Tab test script loaded');
+    </script>
+</body>
+</html>

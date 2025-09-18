@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2A Frontend Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #6b7280; cursor: not-allowed; }
+        .result {
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 A2A Frontend Integration Test</h1>
+        
+        <div class="test-section">
+            <h2>1. A2A Service Health Check</h2>
+            <button onclick="testA2aHealth()">Test A2A Health</button>
+            <div id="health-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Register Test Agents</h2>
+            <button onclick="registerTestAgents()">Register Test Agents</button>
+            <div id="register-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. List A2A Agents</h2>
+            <button onclick="listA2aAgents()">List A2A Agents</button>
+            <div id="agents-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Send A2A Message</h2>
+            <button onclick="sendA2aMessage()">Send Test Message</button>
+            <div id="message-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Get Message History</h2>
+            <button onclick="getMessageHistory()">Get Message History</button>
+            <div id="history-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>6. Complete Integration Test</h2>
+            <button onclick="runCompleteTest()">Run Complete Test</button>
+            <div id="complete-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const A2A_SERVICE_URL = 'http://localhost:5008';
+        let testAgent1Id = '';
+        let testAgent2Id = '';
+
+        async function testA2aHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = 'Testing A2A service health...';
+            
+            try {
+                const response = await fetch(`${A2A_SERVICE_URL}/api/a2a/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ A2A Service is healthy!</span>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ A2A Service error: ${response.status}</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Connection failed: ${error.message}</span>`;
+            }
+        }
+
+        async function registerTestAgents() {
+            const resultDiv = document.getElementById('register-result');
+            resultDiv.innerHTML = 'Registering test agents...';
+            
+            try {
+                // Register Agent 1
+                const agent1Response = await fetch(`${A2A_SERVICE_URL}/api/a2a/agents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: 'frontend-test-agent-1',
+                        name: 'Frontend Test Agent 1',
+                        description: 'Test agent for frontend integration',
+                        model: 'phi3',
+                        capabilities: ['chat', 'testing']
+                    })
+                });
+                
+                const agent1Data = await agent1Response.json();
+                testAgent1Id = agent1Data.agent?.id || 'frontend-test-agent-1';
+                
+                // Register Agent 2
+                const agent2Response = await fetch(`${A2A_SERVICE_URL}/api/a2a/agents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: 'frontend-test-agent-2',
+                        name: 'Frontend Test Agent 2',
+                        description: 'Another test agent for frontend integration',
+                        model: 'qwen2.5',
+                        capabilities: ['chat', 'testing']
+                    })
+                });
+                
+                const agent2Data = await agent2Response.json();
+                testAgent2Id = agent2Data.agent?.id || 'frontend-test-agent-2';
+                
+                if (agent1Response.ok && agent2Response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Test agents registered successfully!</span>\n\nAgent 1: ${JSON.stringify(agent1Data, null, 2)}\n\nAgent 2: ${JSON.stringify(agent2Data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Registration failed</span>\n\nAgent 1: ${JSON.stringify(agent1Data, null, 2)}\n\nAgent 2: ${JSON.stringify(agent2Data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Registration failed: ${error.message}</span>`;
+            }
+        }
+
+        async function listA2aAgents() {
+            const resultDiv = document.getElementById('agents-result');
+            resultDiv.innerHTML = 'Loading A2A agents...';
+            
+            try {
+                const response = await fetch(`${A2A_SERVICE_URL}/api/a2a/agents`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Found ${data.agents.length} A2A agents</span>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to load agents: ${response.status}</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to load agents: ${error.message}</span>`;
+            }
+        }
+
+        async function sendA2aMessage() {
+            const resultDiv = document.getElementById('message-result');
+            resultDiv.innerHTML = 'Sending A2A message...';
+            
+            if (!testAgent1Id || !testAgent2Id) {
+                resultDiv.innerHTML = '<span class="error">❌ Please register test agents first</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${A2A_SERVICE_URL}/api/a2a/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from_agent_id: testAgent1Id,
+                        to_agent_id: testAgent2Id,
+                        content: 'Hello from Frontend Test Agent 1! This is a test A2A message from the frontend integration test.',
+                        type: 'message'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ A2A message sent successfully!</span>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to send message: ${response.status}</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to send message: ${error.message}</span>`;
+            }
+        }
+
+        async function getMessageHistory() {
+            const resultDiv = document.getElementById('history-result');
+            resultDiv.innerHTML = 'Loading message history...';
+            
+            try {
+                const response = await fetch(`${A2A_SERVICE_URL}/api/a2a/messages/history`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ Found ${data.messages.length} messages in history</span>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Failed to load history: ${response.status}</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Failed to load history: ${error.message}</span>`;
+            }
+        }
+
+        async function runCompleteTest() {
+            const resultDiv = document.getElementById('complete-result');
+            resultDiv.innerHTML = 'Running complete A2A integration test...\n\n';
+            
+            let results = [];
+            
+            try {
+                // Test 1: Health Check
+                resultDiv.innerHTML += '1. Testing A2A service health...\n';
+                const healthResponse = await fetch(`${A2A_SERVICE_URL}/api/a2a/health`);
+                if (healthResponse.ok) {
+                    results.push('✅ A2A Service Health: PASSED');
+                } else {
+                    results.push('❌ A2A Service Health: FAILED');
+                }
+                
+                // Test 2: Register Agents
+                resultDiv.innerHTML += '2. Registering test agents...\n';
+                const agent1Response = await fetch(`${A2A_SERVICE_URL}/api/a2a/agents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: 'complete-test-agent-1',
+                        name: 'Complete Test Agent 1',
+                        description: 'Agent for complete integration test',
+                        model: 'phi3',
+                        capabilities: ['chat', 'testing']
+                    })
+                });
+                
+                const agent2Response = await fetch(`${A2A_SERVICE_URL}/api/a2a/agents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: 'complete-test-agent-2',
+                        name: 'Complete Test Agent 2',
+                        description: 'Another agent for complete integration test',
+                        model: 'qwen2.5',
+                        capabilities: ['chat', 'testing']
+                    })
+                });
+                
+                if (agent1Response.ok && agent2Response.ok) {
+                    results.push('✅ Agent Registration: PASSED');
+                    const agent1Data = await agent1Response.json();
+                    const agent2Data = await agent2Response.json();
+                    testAgent1Id = agent1Data.agent.id;
+                    testAgent2Id = agent2Data.agent.id;
+                } else {
+                    results.push('❌ Agent Registration: FAILED');
+                }
+                
+                // Test 3: Send Message
+                resultDiv.innerHTML += '3. Sending A2A message...\n';
+                const messageResponse = await fetch(`${A2A_SERVICE_URL}/api/a2a/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from_agent_id: testAgent1Id,
+                        to_agent_id: testAgent2Id,
+                        content: 'Complete integration test message from frontend!',
+                        type: 'message'
+                    })
+                });
+                
+                if (messageResponse.ok) {
+                    results.push('✅ A2A Message Sending: PASSED');
+                } else {
+                    results.push('❌ A2A Message Sending: FAILED');
+                }
+                
+                // Test 4: Message History
+                resultDiv.innerHTML += '4. Checking message history...\n';
+                const historyResponse = await fetch(`${A2A_SERVICE_URL}/api/a2a/messages/history`);
+                if (historyResponse.ok) {
+                    const historyData = await historyResponse.json();
+                    results.push(`✅ Message History: PASSED (${historyData.messages.length} messages)`);
+                } else {
+                    results.push('❌ Message History: FAILED');
+                }
+                
+                // Summary
+                resultDiv.innerHTML += '\n📊 COMPLETE A2A INTEGRATION TEST RESULTS:\n';
+                resultDiv.innerHTML += '=====================================\n';
+                results.forEach(result => {
+                    resultDiv.innerHTML += result + '\n';
+                });
+                
+                const passedTests = results.filter(r => r.includes('✅')).length;
+                const totalTests = results.length;
+                
+                if (passedTests === totalTests) {
+                    resultDiv.innerHTML += '\n🎉 ALL TESTS PASSED! A2A Frontend Integration is working perfectly!';
+                } else {
+                    resultDiv.innerHTML += `\n⚠️ ${passedTests}/${totalTests} tests passed. Some issues detected.`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `\n❌ Test failed with error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+

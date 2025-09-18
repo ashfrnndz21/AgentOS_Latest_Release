@@ -24,6 +24,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       },
+      '/api/strands-sdk': {
+        target: 'http://localhost:5006',
+        changeOrigin: true,
+        secure: false,
+      },
       '/api/chat': {
         target: 'http://localhost:5005',
         changeOrigin: true,

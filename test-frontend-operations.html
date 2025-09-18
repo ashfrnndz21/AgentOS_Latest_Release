@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Operations Display</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .operation { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .step { font-weight: bold; }
+        .details { color: #666; font-size: 0.9em; }
+        .timestamp { color: #999; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>Test Frontend Operations Display</h1>
+    <div id="operations"></div>
+    
+    <script>
+        // Test the operations log from the backend
+        async function testOperationsDisplay() {
+            try {
+                // First create a test agent
+                const agentResponse = await fetch('http://localhost:5006/api/strands-sdk/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test Agent',
+                        description: 'Test agent for operations display',
+                        model_id: 'llama3.2:latest',
+                        host: 'http://localhost:11434',
+                        system_prompt: 'You are a helpful assistant.',
+                        tools: ['calculator']
+                    })
+                });
+                
+                const agent = await agentResponse.json();
+                console.log('Agent created:', agent);
+                
+                // Execute the agent
+                const executionResponse = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agent.id}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input: 'What is 5 + 3?'
+                    })
+                });
+                
+                const execution = await executionResponse.json();
+                console.log('Execution result:', execution);
+                
+                // Display operations
+                const operationsDiv = document.getElementById('operations');
+                if (execution.operations_log) {
+                    operationsDiv.innerHTML = '<h2>Operations Log (' + execution.operations_log.length + ' steps)</h2>';
+                    
+                    execution.operations_log.forEach((op, index) => {
+                        const opDiv = document.createElement('div');
+                        opDiv.className = 'operation';
+                        opDiv.innerHTML = `
+                            <div class="step">Step ${index + 1}: ${op.step}</div>
+                            <div class="details">${op.details || 'No details'}</div>
+                            <div class="timestamp">${op.timestamp}</div>
+                        `;
+                        operationsDiv.appendChild(opDiv);
+                    });
+                } else {
+                    operationsDiv.innerHTML = '<p>No operations log found</p>';
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                document.getElementById('operations').innerHTML = '<p>Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Run test when page loads
+        window.onload = testOperationsDisplay;
+    </script>
+</body>
+</html>

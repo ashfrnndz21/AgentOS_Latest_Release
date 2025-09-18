@@ -29,6 +29,21 @@ export const MultiAgentProjectSelector: React.FC<ProjectSelectorProps> = ({ onSe
       features: ['Strands Reasoning Patterns', 'Local Ollama Integration', 'Smart Tools', 'Auto-Orchestration'],
       preview: '/placeholder-strands.jpg',
       category: 'cross-industry'
+    },
+    {
+      id: 'a2a-registry',
+      title: 'A2A Agent Registry',
+      description: 'Real-time Agent-to-Agent communication hub. Manage registered agents, monitor A2A communication, and coordinate multi-agent workflows with live status updates.',
+      icon: Bot,
+      color: 'text-blue-400',
+      bgColor: 'bg-gradient-to-br from-blue-900/20 via-cyan-900/20 to-slate-800/50',
+      borderColor: 'border-blue-400/30',
+      status: 'new',
+      agents: 'Live',
+      connections: 'Real-time',
+      features: ['Agent Registry', 'A2A Communication', 'Real-time Monitoring', 'Multi-Agent Coordination'],
+      preview: '/placeholder-a2a.jpg',
+      category: 'cross-industry'
     }
   ];
 

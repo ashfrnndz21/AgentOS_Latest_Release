@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Tooltips Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .group:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .tooltip {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">All Tooltips Fix Test</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Agents Tooltips -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4 text-blue-400">🤖 Agent Tooltips</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="text-green-400">✅ Expected Features:</div>
+                    <ul class="list-disc list-inside ml-4 space-y-1 text-gray-300">
+                        <li>Complete agent configuration</li>
+                        <li>Basic Information section</li>
+                        <li>Model Configuration details</li>
+                        <li>Capabilities as badges</li>
+                        <li>Security & Guardrails status</li>
+                        <li>System Prompt (scrollable)</li>
+                        <li>Professional styling</li>
+                        <li>Fixed positioning (no clipping)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Utilities Tooltips -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4 text-yellow-400">🔧 Utility Tooltips</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="text-green-400">✅ Expected Features:</div>
+                    <ul class="list-disc list-inside ml-4 space-y-1 text-gray-300">
+                        <li>Node type and description</li>
+                        <li>Configuration Options</li>
+                        <li>Best For use cases</li>
+                        <li>Color-coded indicators</li>
+                        <li>Professional icons</li>
+                        <li>Usage instructions</li>
+                        <li>Fixed positioning (no clipping)</li>
+                        <li>Consistent styling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- MCP Tools Tooltips -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4 text-purple-400">🛠️ MCP Tools Tooltips</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="text-green-400">✅ Expected Features:</div>
+                    <ul class="list-disc list-inside ml-4 space-y-1 text-gray-300">
+                        <li>Tool name and description</li>
+                        <li>Category and complexity</li>
+                        <li>Server information</li>
+                        <li>Usage examples</li>
+                        <li>Verification status</li>
+                        <li>Action instructions</li>
+                        <li>Fixed positioning (no clipping)</li>
+                        <li>Consistent styling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Instructions -->
+        <div class="bg-gray-800 p-6 rounded-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4">📋 Test Instructions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-blue-400">Setup</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-300">
+                        <li>Start the development server: <code class="bg-gray-700 px-2 py-1 rounded">npm run dev</code></li>
+                        <li>Navigate to Multi-Agent Workspace</li>
+                        <li>Open the Agent Palette on the left</li>
+                        <li>Switch between Agents, Utilities, and MCP Tools tabs</li>
+                    </ol>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-green-400">Testing</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-300">
+                        <li>Hover over items in each tab</li>
+                        <li>Verify tooltips appear to the right</li>
+                        <li>Check that tooltips are not clipped</li>
+                        <li>Confirm all content is visible</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Positioning Details -->
+        <div class="bg-gray-800 p-6 rounded-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4">📐 Positioning Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-blue-400">Fixed Positioning</h3>
+                    <div class="bg-gray-700 p-3 rounded">
+                        <code class="text-sm text-gray-300">
+                            position: fixed;<br>
+                            left: 400px;<br>
+                            top: 50%;<br>
+                            transform: translateY(-50%);<br>
+                            z-index: 10000;
+                        </code>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-green-400">Benefits</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-300">
+                        <li>No clipping by parent containers</li>
+                        <li>Consistent positioning across tabs</li>
+                        <li>High z-index ensures visibility</li>
+                        <li>Proper vertical centering</li>
+                        <li>Professional backdrop blur effect</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Criteria -->
+        <div class="bg-green-800/20 border border-green-600 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4 text-green-400">✅ Success Criteria</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium mb-3">Agents Tab</h3>
+                    <ul class="space-y-2 text-green-300">
+                        <li>• Complete configuration tooltips</li>
+                        <li>• No clipping issues</li>
+                        <li>• Professional styling</li>
+                        <li>• Smooth transitions</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium mb-3">Utilities Tab</h3>
+                    <ul class="space-y-2 text-green-300">
+                        <li>• Detailed node information</li>
+                        <li>• Configuration options visible</li>
+                        <li>• No clipping issues</li>
+                        <li>• Consistent positioning</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium mb-3">MCP Tools Tab</h3>
+                    <ul class="space-y-2 text-green-300">
+                        <li>• Complete tool details</li>
+                        <li>• Server information visible</li>
+                        <li>• No clipping issues</li>
+                        <li>• Consistent styling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

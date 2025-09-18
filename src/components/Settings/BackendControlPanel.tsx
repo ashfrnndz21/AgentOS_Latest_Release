@@ -26,7 +26,7 @@ export const BackendControlPanel = () => {
   const { apiKey, setApiKey, isValid } = useLangChainKey();
   const [ollamaEnabled, setOllamaEnabled] = useState(false);
   const [ollamaEndpoint, setOllamaEndpoint] = useState("http://localhost:11434");
-  const [ollamaModel, setOllamaModel] = useState("llama3");
+  const [ollamaModel, setOllamaModel] = useState("llama3.2:latest");
   const [crewAiEnabled, setCrewAiEnabled] = useState(false);
   const [langfuseEnabled, setLangfuseEnabled] = useState(false);
   const [memoryEnabled, setMemoryEnabled] = useState(false);

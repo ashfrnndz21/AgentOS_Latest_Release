@@ -114,8 +114,71 @@ echo "🧹 Cleaning up any existing services..."
 echo ""
 echo "🚀 Starting services..."
 
+# Start Agent Registry Service
+echo -e "${BLUE}1. Starting Agent Registry Service...${NC}"
+if ! check_port 5010; then
+    echo -e "${RED}   Port 5010 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Agent Registry on port 5010..."
+cd backend
+source venv/bin/activate
+python agent_registry.py >agent_registry.log 2>&1 &
+REGISTRY_PID=$!
+cd ..
+
+wait_for_service 5010 "Agent Registry"
+if [ $? -eq 0 ]; then
+    sleep 3
+    test_service "http://localhost:5010/health" "Agent Registry"
+fi
+
+# Start A2A Agent Servers
+echo -e "${BLUE}2. Starting A2A Agent Servers...${NC}"
+
+echo "   Starting Calculator Agent (Port 8001)..."
+if ! check_port 8001; then
+    echo -e "${RED}   Port 8001 is still in use!${NC}"
+    exit 1
+fi
+
+cd backend/a2a_servers
+source ../venv/bin/activate
+python calculator_agent_server.py >calculator_agent.log 2>&1 &
+CALCULATOR_PID=$!
+cd ../..
+
+echo "   Starting Research Agent (Port 8002)..."
+if ! check_port 8002; then
+    echo -e "${RED}   Port 8002 is still in use!${NC}"
+    exit 1
+fi
+
+cd backend/a2a_servers
+source ../venv/bin/activate
+python research_agent_server.py >research_agent.log 2>&1 &
+RESEARCH_PID=$!
+cd ../..
+
+echo "   Starting Coordinator Agent (Port 8000)..."
+if ! check_port 8000; then
+    echo -e "${RED}   Port 8000 is still in use!${NC}"
+    exit 1
+fi
+
+cd backend/a2a_servers
+source ../venv/bin/activate
+python coordinator_agent_server.py >coordinator_agent.log 2>&1 &
+COORDINATOR_PID=$!
+cd ../..
+
+wait_for_service 8000 "Coordinator Agent"
+wait_for_service 8001 "Calculator Agent"
+wait_for_service 8002 "Research Agent"
+
 # Start Ollama core service (if not already running)
-echo -e "${BLUE}1. Starting Ollama Core Service...${NC}"
+echo -e "${BLUE}3. Starting Ollama Core Service...${NC}"
 if ! check_port 11434; then
     echo "   Ollama already running on port 11434"
 else
@@ -187,8 +250,146 @@ if [ $? -eq 0 ]; then
     test_service "http://localhost:5002/health" "Ollama API"
 fi
 
+# Start Chat Orchestrator API
+echo -e "${BLUE}5. Starting Chat Orchestrator API...${NC}"
+if ! check_port 5005; then
+    echo -e "${RED}   Port 5005 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Chat Orchestrator API on port 5005..."
+cd backend
+source venv/bin/activate
+python chat_orchestrator_api.py >/dev/null 2>&1 &
+CHAT_ORCHESTRATOR_PID=$!
+cd ..
+
+wait_for_service 5005 "Chat Orchestrator API"
+if [ $? -eq 0 ]; then
+    # Test the service
+    sleep 3
+    test_service "http://localhost:5005/api/chat/health" "Chat Orchestrator API"
+fi
+
+# Start Strands SDK API (Individual Agent Analytics)
+echo -e "${BLUE}6. Starting Strands SDK API (Individual Agent Analytics)...${NC}"
+if ! check_port 5006; then
+    echo -e "${RED}   Port 5006 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Strands SDK API on port 5006..."
+cd backend
+source venv/bin/activate
+python strands_sdk_api.py >strands_sdk_api.log 2>&1 &
+STRANDS_SDK_PID=$!
+cd ..
+
+wait_for_service 5006 "Strands SDK API"
+if [ $? -eq 0 ]; then
+    # Test the service with retry logic for Strands SDK
+    sleep 8
+    retry_count=0
+    max_retries=5
+    while [ $retry_count -lt $max_retries ]; do
+        if test_service "http://localhost:5006/api/strands-sdk/health" "Strands SDK API"; then
+            break
+        fi
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $max_retries ]; then
+            echo "   Retrying health check in 5 seconds..."
+            sleep 5
+        fi
+    done
+fi
+
+# Start A2A Communication Service (Agent-to-Agent Communication)
+echo -e "${BLUE}7. Starting A2A Communication Service...${NC}"
+if ! check_port 5008; then
+    echo -e "${RED}   Port 5008 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting A2A Communication Service on port 5008..."
+cd backend
+source venv/bin/activate
+python a2a_service.py >a2a_service.log 2>&1 &
+A2A_SERVICE_PID=$!
+cd ..
+
+wait_for_service 5008 "A2A Communication Service"
+if [ $? -eq 0 ]; then
+    # Test the service with retry logic
+    sleep 5
+    retry_count=0
+    max_retries=3
+    while [ $retry_count -lt $max_retries ]; do
+        if test_service "http://localhost:5008/api/a2a/health" "A2A Communication Service"; then
+            break
+        fi
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $max_retries ]; then
+            echo "   Retrying health check in 3 seconds..."
+            sleep 3
+        fi
+    done
+fi
+
+# Start Strands Orchestration API (Workflow Management)
+echo -e "${BLUE}8. Starting Strands Orchestration API...${NC}"
+if ! check_port 5009; then
+    echo -e "${RED}   Port 5009 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Strands Orchestration API on port 5009..."
+cd backend
+source venv/bin/activate
+python strands_orchestration_api.py >strands_orchestration_api.log 2>&1 &
+STRANDS_ORCHESTRATION_PID=$!
+cd ..
+
+wait_for_service 5009 "Strands Orchestration API"
+if [ $? -eq 0 ]; then
+    # Test the service with retry logic
+    sleep 5
+    retry_count=0
+    max_retries=3
+    while [ $retry_count -lt $max_retries ]; do
+        if test_service "http://localhost:5009/api/strands-orchestration/health" "Strands Orchestration API"; then
+            break
+        fi
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $max_retries ]; then
+            echo "   Retrying health check in 3 seconds..."
+            sleep 3
+        fi
+    done
+fi
+
+# Start Resource Monitor API
+echo -e "${BLUE}9. Starting Resource Monitor API...${NC}"
+if ! check_port 5011; then
+    echo -e "${RED}   Port 5011 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Resource Monitor API on port 5011..."
+cd backend
+source venv/bin/activate
+python resource_monitor_api.py >resource_monitor_api.log 2>&1 &
+RESOURCE_MONITOR_PID=$!
+cd ..
+
+wait_for_service 5011 "Resource Monitor API"
+if [ $? -eq 0 ]; then
+    # Test the service
+    sleep 3
+    test_service "http://localhost:5011/api/resource-monitor/health" "Resource Monitor API"
+fi
+
 # Start Frontend (Vite)
-echo -e "${BLUE}5. Starting Frontend (Vite)...${NC}"
+echo -e "${BLUE}10. Starting Frontend (Vite)...${NC}"
 if ! check_port 5173; then
     echo -e "${RED}   Port 5173 is still in use!${NC}"
     exit 1
@@ -215,6 +416,12 @@ services=(
     "5002:Ollama API"
     "5003:RAG API"
     "5004:Strands API"
+    "5005:Chat Orchestrator API"
+    "5006:Strands SDK API"
+    "5008:A2A Communication Service"
+    "5009:Strands Orchestration API"
+    "5010:Agent Registry"
+    "5011:Resource Monitor API"
     "5173:Frontend"
 )
 
@@ -237,11 +444,17 @@ if [ "$all_running" = true ]; then
     echo -e "${GREEN}🎉 All services started successfully!${NC}"
     echo ""
     echo "📡 Service URLs:"
-    echo "   • Frontend:     http://localhost:5173"
-    echo "   • Strands API:  http://localhost:5004"
-    echo "   • RAG API:      http://localhost:5003"
-    echo "   • Ollama API:   http://localhost:5002"
-    echo "   • Ollama Core:  http://localhost:11434"
+    echo "   • Frontend:                    http://localhost:5173"
+    echo "   • Resource Monitor API:        http://localhost:5011  (System Monitoring)"
+    echo "   • Agent Registry:              http://localhost:5010  (Agent Management)"
+    echo "   • Strands Orchestration API:   http://localhost:5009  (Workflow Management)"
+    echo "   • A2A Communication Service:   http://localhost:5008  (Agent-to-Agent Communication)"
+    echo "   • Strands SDK API:             http://localhost:5006  (Individual Agent Analytics)"
+    echo "   • Chat Orchestrator:           http://localhost:5005  (Multi-Agent Chat)"
+    echo "   • Strands API:                 http://localhost:5004  (Intelligence & Reasoning)"
+    echo "   • RAG API:                     http://localhost:5003  (Document Chat)"
+    echo "   • Ollama API:                  http://localhost:5002  (Terminal & Agents)"
+    echo "   • Ollama Core:                 http://localhost:11434 (LLM Engine)"
     echo ""
     echo "🌐 Application is ready!"
     echo "   • Open your browser: http://localhost:5173"
