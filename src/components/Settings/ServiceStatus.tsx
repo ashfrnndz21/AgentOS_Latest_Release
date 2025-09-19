@@ -68,20 +68,30 @@ export const ServiceStatus: React.FC = () => {
 
   const getServiceDisplayName = (serviceKey: string) => {
     const displayNames: { [key: string]: string } = {
-      'ollama': 'Ollama Server',
-      'strands_sdk': 'Strands SDK API',
-      'a2a_service': 'A2A Communication Service',
-      'agent_registry': 'Agent Registry Service'
+      'ollama_core': 'Ollama Core',
+      'ollama_api': 'Ollama API',
+      'rag_api': 'Rag API',
+      'strands_api': 'Strands Api',
+      'chat_orchestrator': 'Chat Orchestrator',
+      'strands_sdk': 'Strands Sdk',
+      'a2a_service': 'A2a Service',
+      'strands_orchestration': 'Strands Orchestration',
+      'agent_registry': 'Agent Registry'
     };
     return displayNames[serviceKey] || serviceKey.replace('_', ' ').toUpperCase();
   };
 
   const getServiceDescription = (serviceKey: string) => {
     const descriptions: { [key: string]: string } = {
-      'ollama': 'LLM model server for running AI models',
-      'strands_sdk': 'Strands SDK API for agent creation and execution',
-      'a2a_service': 'Agent-to-Agent communication and collaboration',
-      'agent_registry': 'Agent discovery and health monitoring'
+      'ollama_core': 'Ollama Core is running',
+      'ollama_api': 'Ollama API is running',
+      'rag_api': 'RAG API is running',
+      'strands_api': 'Strands API is running',
+      'chat_orchestrator': 'Chat Orchestrator is running',
+      'strands_sdk': 'Strands SDK running (mock-strands)',
+      'a2a_service': 'A2A Service running (2 agents)',
+      'strands_orchestration': 'Strands Orchestration is running',
+      'agent_registry': 'Agent Registry is running'
     };
     return descriptions[serviceKey] || 'Backend service';
   };
@@ -185,10 +195,15 @@ export const ServiceStatus: React.FC = () => {
         <div className="p-4 rounded-lg border bg-gray-800/20">
           <h4 className="text-sm font-medium text-white mb-2">Service Information</h4>
           <div className="space-y-1 text-xs text-gray-400">
-            <div>• <strong>Ollama Server:</strong> Required for running LLM models</div>
-            <div>• <strong>Strands SDK API:</strong> Required for creating and managing agents</div>
-            <div>• <strong>A2A Service:</strong> Required for agent-to-agent collaboration</div>
-            <div>• <strong>Agent Registry:</strong> Required for agent discovery and health monitoring</div>
+            <div>• <strong>Ollama Core:</strong> LLM Engine (Port 11434)</div>
+            <div>• <strong>Ollama API:</strong> Terminal & Agents (Port 5002)</div>
+            <div>• <strong>RAG API:</strong> Document Chat (Port 5003)</div>
+            <div>• <strong>Strands API:</strong> Intelligence & Reasoning (Port 5004)</div>
+            <div>• <strong>Chat Orchestrator:</strong> Multi-Agent Chat (Port 5005)</div>
+            <div>• <strong>Strands SDK:</strong> Individual Agent Analytics (Port 5006)</div>
+            <div>• <strong>A2A Service:</strong> Agent-to-Agent Communication (Port 5008)</div>
+            <div>• <strong>Strands Orchestration:</strong> Workflow Management (Port 5009)</div>
+            <div>• <strong>Agent Registry:</strong> Agent Management (Port 5010)</div>
           </div>
         </div>
 

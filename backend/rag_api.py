@@ -17,6 +17,8 @@ import sqlite3
 import uuid
 import tempfile
 import shutil
+import io
+from PyPDF2 import PdfReader
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -360,20 +362,42 @@ async def process_document_content(document_id: str, filename: str, content: byt
         }
 
 async def extract_pdf_text(content: bytes):
-    """Extract text from PDF content"""
+    """Extract text from PDF content using PyPDF2"""
     try:
-        # For demo purposes, simulate PDF processing
-        # In production, use PyPDF2, pdfplumber, or similar
-        text = f"PDF Content Extracted\n\nThis is simulated PDF text extraction. In production, this would use a proper PDF parsing library like PyPDF2 or pdfplumber to extract the actual text content from the PDF file.\n\nFile size: {len(content)} bytes"
+        # Create a BytesIO object from the PDF content
+        pdf_buffer = io.BytesIO(content)
         
-        # Simulate page count based on file size
-        estimated_pages = max(1, len(content) // 50000)  # Rough estimate
+        # Read the PDF
+        pdf_reader = PdfReader(pdf_buffer)
         
-        return text, estimated_pages
+        # Extract text from all pages
+        text_parts = []
+        pages_processed = len(pdf_reader.pages)
+        
+        for page_num, page in enumerate(pdf_reader.pages):
+            try:
+                page_text = page.extract_text()
+                if page_text.strip():  # Only add non-empty pages
+                    text_parts.append(f"--- Page {page_num + 1} ---\n{page_text.strip()}")
+            except Exception as e:
+                logger.warning(f"Failed to extract text from page {page_num + 1}: {str(e)}")
+                continue
+        
+        # Combine all text
+        full_text = "\n\n".join(text_parts)
+        
+        if not full_text.strip():
+            raise Exception("No text content could be extracted from the PDF")
+        
+        logger.info(f"Successfully extracted text from PDF: {pages_processed} pages, {len(full_text)} characters")
+        
+        return full_text, pages_processed
+        
     except Exception as e:
+        logger.error(f"Failed to extract PDF text: {str(e)}")
         raise Exception(f"Failed to extract PDF text: {str(e)}")
 
-def create_text_chunks(text: str, chunk_size: int = 1000, overlap: int = 200):
+def create_text_chunks(text: str, chunk_size: int = 2000, overlap: int = 400):
     """Create overlapping text chunks"""
     chunks = []
     start = 0
