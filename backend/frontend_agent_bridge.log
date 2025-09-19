@@ -1,0 +1,131 @@
+🌉 Starting Frontend Agent Bridge Service...
+📍 Port: 5012
+🔗 Bridging frontend agents with backend orchestration
+📡 Backend Registry: http://localhost:5010
+📡 Frontend A2A: http://localhost:5008
+📡 Orchestration: http://localhost:8005
+ * Serving Flask app 'frontend_agent_bridge'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5012
+ * Running on http://192.168.0.186:5012
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [19/Sep/2025 08:58:49] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:16:05] "[33mDELETE /agent/bd3ad77e-f19d-49a9-970c-1bb22f47d276 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:16:05] "OPTIONS /agent/bd3ad77e-f19d-49a9-970c-1bb22f47d276 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:16:05] "[33mDELETE /agent/bd3ad77e-f19d-49a9-970c-1bb22f47d276 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:18:11] "[33mDELETE /agent/e46d13b1-be90-4c5b-91a4-087335c73ec9 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:18:11] "OPTIONS /agent/e46d13b1-be90-4c5b-91a4-087335c73ec9 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:18:11] "[33mDELETE /agent/e46d13b1-be90-4c5b-91a4-087335c73ec9 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:19:43] "OPTIONS /register HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:19:43] "POST /register HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:20:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:20:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:21:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:21:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:22:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:22:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:23:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:23:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:24:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:24:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:25:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:25:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:26:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:26:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:27:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:27:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:28:04] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:28:34] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:29:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:29:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:30:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:30:20] "[33mGET / HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:30:32] "[33mGET /api/agents HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:30:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:30:41] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:30:47] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:31:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:31:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:32:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:32:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:33:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:33:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:34:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:34:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:35:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:35:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:36:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:36:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:37:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:37:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:38:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:38:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:39:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:39:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:40:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:40:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:41:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:41:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:42:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:42:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:43:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:43:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:44:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:44:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:45:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:45:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:45:44] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:45:53] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:46:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:46:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:47:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:47:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:48:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:48:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:49:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:49:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:50:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:50:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:50:53] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:51:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:51:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:52:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:52:31] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:52:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:53:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:53:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:54:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:54:35] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:54:39] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:55:05] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:55:36] "GET /agent/ea3a7403-304b-4d44-a988-3c0279caf942/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:55:40] "DELETE /agent/ea3a7403-304b-4d44-a988-3c0279caf942 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:55:40] "OPTIONS /agent/ea3a7403-304b-4d44-a988-3c0279caf942 HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:55:40] "[33mDELETE /agent/ea3a7403-304b-4d44-a988-3c0279caf942 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Sep/2025 09:56:35] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:57:44] "OPTIONS /register HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:57:44] "POST /register HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:58:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:58:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:59:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:59:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 09:59:38] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:00:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:00:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:01:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:01:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:02:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:02:32] "GET /agents HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:02:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:03:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:03:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:04:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:04:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:05:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:05:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:06:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:06:36] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:07:06] "GET /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710/health HTTP/1.1" 200 -
+127.0.0.1 - - [19/Sep/2025 10:07:22] "DELETE /agent/6b6781c4-dc1c-4d26-8195-d191a18bd710 HTTP/1.1" 200 -

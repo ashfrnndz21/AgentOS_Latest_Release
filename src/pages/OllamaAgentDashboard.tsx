@@ -38,7 +38,7 @@ import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
 import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
 import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
-import { RealTimeLLMOrchestrationMonitor } from '@/components/A2A/RealTimeLLMOrchestrationMonitor';
+import { AdvancedOrchestrationMonitor } from '@/components/A2A/AdvancedOrchestrationMonitor';
 import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
@@ -47,6 +47,7 @@ export const OllamaAgentDashboard: React.FC = () => {
   const [strandsAgents, setStrandsAgents] = useState<StrandsSdkAgent[]>([]);
   const [a2aAgents, setA2aAgents] = useState<StrandsSdkAgent[]>([]);
   const [a2aStatuses, setA2aStatuses] = useState<Record<string, A2AStatus>>({});
+  const [actualA2AConnections, setActualA2AConnections] = useState<number>(0);
   const [selectedAgent, setSelectedAgent] = useState<OllamaAgentConfig | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showStrandsSdkDialog, setShowStrandsSdkDialog] = useState(false);
@@ -214,7 +215,15 @@ export const OllamaAgentDashboard: React.FC = () => {
         }, {} as Record<string, A2AStatus>);
         
         setA2aStatuses(statusMap);
-        console.log('[Dashboard] Loaded A2A agents:', convertedAgents.length);
+        
+        // Load actual A2A connections count
+        const connectionCount = await getActualA2AConnections();
+        setActualA2AConnections(connectionCount);
+        
+        console.log('[Dashboard] Loaded A2A agents:', {
+          count: convertedAgents.length,
+          actualConnections: connectionCount
+        });
       } else {
         console.error('[Dashboard] Failed to fetch A2A agents:', response.status);
       }
@@ -227,8 +236,9 @@ export const OllamaAgentDashboard: React.FC = () => {
     try {
       const status = await ollamaAgentService.healthCheck();
       
-      // Use the actual loaded agents count - a2aAgents are the same as strandsAgents, so don't double count
-      const totalAgentCount = agents.length + strandsAgents.length;
+      // Use the actual loaded agents count - only count regular agents for the main count
+      // A2A agents are handled separately in their own tab
+      const totalAgentCount = agents.length;
       
       // Calculate total executions from all sources
       const strandsExecutions = strandsAgents.reduce((sum, agent) => sum + ((agent as any).recent_executions?.length || 0), 0);
@@ -474,6 +484,26 @@ export const OllamaAgentDashboard: React.FC = () => {
     });
   };
 
+  const handleA2AConnected = async () => {
+    // Reload A2A agents and statuses to update connection counts
+    await loadA2AAgents();
+    toast({
+      title: "A2A Connection Complete",
+      description: "Agents have been connected for A2A communication!",
+    });
+  };
+
+  const getActualA2AConnections = async (): Promise<number> => {
+    try {
+      const response = await fetch('http://localhost:5008/api/a2a/connections');
+      const data = await response.json();
+      return data.connections?.length || 0;
+    } catch (error) {
+      console.error('Failed to get A2A connections:', error);
+      return 0;
+    }
+  };
+
   const handleChatWithAgent = async (agent: OllamaAgentConfig) => {
     setChatLoading(agent.id);
     
@@ -572,7 +602,7 @@ export const OllamaAgentDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span>
                   System Status: {healthStatus.status} • Ollama: {healthStatus.ollamaStatus} • 
-                  {healthStatus.agentCount} agents • {healthStatus.totalExecutions} total executions
+                  {healthStatus.agentCount} legacy agents • {a2aAgents.length} A2A agents • {healthStatus.totalExecutions} total executions
                 </span>
                 {healthStatus.errors.length > 0 && (
                   <span className="text-sm">
@@ -588,7 +618,7 @@ export const OllamaAgentDashboard: React.FC = () => {
           <TabsList className="bg-gray-800">
             <TabsTrigger value="agents" className="data-[state=active]:bg-purple-600">
               <Bot className="h-4 w-4 mr-2" />
-              Agents ({agents.length + strandsAgents.length})
+              Agents ({agents.length})
             </TabsTrigger>
             <TabsTrigger value="a2a" className="data-[state=active]:bg-purple-600">
               <Network className="h-4 w-4 mr-2" />
@@ -607,7 +637,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
                 <p>Loading agents...</p>
               </div>
-            ) : agents.length === 0 && strandsAgents.length === 0 ? (
+            ) : agents.length === 0 ? (
               <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="text-center py-12">
                   <Bot size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
@@ -779,7 +809,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 })}
 
                 {/* Strands SDK Agents */}
-                {strandsAgents.map((agent) => (
+                {false && strandsAgents.map((agent) => (
                   <Card key={`strands-sdk-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -1044,7 +1074,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 {/* A2A System Status */}
                 <A2AStatusIndicator
                   isActive={true}
-                  agentsConnected={a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length}
+                  agentsConnected={actualA2AConnections}
                   lastActivity="Just now"
                   status="idle"
                 />
@@ -1066,6 +1096,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                             onChat={handleChatWithStrandsAgent}
                             onAnalytics={handleOpenAnalytics}
                             onDelete={handleDeleteStrandsAgent}
+                            onA2AConnected={handleA2AConnected}
                             chatLoading={chatLoading}
                             a2aStatus={a2aStatuses[agent.id!]}
                           />
@@ -1081,7 +1112,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                       <Users className="h-5 w-5 text-blue-400" />
                       Agent Orchestration
                     </h3>
-                    <RealTimeLLMOrchestrationMonitor />
+                    <AdvancedOrchestrationMonitor />
                   </div>
                 )}
 
@@ -1188,18 +1219,33 @@ export const OllamaAgentDashboard: React.FC = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <Card className="bg-gray-800 border-gray-700">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <Bot className="text-purple-400" size={16} />
-                    Total Agents
+                    Legacy Agents
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{agents.length + strandsAgents.length}</div>
+                  <div className="text-2xl font-bold">{agents.length}</div>
                   <p className="text-xs text-gray-400">
-                    {agents.length} Legacy + {strandsAgents.length} Strands SDK
+                    Ollama agents
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Network className="text-orange-400" size={16} />
+                    A2A Agents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{a2aAgents.length}</div>
+                  <p className="text-xs text-gray-400">
+                    {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length} registered
                   </p>
                 </CardContent>
               </Card>

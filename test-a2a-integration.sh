@@ -145,3 +145,8 @@ echo "2. Navigate to Multi-Agent Workspace"
 echo "3. Select 'A2A Agent Registry'"
 echo "4. View registered agents and test communication"
 
+
+
+
+
+

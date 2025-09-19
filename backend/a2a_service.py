@@ -8,7 +8,6 @@ import asyncio
 import json
 import uuid
 import sqlite3
-import requests
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from flask import Flask, request, jsonify
@@ -82,46 +81,6 @@ class A2AAgentRegistry:
     def __init__(self):
         self.agents: Dict[str, Dict[str, Any]] = {}
         self.connections: Dict[str, List[str]] = {}  # agent_id -> list of connected agent_ids
-        self.load_agents_from_db()
-    
-    def load_agents_from_db(self):
-        """Load agents from database on startup"""
-        try:
-            conn = sqlite3.connect(A2A_DB)
-            cursor = conn.cursor()
-            
-            # Load agents
-            cursor.execute("SELECT id, name, description, model, capabilities, status, registered_at, last_seen FROM a2a_agents")
-            rows = cursor.fetchall()
-            
-            for row in rows:
-                agent_id, name, description, model, capabilities, status, registered_at, last_seen = row
-                self.agents[agent_id] = {
-                    "id": agent_id,
-                    "name": name,
-                    "description": description or "",
-                    "model": model or "",
-                    "capabilities": json.loads(capabilities) if capabilities else [],
-                    "status": status or "active",
-                    "registered_at": registered_at or datetime.now().isoformat(),
-                    "last_seen": last_seen or datetime.now().isoformat()
-                }
-                self.connections[agent_id] = []
-            
-            # Load connections
-            cursor.execute("SELECT from_agent_id, to_agent_id FROM a2a_connections WHERE is_active = 1")
-            connection_rows = cursor.fetchall()
-            
-            for from_agent_id, to_agent_id in connection_rows:
-                if from_agent_id in self.connections and to_agent_id not in self.connections[from_agent_id]:
-                    self.connections[from_agent_id].append(to_agent_id)
-                if to_agent_id in self.connections and from_agent_id not in self.connections[to_agent_id]:
-                    self.connections[to_agent_id].append(from_agent_id)
-            
-            conn.close()
-            print(f"📊 Loaded {len(self.agents)} agents from A2A database")
-        except Exception as e:
-            print(f"⚠️ Failed to load agents from database: {e}")
     
     def register_agent(self, agent_id: str, agent_data: Dict[str, Any]) -> Dict[str, Any]:
         """Register an agent for A2A communication"""
@@ -137,29 +96,6 @@ class A2AAgentRegistry:
                 "last_seen": datetime.now().isoformat()
             }
             
-            # Save to database
-            conn = sqlite3.connect(A2A_DB)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT OR REPLACE INTO a2a_agents 
-                (id, name, description, model, capabilities, status, registered_at, last_seen)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                agent_id,
-                agent_info["name"],
-                agent_info["description"],
-                agent_info["model"],
-                json.dumps(agent_info["capabilities"]),
-                agent_info["status"],
-                agent_info["registered_at"],
-                agent_info["last_seen"]
-            ))
-            
-            conn.commit()
-            conn.close()
-            
-            # Update in-memory registry
             self.agents[agent_id] = agent_info
             self.connections[agent_id] = []
             
@@ -183,6 +119,25 @@ class A2AAgentRegistry:
     def get_agent(self, agent_id: str) -> Optional[Dict[str, Any]]:
         """Get specific agent by ID"""
         return self.agents.get(agent_id)
+    
+    def remove_agent(self, agent_id: str) -> bool:
+        """Remove an agent from the registry"""
+        try:
+            if agent_id in self.agents:
+                del self.agents[agent_id]
+                # Also remove from connections
+                if agent_id in self.connections:
+                    del self.connections[agent_id]
+                # Remove from other agents' connections
+                for other_agent_id in self.connections:
+                    if agent_id in self.connections[other_agent_id]:
+                        self.connections[other_agent_id].remove(agent_id)
+                print(f"✅ Agent {agent_id} removed from A2A registry")
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ Error removing agent {agent_id}: {e}")
+            return False
     
     def connect_agents(self, from_agent_id: str, to_agent_id: str) -> Dict[str, Any]:
         """Create a connection between two agents"""
@@ -214,6 +169,23 @@ class A2AAgentRegistry:
                 "status": "error",
                 "error": str(e)
             }
+    
+    def get_all_connections(self) -> List[Dict[str, Any]]:
+        """Get all agent connections"""
+        connections = []
+        for agent_id, connected_agents in self.connections.items():
+            for connected_agent_id in connected_agents:
+                connections.append({
+                    "from_agent_id": agent_id,
+                    "to_agent_id": connected_agent_id,
+                    "from_agent_name": self.agents[agent_id]["name"],
+                    "to_agent_name": self.agents[connected_agent_id]["name"]
+                })
+        return connections
+    
+    def get_agent_connections(self, agent_id: str) -> List[str]:
+        """Get connections for a specific agent"""
+        return self.connections.get(agent_id, [])
 
 class A2AMessageRouter:
     """Handles message routing between agents"""
@@ -384,40 +356,52 @@ def delete_agent(agent_id):
             }), 404
         
         # Remove from registry
-        agent_name = agent["name"]
-        del agent_registry.agents[agent_id]
+        success = agent_registry.remove_agent(agent_id)
         
-        # Remove from connections
-        if agent_id in agent_registry.connections:
-            del agent_registry.connections[agent_id]
-        
-        # Remove connections to this agent
-        for other_agent_id, connections in agent_registry.connections.items():
-            if agent_id in connections:
-                connections.remove(agent_id)
-        
-        # Clean up database
-        conn = sqlite3.connect(A2A_DB)
-        cursor = conn.cursor()
-        
-        # Delete agent
-        cursor.execute("DELETE FROM a2a_agents WHERE id = ?", (agent_id,))
-        
-        # Delete related messages
-        cursor.execute("DELETE FROM a2a_messages WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-        
-        # Delete related connections
-        cursor.execute("DELETE FROM a2a_connections WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-        
-        conn.commit()
-        conn.close()
-        
-        print(f"🗑️ A2A Agent deleted: {agent_name} ({agent_id})")
-        
+        if success:
+            print(f"✅ A2A agent deleted: {agent.get('name', agent_id)}")
+            return jsonify({
+                "status": "success",
+                "message": f"Agent {agent.get('name', agent_id)} deleted successfully"
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "error": "Failed to delete agent"
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error deleting A2A agent {agent_id}: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+@app.route('/api/a2a/connections', methods=['GET'])
+def get_connections():
+    """Get all agent connections"""
+    try:
+        connections = agent_registry.get_all_connections()
         return jsonify({
             "status": "success",
-            "message": f"Agent {agent_name} deleted successfully"
-        })
+            "connections": connections
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+@app.route('/api/a2a/connections/<agent_id>', methods=['GET'])
+def get_agent_connections(agent_id):
+    """Get connections for a specific agent"""
+    try:
+        connections = agent_registry.get_agent_connections(agent_id)
+        return jsonify({
+            "status": "success",
+            "agent_id": agent_id,
+            "connections": connections
+        }), 200
     except Exception as e:
         return jsonify({
             "status": "error",
@@ -496,259 +480,14 @@ def get_message_history():
             "error": str(e)
         }), 500
 
-@app.route('/api/a2a/health-check', methods=['GET'])
-def health_check_agents():
-    """Check if A2A registered agents still exist in their source services"""
-    try:
-        orphaned_agents = []
-        healthy_agents = []
-        
-        for agent_id, agent in agent_registry.agents.items():
-            # Check if agent exists in source services
-            source_found = False
-            
-            # Check Strands SDK service (port 5006)
-            try:
-                response = requests.get("http://localhost:5006/api/strands-sdk/agents", timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    agents = data.get('agents', [])
-                    # Check if agent exists in the list
-                    for agent in agents:
-                        if agent.get('id') == agent_id:
-                            source_found = True
-                            break
-            except:
-                pass
-            
-            # Check Strands Native service (port 5004)
-            if not source_found:
-                try:
-                    response = requests.get(f"http://localhost:5004/api/strands/agents/{agent_id}", timeout=5)
-                    if response.status_code == 200:
-                        source_found = True
-                except:
-                    pass
-            
-            # Check Ollama service (port 5005)
-            if not source_found:
-                try:
-                    response = requests.get(f"http://localhost:5005/api/agents/ollama/{agent_id}", timeout=5)
-                    if response.status_code == 200:
-                        source_found = True
-                except:
-                    pass
-            
-            if source_found:
-                healthy_agents.append(agent)
-            else:
-                orphaned_agents.append(agent)
-        
-        return jsonify({
-            "status": "success",
-            "total_agents": len(agent_registry.agents),
-            "healthy_agents": len(healthy_agents),
-            "orphaned_agents": len(orphaned_agents),
-            "healthy_agent_list": healthy_agents,
-            "orphaned_agent_list": orphaned_agents
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/cleanup', methods=['POST'])
-def cleanup_orphaned_agents():
-    """Remove orphaned A2A agents that no longer exist in source services"""
-    try:
-        orphaned_count = 0
-        cleaned_agents = []
-        
-        for agent_id, agent in list(agent_registry.agents.items()):
-            # Check if agent exists in source services
-            source_found = False
-            
-            # Check Strands SDK service (port 5006)
-            try:
-                response = requests.get("http://localhost:5006/api/strands-sdk/agents", timeout=5)
-                if response.status_code == 200:
-                    data = response.json()
-                    agents = data.get('agents', [])
-                    # Check if agent exists in the list
-                    for agent in agents:
-                        if agent.get('id') == agent_id:
-                            source_found = True
-                            break
-            except:
-                pass
-            
-            # Check Strands Native service (port 5004)
-            if not source_found:
-                try:
-                    response = requests.get(f"http://localhost:5004/api/strands/agents/{agent_id}", timeout=5)
-                    if response.status_code == 200:
-                        source_found = True
-                except:
-                    pass
-            
-            # Check Ollama service (port 5005)
-            if not source_found:
-                try:
-                    response = requests.get(f"http://localhost:5005/api/agents/ollama/{agent_id}", timeout=5)
-                    if response.status_code == 200:
-                        source_found = True
-                except:
-                    pass
-            
-            # If not found in any source service, remove from A2A
-            if not source_found:
-                agent_name = agent["name"]
-                cleaned_agents.append(agent_name)
-                
-                # Remove from registry
-                del agent_registry.agents[agent_id]
-                
-                # Remove from connections
-                if agent_id in agent_registry.connections:
-                    del agent_registry.connections[agent_id]
-                
-                # Remove connections to this agent
-                for other_agent_id, connections in agent_registry.connections.items():
-                    if agent_id in connections:
-                        connections.remove(agent_id)
-                
-                # Clean up database
-                conn = sqlite3.connect(A2A_DB)
-                cursor = conn.cursor()
-                
-                # Delete agent
-                cursor.execute("DELETE FROM a2a_agents WHERE id = ?", (agent_id,))
-                
-                # Delete related messages
-                cursor.execute("DELETE FROM a2a_messages WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-                
-                # Delete related connections
-                cursor.execute("DELETE FROM a2a_connections WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-                
-                conn.commit()
-                conn.close()
-                
-                orphaned_count += 1
-                print(f"🧹 Cleaned up orphaned A2A agent: {agent_name} ({agent_id})")
-        
-        return jsonify({
-            "status": "success",
-            "orphaned_agents_removed": orphaned_count,
-            "cleaned_agents": cleaned_agents,
-            "remaining_agents": len(agent_registry.agents)
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-def periodic_cleanup():
-    """Periodic cleanup job to remove orphaned A2A agents"""
-    while True:
-        try:
-            time.sleep(300)  # Run every 5 minutes
-            print("🧹 Running periodic A2A cleanup...")
-            
-            # Check for orphaned agents
-            orphaned_count = 0
-            for agent_id, agent in list(agent_registry.agents.items()):
-                source_found = False
-                
-                # Check Strands SDK service (port 5006)
-                try:
-                    response = requests.get("http://localhost:5006/api/strands-sdk/agents", timeout=5)
-                    if response.status_code == 200:
-                        data = response.json()
-                        agents = data.get('agents', [])
-                        # Check if agent exists in the list
-                        for agent in agents:
-                            if agent.get('id') == agent_id:
-                                source_found = True
-                                break
-                except:
-                    pass
-                
-                # Check Strands Native service (port 5004)
-                if not source_found:
-                    try:
-                        response = requests.get(f"http://localhost:5004/api/strands/agents/{agent_id}", timeout=5)
-                        if response.status_code == 200:
-                            source_found = True
-                    except:
-                        pass
-                
-                # Check Ollama service (port 5005)
-                if not source_found:
-                    try:
-                        response = requests.get(f"http://localhost:5005/api/agents/ollama/{agent_id}", timeout=5)
-                        if response.status_code == 200:
-                            source_found = True
-                    except:
-                        pass
-                
-                # If not found in any source service, remove from A2A
-                if not source_found:
-                    agent_name = agent["name"]
-                    orphaned_count += 1
-                    
-                    # Remove from registry
-                    del agent_registry.agents[agent_id]
-                    
-                    # Remove from connections
-                    if agent_id in agent_registry.connections:
-                        del agent_registry.connections[agent_id]
-                    
-                    # Remove connections to this agent
-                    for other_agent_id, connections in agent_registry.connections.items():
-                        if agent_id in connections:
-                            connections.remove(agent_id)
-                    
-                    # Clean up database
-                    conn = sqlite3.connect(A2A_DB)
-                    cursor = conn.cursor()
-                    
-                    # Delete agent
-                    cursor.execute("DELETE FROM a2a_agents WHERE id = ?", (agent_id,))
-                    
-                    # Delete related messages
-                    cursor.execute("DELETE FROM a2a_messages WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-                    
-                    # Delete related connections
-                    cursor.execute("DELETE FROM a2a_connections WHERE from_agent_id = ? OR to_agent_id = ?", (agent_id, agent_id))
-                    
-                    conn.commit()
-                    conn.close()
-                    
-                    print(f"🧹 Cleaned up orphaned A2A agent: {agent_name} ({agent_id})")
-            
-            if orphaned_count > 0:
-                print(f"🧹 Periodic cleanup completed: {orphaned_count} orphaned agents removed")
-            else:
-                print("🧹 Periodic cleanup completed: No orphaned agents found")
-                
-        except Exception as e:
-            print(f"🧹 Periodic cleanup error: {e}")
-
 if __name__ == '__main__':
     print("🚀 Starting A2A Communication Service...")
     print("📍 Port: 5008")
     print("🔗 WebSocket support enabled")
     print("🤖 Agent registry initialized")
     print("📨 Message router ready")
-    print("🧹 Periodic cleanup enabled (every 5 minutes)")
     
     # Initialize database
     init_a2a_database()
-    
-    # Start periodic cleanup in background thread
-    cleanup_thread = threading.Thread(target=periodic_cleanup, daemon=True)
-    cleanup_thread.start()
     
     socketio.run(app, host='0.0.0.0', port=5008, debug=False, allow_unsafe_werkzeug=True)

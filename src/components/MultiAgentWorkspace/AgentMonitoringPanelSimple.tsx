@@ -275,3 +275,10 @@ export const AgentMonitoringPanelSimple: React.FC<AgentMonitoringPanelSimpleProp
 
 
 
+
+
+
+
+
+
+

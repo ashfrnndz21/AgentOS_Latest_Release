@@ -19,12 +19,12 @@ import os
 import sys
 import concurrent.futures
 import threading
+import requests  # Move requests import outside try block for cleanup functions
 
 # Official Strands SDK Integration with Ollama
 try:
     from strands import Agent, tool
     from strands.models.ollama import OllamaModel
-    import requests
     from datetime import datetime
     import math
     STRANDS_SDK_AVAILABLE = True
@@ -2005,24 +2005,91 @@ def delete_strands_agent(agent_id):
         conn.commit()
         conn.close()
         
-        # Cascade deletion: Remove from A2A service if registered
+        # Cascade deletion: Remove from ALL A2A services if registered
+        cleanup_results = {}
+        
+        # 1. Clean up A2A Service (port 5008) - Enhanced with better error handling
         try:
-            a2a_response = requests.delete(f"http://localhost:5008/api/a2a/agents/{agent_id}", timeout=5)
+            print(f"[Strands SDK] 🔄 Cleaning up A2A service for agent: {agent_name} ({agent_id})")
+            a2a_response = requests.delete(f"http://localhost:5008/api/a2a/agents/{agent_id}", timeout=10)
             if a2a_response.status_code == 200:
-                print(f"[Strands SDK] ✅ A2A registration cleaned up for {agent_name}")
+                print(f"[Strands SDK] ✅ A2A service cleanup successful for {agent_name}")
+                cleanup_results['a2a_service'] = 'success'
             elif a2a_response.status_code == 404:
                 print(f"[Strands SDK] ℹ️  Agent {agent_name} was not registered in A2A service")
+                cleanup_results['a2a_service'] = 'not_found'
             else:
-                print(f"[Strands SDK] ⚠️  A2A cleanup failed for {agent_name}: {a2a_response.status_code}")
+                print(f"[Strands SDK] ⚠️  A2A service cleanup failed for {agent_name}: {a2a_response.status_code} - {a2a_response.text}")
+                cleanup_results['a2a_service'] = 'failed'
+        except requests.exceptions.ConnectionError:
+            print(f"[Strands SDK] ⚠️  A2A service cleanup error for {agent_name}: Connection refused (A2A service not running)")
+            cleanup_results['a2a_service'] = 'connection_error'
+        except requests.exceptions.Timeout:
+            print(f"[Strands SDK] ⚠️  A2A service cleanup error for {agent_name}: Request timeout")
+            cleanup_results['a2a_service'] = 'timeout'
         except Exception as a2a_error:
-            print(f"[Strands SDK] ⚠️  A2A cleanup error for {agent_name}: {a2a_error}")
+            print(f"[Strands SDK] ⚠️  A2A service cleanup error for {agent_name}: {a2a_error}")
+            cleanup_results['a2a_service'] = 'error'
         
-        print(f"[Strands SDK] Agent deleted: {agent_name}")
+        # 2. Clean up Agent Registry (port 5010) - Enhanced error handling
+        try:
+            print(f"[Strands SDK] 🔄 Cleaning up Agent Registry for agent: {agent_name}")
+            registry_response = requests.delete(f"http://localhost:5010/agents/{agent_id}", timeout=10)
+            if registry_response.status_code == 200:
+                print(f"[Strands SDK] ✅ Agent Registry cleanup successful for {agent_name}")
+                cleanup_results['agent_registry'] = 'success'
+            elif registry_response.status_code == 404:
+                print(f"[Strands SDK] ℹ️  Agent {agent_name} was not registered in Agent Registry")
+                cleanup_results['agent_registry'] = 'not_found'
+            else:
+                print(f"[Strands SDK] ⚠️  Agent Registry cleanup failed for {agent_name}: {registry_response.status_code} - {registry_response.text}")
+                cleanup_results['agent_registry'] = 'failed'
+        except requests.exceptions.ConnectionError:
+            print(f"[Strands SDK] ℹ️  Agent Registry cleanup skipped for {agent_name}: Service not available (port 5010)")
+            cleanup_results['agent_registry'] = 'service_unavailable'
+        except requests.exceptions.Timeout:
+            print(f"[Strands SDK] ⚠️  Agent Registry cleanup error for {agent_name}: Request timeout")
+            cleanup_results['agent_registry'] = 'timeout'
+        except Exception as registry_error:
+            print(f"[Strands SDK] ⚠️  Agent Registry cleanup error for {agent_name}: {registry_error}")
+            cleanup_results['agent_registry'] = 'error'
+        
+        # 3. Clean up Frontend Agent Bridge (port 5012) - Enhanced error handling
+        try:
+            print(f"[Strands SDK] 🔄 Cleaning up Frontend Agent Bridge for agent: {agent_name}")
+            bridge_response = requests.delete(f"http://localhost:5012/agent/{agent_id}", timeout=10)
+            if bridge_response.status_code == 200:
+                print(f"[Strands SDK] ✅ Frontend Agent Bridge cleanup successful for {agent_name}")
+                cleanup_results['frontend_bridge'] = 'success'
+            elif bridge_response.status_code == 404:
+                print(f"[Strands SDK] ℹ️  Agent {agent_name} was not registered in Frontend Agent Bridge")
+                cleanup_results['frontend_bridge'] = 'not_found'
+            else:
+                print(f"[Strands SDK] ⚠️  Frontend Agent Bridge cleanup failed for {agent_name}: {bridge_response.status_code} - {bridge_response.text}")
+                cleanup_results['frontend_bridge'] = 'failed'
+        except requests.exceptions.ConnectionError:
+            print(f"[Strands SDK] ℹ️  Frontend Agent Bridge cleanup skipped for {agent_name}: Service not available (port 5012)")
+            cleanup_results['frontend_bridge'] = 'service_unavailable'
+        except requests.exceptions.Timeout:
+            print(f"[Strands SDK] ⚠️  Frontend Agent Bridge cleanup error for {agent_name}: Request timeout")
+            cleanup_results['frontend_bridge'] = 'timeout'
+        except Exception as bridge_error:
+            print(f"[Strands SDK] ⚠️  Frontend Agent Bridge cleanup error for {agent_name}: {bridge_error}")
+            cleanup_results['frontend_bridge'] = 'error'
+        
+        # Summary of cleanup results
+        successful_cleanups = sum(1 for result in cleanup_results.values() if result in ['success', 'not_found', 'service_unavailable'])
+        total_cleanups = len(cleanup_results)
+        
+        print(f"[Strands SDK] ✅ Agent deleted: {agent_name}")
+        print(f"[Strands SDK] 📊 Cleanup Summary: {successful_cleanups}/{total_cleanups} services cleaned successfully")
+        print(f"[Strands SDK] 🔧 Cleanup Results: {cleanup_results}")
         
         return jsonify({
             'message': f'Strands SDK agent "{agent_name}" deleted successfully',
             'sdk_type': 'official-strands',
-            'a2a_cleanup': 'attempted'
+            'cleanup_results': cleanup_results,
+            'cleanup_summary': f'{successful_cleanups}/{total_cleanups} services cleaned successfully'
         })
         
     except Exception as e:

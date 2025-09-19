@@ -28,6 +28,7 @@ interface A2AAgentCardProps {
   onAnalytics: (agent: StrandsSdkAgent) => void;
   onDelete: (agentId: string) => void;
   onRegisterA2A?: (agent: StrandsSdkAgent) => void;
+  onA2AConnected?: () => void;
   chatLoading?: string | null;
   a2aStatus?: {
     registered: boolean;
@@ -44,11 +45,53 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
   onAnalytics,
   onDelete,
   onRegisterA2A,
+  onA2AConnected,
   chatLoading,
   a2aStatus
 }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connections, setConnections] = useState<string[]>([]);
+  const [availableAgents, setAvailableAgents] = useState<any[]>([]);
+
+  // Fetch available agents for A2A connections
+  useEffect(() => {
+    const fetchAvailableAgents = async () => {
+      try {
+        const response = await fetch('http://localhost:5008/api/a2a/agents');
+        if (response.ok) {
+          const data = await response.json();
+          const otherAgents = data.agents.filter((a: any) => a.id !== agent.id);
+          setAvailableAgents(otherAgents);
+        }
+      } catch (error) {
+        console.error('Failed to fetch available agents:', error);
+      }
+    };
+
+    fetchAvailableAgents();
+  }, [agent.id]);
+
+  // Fetch A2A status and connections
+  const fetchA2AStatus = async () => {
+    try {
+      // Fetch agent connections
+      const connectionsResponse = await fetch(`http://localhost:5008/api/a2a/connections/${agent.id}`);
+      if (connectionsResponse.ok) {
+        const connectionsData = await connectionsResponse.json();
+        setConnections(connectionsData.connections || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch A2A status:', error);
+    }
+  };
+
+  // Fetch A2A status on component mount and when agent changes
+  useEffect(() => {
+    if (a2aStatus?.registered) {
+      fetchA2AStatus();
+    }
+  }, [agent.id, a2aStatus?.registered]);
 
   const handleRegisterA2A = async () => {
     setIsRegistering(true);
@@ -89,21 +132,51 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
         const otherAgents = data.agents.filter((a: any) => a.id !== agent.id);
         
         if (otherAgents.length > 0) {
-          // Connect to first available agent (in real implementation, show selection UI)
-          const connectResponse = await fetch('http://localhost:5008/api/a2a/connections', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from_agent_id: agent.id,
-              to_agent_id: otherAgents[0].id
-            })
+          // Connect to ALL other agents that aren't already connected
+          const connectionPromises = otherAgents.map(async (otherAgent: any) => {
+            // Check if already connected
+            const isAlreadyConnected = connections.includes(otherAgent.id);
+            if (isAlreadyConnected) {
+              return { success: true, alreadyConnected: true };
+            }
+
+            // Create connection
+            const connectResponse = await fetch('http://localhost:5008/api/a2a/connections', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from_agent_id: agent.id,
+                to_agent_id: otherAgent.id
+              })
+            });
+
+            return { 
+              success: connectResponse.ok, 
+              agentId: otherAgent.id,
+              alreadyConnected: false
+            };
           });
 
-          if (connectResponse.ok) {
-            // Refresh A2A status
-            window.location.reload();
+          // Wait for all connections to complete
+          const results = await Promise.all(connectionPromises);
+          const successfulConnections = results.filter(r => r.success && !r.alreadyConnected).length;
+          
+          if (successfulConnections > 0) {
+            // Refresh A2A status instead of reloading page
+            await fetchA2AStatus();
+            // Update available agents count
+            const updatedResponse = await fetch('http://localhost:5008/api/a2a/agents');
+            if (updatedResponse.ok) {
+              const updatedData = await updatedResponse.json();
+              const updatedOtherAgents = updatedData.agents.filter((a: any) => a.id !== agent.id);
+              setAvailableAgents(updatedOtherAgents);
+            }
+            // Notify parent component that connections were made
+            if (onA2AConnected) {
+              onA2AConnected();
+            }
           }
         }
       }
@@ -319,7 +392,7 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                   ) : (
                     <>
                       <Network className="h-3 w-3 mr-2" />
-                      Enable A2A
+                      Register for A2A
                     </>
                   )}
                 </Button>
@@ -328,24 +401,38 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-400">Connections:</span>
-                  <span className="text-white">{a2aStatus.connections || 0}</span>
+                  <span className="text-white">{connections.length}</span>
                 </div>
                 <Button
                   size="sm"
                   onClick={handleConnectToA2A}
-                  disabled={isConnecting}
+                  disabled={isConnecting || availableAgents.length === 0 || connections.length >= availableAgents.length}
                   variant="outline"
-                  className="w-full border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
+                  className={`w-full ${
+                    availableAgents.length === 0 || connections.length >= availableAgents.length
+                      ? 'border-gray-500 text-gray-500 cursor-not-allowed' 
+                      : 'border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white'
+                  }`}
                 >
                   {isConnecting ? (
                     <>
                       <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
                       Connecting...
                     </>
+                  ) : availableAgents.length === 0 ? (
+                    <>
+                      <Users className="h-3 w-3 mr-2" />
+                      No Other Agents Available
+                    </>
+                  ) : connections.length >= availableAgents.length ? (
+                    <>
+                      <Users className="h-3 w-3 mr-2" />
+                      All Agents Connected ({connections.length}/{availableAgents.length})
+                    </>
                   ) : (
                     <>
                       <Users className="h-3 w-3 mr-2" />
-                      Connect to Other Agents
+                      Connect to All Agents ({availableAgents.length - connections.length} remaining)
                     </>
                   )}
                 </Button>

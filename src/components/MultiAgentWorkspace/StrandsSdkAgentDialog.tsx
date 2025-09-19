@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Code, Zap, CheckCircle, AlertCircle, Settings, Loader2, Download, RefreshCw, ArrowLeft } from 'lucide-react';
-import { strandsSdkService, StrandsSdkCreateRequest } from '@/lib/services/StrandsSdkService';
+import { strandsSdkService } from '@/lib/services/StrandsSdkService';
 import StrandsToolConfigDialog from './StrandsToolConfigDialog';
 import { StrandsToolConfigurationDialog } from './StrandsToolConfigurationDialog';
 
@@ -218,6 +218,7 @@ export function StrandsSdkAgentDialog({
   onOpenChange, 
   onAgentCreated 
 }: StrandsSdkAgentDialogProps) {
+  
   const [formData, setFormData] = useState<StrandsSdkAgentConfig>({
     name: '',
     description: '',
@@ -234,7 +235,7 @@ export function StrandsSdkAgentDialog({
       top_k: undefined
     },
     validate_execution: false, // Default to fast creation
-    a2a_enabled: false // Default to A2A disabled
+    a2a_enabled: true // Default to A2A enabled for automatic orchestration
   });
 
   const [isCreating, setIsCreating] = useState(false);
@@ -415,6 +416,9 @@ export function StrandsSdkAgentDialog({
   }, [open]);
 
   const handleCreateAgent = async () => {
+    console.log('🚀 handleCreateAgent called');
+    console.log('🚀 strandsSdkService available:', !!strandsSdkService);
+    console.log('🚀 strandsSdkService.createAgent available:', !!strandsSdkService?.createAgent);
     try {
       setIsCreating(true);
       setError(null);
@@ -429,27 +433,91 @@ export function StrandsSdkAgentDialog({
       }
 
       // Create agent using Strands SDK service with enhanced configuration
-      const createRequest: StrandsSdkCreateRequest = {
+      console.log('🔄 formData:', formData);
+      const createRequest = {
         name: formData.name,
         description: formData.description,
-        model_id: formData.model_id,
-        host: formData.host,
-        system_prompt: formData.system_prompt,
+        model: formData.model_id, // Convert model_id to model
+        systemPrompt: formData.system_prompt, // Convert system_prompt to systemPrompt
         tools: formData.tools,
-        ollama_config: formData.ollama_config
+        temperature: formData.ollama_config.temperature,
+        maxTokens: formData.ollama_config.max_tokens
       };
 
-      const createdAgent = await strandsSdkService.createAgent(createRequest);
+      console.log('🔄 Frontend creating agent with data:', createRequest);
+      console.log('🔄 About to call strandsSdkService.createAgent...');
+      console.log('🔄 strandsSdkService object:', strandsSdkService);
+      console.log('🔄 strandsSdkService.createAgent method:', typeof strandsSdkService.createAgent);
       
-      // If A2A is enabled, register the agent for A2A communication
+      let createdAgent;
+      try {
+        console.log('🔄 About to call strandsSdkService.createAgent with:', createRequest);
+        console.log('🔄 Service object before call:', strandsSdkService);
+        console.log('🔄 Service createAgent method:', strandsSdkService.createAgent);
+        console.log('🔄 Service createAgent type:', typeof strandsSdkService.createAgent);
+        
+      // Test if service method exists
+      if (!strandsSdkService || !strandsSdkService.createAgent) {
+        console.error('❌ Service or createAgent method not available');
+        console.error('❌ strandsSdkService:', strandsSdkService);
+        console.error('❌ strandsSdkService.createAgent:', strandsSdkService?.createAgent);
+        throw new Error('Service or createAgent method not available');
+      }
+        
+        createdAgent = await strandsSdkService.createAgent(createRequest);
+        console.log('🔄 strandsSdkService.createAgent returned:', createdAgent);
+      } catch (serviceError) {
+        console.error('❌ strandsSdkService.createAgent threw an error:', serviceError);
+        console.error('❌ Error details:', serviceError);
+        console.error('❌ Error stack:', serviceError instanceof Error ? serviceError.stack : 'No stack');
+        throw new Error(`Service call failed: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`);
+      }
+      
+      // Check if agent creation was successful
+      if (!createdAgent) {
+        throw new Error('Failed to create agent - no agent returned from service');
+      }
+      
+      console.log('✅ Agent created successfully:', createdAgent);
+      
+      // If A2A is enabled, register the agent for A2A communication and Frontend Agent Bridge
       if (formData.a2a_enabled && createdAgent) {
         try {
-          await strandsSdkService.registerAgentForA2A(createdAgent.id);
-          console.log(`Agent ${createdAgent.name} registered for A2A communication`);
+          console.log(`🔄 Registering agent ${createdAgent.name} for A2A communication...`);
+          
+          const capabilities = strandsSdkService.extractCapabilities({
+            name: createdAgent.name,
+            description: createdAgent.description,
+            tools: createdAgent.tools
+          });
+
+          console.log(`📋 Extracted capabilities for ${createdAgent.name}:`, capabilities);
+
+          const registrationResult = await strandsSdkService.registerAgentForA2AWithBridge(
+            createdAgent.id,
+            {
+              name: createdAgent.name,
+              description: createdAgent.description,
+              capabilities: capabilities
+            }
+          );
+
+          if (registrationResult.success) {
+            console.log(`✅ Agent ${createdAgent.name} successfully registered for A2A communication and orchestration`);
+            console.log(`   - A2A Registered: ${registrationResult.a2aRegistered}`);
+            console.log(`   - Bridge Registered: ${registrationResult.bridgeRegistered}`);
+          } else {
+            console.error('❌ Failed to register agent for A2A:', registrationResult.error);
+            console.log(`   - A2A Registered: ${registrationResult.a2aRegistered}`);
+            console.log(`   - Bridge Registered: ${registrationResult.bridgeRegistered}`);
+            // Don't fail the entire creation if A2A registration fails
+          }
         } catch (a2aError) {
-          console.warn('Failed to register agent for A2A:', a2aError);
+          console.error('❌ Exception during A2A registration:', a2aError);
           // Don't fail the entire creation if A2A registration fails
         }
+      } else {
+        console.log(`ℹ️ A2A disabled for agent ${createdAgent?.name || 'unknown'}`);
       }
       
       setSuccess(true);
@@ -459,7 +527,7 @@ export function StrandsSdkAgentDialog({
         setFormData({
           name: '',
           description: '',
-          model_id: 'llama3.2:latest',
+          model_id: formData.model_id, // Preserve the user's selected model
           host: 'http://localhost:11434',
           system_prompt: 'You are a helpful assistant.',
           tools: [],
@@ -472,7 +540,7 @@ export function StrandsSdkAgentDialog({
             top_k: undefined
           },
           validate_execution: false,
-          a2a_enabled: false
+          a2a_enabled: true // Keep A2A enabled by default
         });
         setSuccess(false);
         onOpenChange(false);
@@ -605,7 +673,14 @@ agent.model.update_config(
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 text-green-700">
                     <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">Strands SDK agent created successfully!</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Strands SDK agent created successfully!</span>
+                      {formData.a2a_enabled && (
+                        <span className="text-sm text-green-600 mt-1">
+                          ✅ Agent registered for orchestration and A2A communication
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1133,7 +1208,12 @@ agent.model.update_config(
               Cancel
             </Button>
           <Button
-            onClick={handleCreateAgent}
+            onClick={() => {
+              console.log('🎯 Create Agent button clicked');
+              console.log('🎯 About to call handleCreateAgent');
+              handleCreateAgent();
+              console.log('🎯 handleCreateAgent call completed');
+            }}
             disabled={
               !formData.name.trim() || 
               !formData.system_prompt || typeof formData.system_prompt !== 'string' || !formData.system_prompt.trim() || 

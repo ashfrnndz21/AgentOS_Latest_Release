@@ -111,6 +111,16 @@ echo ""
 echo "🧹 Cleaning up any existing services..."
 ./kill-all-services.sh >/dev/null 2>&1
 
+# Additional cleanup for common ports
+echo "   Cleaning up common ports..."
+for port in 5002 5003 5004 5005 5006 5008 5009 5010 5011 5012 5173; do
+    if lsof -ti:$port >/dev/null 2>&1; then
+        echo "   Killing process on port $port..."
+        lsof -ti:$port | xargs kill -9 2>/dev/null || true
+    fi
+done
+sleep 3
+
 echo ""
 echo "🚀 Starting services..."
 
@@ -388,15 +398,38 @@ if [ $? -eq 0 ]; then
     test_service "http://localhost:5011/api/resource-monitor/health" "Resource Monitor API"
 fi
 
+# Start Frontend Agent Bridge (Frontend-Backend Integration)
+echo -e "${BLUE}10. Starting Frontend Agent Bridge...${NC}"
+if ! check_port 5012; then
+    echo -e "${YELLOW}   Port 5012 is in use, killing existing process...${NC}"
+    lsof -ti:5012 | xargs kill -9 2>/dev/null || true
+    sleep 2
+fi
+
+echo "   Starting Frontend Agent Bridge on port 5012..."
+cd backend
+source venv/bin/activate
+python frontend_agent_bridge.py >frontend_agent_bridge.log 2>&1 &
+FRONTEND_BRIDGE_PID=$!
+cd ..
+
+wait_for_service 5012 "Frontend Agent Bridge"
+if [ $? -eq 0 ]; then
+    # Test the service
+    sleep 3
+    test_service "http://localhost:5012/health" "Frontend Agent Bridge"
+fi
+
 # Start Frontend (Vite)
-echo -e "${BLUE}10. Starting Frontend (Vite)...${NC}"
+echo -e "${BLUE}11. Starting Frontend (Vite)...${NC}"
 if ! check_port 5173; then
-    echo -e "${RED}   Port 5173 is still in use!${NC}"
-    exit 1
+    echo -e "${YELLOW}   Port 5173 is in use, killing existing process...${NC}"
+    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+    sleep 2
 fi
 
 echo "   Starting Vite dev server on port 5173..."
-npm run dev >/dev/null 2>&1 &
+npm run dev >frontend.log 2>&1 &
 FRONTEND_PID=$!
 
 wait_for_service 5173 "Frontend"
@@ -422,6 +455,7 @@ services=(
     "5009:Strands Orchestration API"
     "5010:Agent Registry"
     "5011:Resource Monitor API"
+    "5012:Frontend Agent Bridge"
     "5173:Frontend"
 )
 
@@ -445,6 +479,7 @@ if [ "$all_running" = true ]; then
     echo ""
     echo "📡 Service URLs:"
     echo "   • Frontend:                    http://localhost:5173"
+    echo "   • Frontend Agent Bridge:       http://localhost:5012  (Frontend-Backend Integration)"
     echo "   • Resource Monitor API:        http://localhost:5011  (System Monitoring)"
     echo "   • Agent Registry:              http://localhost:5010  (Agent Management)"
     echo "   • Strands Orchestration API:   http://localhost:5009  (Workflow Management)"

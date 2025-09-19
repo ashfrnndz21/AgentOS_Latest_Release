@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Orchestration Monitor</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .log {
+            background-color: #2a2a2a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        .warning {
+            border-left-color: #ff9800;
+        }
+        .info {
+            border-left-color: #2196F3;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            width: 300px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .disconnected {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Real-Time LLM Orchestration Monitor Test</h1>
+    
+    <div id="status" class="status disconnected">
+        🔌 WebSocket: Disconnected
+    </div>
+    
+    <div>
+        <input type="text" id="queryInput" placeholder="Enter your query (e.g., 'what is 15 * 8')" value="what is 15 * 8">
+        <button onclick="startOrchestration()">Start Orchestration</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    
+    <div id="logs"></div>
+
+    <script>
+        const ORCHESTRATION_URL = 'http://localhost:5009';
+        let socket;
+        let sessionId = `test_session_${Date.now()}`;
+        
+        function log(message, type = 'log') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logDiv);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '🔌 WebSocket: Connected';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '🔌 WebSocket: Disconnected';
+            }
+        }
+        
+        function connectWebSocket() {
+            log('🔌 Connecting to WebSocket...', 'info');
+            socket = io(ORCHESTRATION_URL);
+            
+            socket.on('connect', () => {
+                log('✅ WebSocket Connected!', 'log');
+                updateStatus(true);
+                
+                // Join orchestration session
+                log('🏠 Joining orchestration session...', 'info');
+                socket.emit('join_orchestration', { session_id: sessionId });
+            });
+            
+            socket.on('disconnect', () => {
+                log('🔌 WebSocket Disconnected', 'warning');
+                updateStatus(false);
+            });
+            
+            socket.on('connect_error', (error) => {
+                log(`❌ WebSocket Connection Error: ${error}`, 'error');
+                updateStatus(false);
+            });
+            
+            // Handle orchestration events
+            socket.on('orchestration_start', (data) => {
+                log('🔄 ORCHESTRATION START', 'log');
+                log(`   Query: ${data.payload?.query || 'N/A'}`, 'info');
+                log(`   Session: ${data.payload?.session_id || 'N/A'}`, 'info');
+                log(`   Timestamp: ${data.payload?.timestamp || 'N/A'}`, 'info');
+            });
+            
+            socket.on('orchestration_step', (data) => {
+                const payload = data.payload || {};
+                const stepType = payload.step_type || 'Unknown';
+                log(`📋 ORCHESTRATION STEP: ${stepType}`, 'log');
+                
+                if (stepType === 'AGENT_DISCOVERY') {
+                    const details = payload.details || {};
+                    log(`   Agents Found: ${details.agents_found || 0}`, 'info');
+                    log(`   Agent IDs: ${JSON.stringify(details.agent_ids || [])}`, 'info');
+                } else {
+                    log(`   Details: ${JSON.stringify(payload.details || 'N/A')}`, 'info');
+                }
+            });
+            
+            socket.on('orchestration_complete', (data) => {
+                const payload = data.payload || {};
+                log('✅ ORCHESTRATION COMPLETE', 'log');
+                log(`   Query: ${payload.query || 'N/A'}`, 'info');
+                log(`   Total Agents: ${payload.total_agents_available || 'N/A'}`, 'info');
+                log(`   Execution Strategy: ${payload.orchestration_plan?.execution_strategy || 'N/A'}`, 'info');
+            });
+            
+            socket.on('agent_conversation', (data) => {
+                const payload = data.payload || {};
+                log('💬 AGENT CONVERSATION', 'log');
+                log(`   Agent: ${payload.agent_name || 'N/A'}`, 'info');
+                log(`   Question: ${payload.question || 'N/A'}`, 'info');
+                log(`   Response: ${payload.llm_response || 'N/A'}`, 'info');
+                log(`   Execution Time: ${payload.execution_time || 'N/A'}s`, 'info');
+            });
+        }
+        
+        function startOrchestration() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                log('❌ Please enter a query', 'error');
+                return;
+            }
+            
+            if (!socket || !socket.connected) {
+                log('❌ WebSocket not connected', 'error');
+                return;
+            }
+            
+            // Generate new session ID
+            sessionId = `test_session_${Date.now()}`;
+            
+            log(`📤 Sending Query: '${query}'`, 'info');
+            log(`📡 Session ID: ${sessionId}`, 'info');
+            
+            // Send orchestration request
+            fetch(`${ORCHESTRATION_URL}/api/strands-orchestration/orchestrate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    session_id: sessionId,
+                    user_id: 'test_user'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                log('📊 HTTP RESPONSE RECEIVED', 'log');
+                log(`   Status: Success`, 'info');
+                log(`   Execution Time: ${data.execution_results?.execution_time || 'N/A'}s`, 'info');
+                log(`   Result: ${data.execution_results?.results?.[0]?.result?.response || 'N/A'}`, 'info');
+            })
+            .catch(error => {
+                log(`❌ HTTP Request Error: ${error}`, 'error');
+            });
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Auto-connect on page load
+        window.onload = function() {
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>

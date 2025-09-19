@@ -43,6 +43,11 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:5002',
         changeOrigin: true,
         secure: false,
+      },
+      '/agent': {
+        target: 'http://localhost:5006',
+        changeOrigin: true,
+        secure: false,
       }
     }
   },

@@ -245,6 +245,33 @@ def check_agent_health(agent_id):
     result = registry.health_check_agent(agent_id)
     return jsonify(result)
 
+@app.route('/agents/<agent_id>', methods=['DELETE'])
+def delete_agent(agent_id):
+    """Delete an agent from the registry"""
+    try:
+        # Remove from database
+        conn = sqlite3.connect(REGISTRY_DB)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM agents WHERE id = ?', (agent_id,))
+        conn.commit()
+        conn.close()
+        
+        # Remove from memory
+        if agent_id in registry.agents:
+            del registry.agents[agent_id]
+            return jsonify({
+                "status": "success",
+                "message": f"Agent {agent_id} deleted successfully"
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "error": "Agent not found"
+            }), 404
+            
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
 if __name__ == '__main__':
     print("🚀 Starting Agent Registry Service...")
     print("📍 Port: 5010")
