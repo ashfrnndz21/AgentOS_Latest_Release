@@ -23,7 +23,8 @@ import {
   Info,
   Eye,
   Wrench,
-  Network
+  Network,
+  Users
 } from 'lucide-react';
 import { ollamaAgentService, OllamaAgentConfig } from '@/lib/services/OllamaAgentService';
 import { ollamaService } from '@/lib/services/OllamaService';
@@ -37,6 +38,8 @@ import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
 import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
 import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
+import { RealTimeLLMOrchestrationMonitor } from '@/components/A2A/RealTimeLLMOrchestrationMonitor';
+import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
 export const OllamaAgentDashboard: React.FC = () => {
@@ -427,12 +430,22 @@ export const OllamaAgentDashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
     
     try {
-      await strandsSdkService.deleteAgent(agentId);
-      setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
-      toast({
-        title: "Agent Deleted",
-        description: "Strands SDK agent has been removed successfully",
-      });
+      // Use enhanced deletion with automatic cleanup
+      const result = await strandsSdkService.deleteAgentWithCleanup(agentId);
+
+      if (result.success) {
+        setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
+        setA2aAgents(prev => prev.filter(agent => agent.id !== agentId));
+        toast({
+          title: "Agent Deleted",
+          description: `Strands SDK agent has been removed successfully. Cleanup: Registry: ${result.cleanupResults?.registryRemoved ? '✅' : '❌'}, Bridge: ${result.cleanupResults?.bridgeRemoved ? '✅' : '❌'}`,
+        });
+        
+        // Refresh A2A agents to update the UI
+        await loadA2AAgents();
+      } else {
+        throw new Error(result.error || 'Failed to delete agent');
+      }
     } catch (error) {
       toast({
         title: "Failed to delete agent",
@@ -1028,6 +1041,14 @@ export const OllamaAgentDashboard: React.FC = () => {
               </Card>
             ) : (
               <div className="space-y-6">
+                {/* A2A System Status */}
+                <A2AStatusIndicator
+                  isActive={true}
+                  agentsConnected={a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length}
+                  lastActivity="Just now"
+                  status="idle"
+                />
+
                 {/* Registered A2A Agents */}
                 {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length > 0 && (
                   <div>
@@ -1050,6 +1071,17 @@ export const OllamaAgentDashboard: React.FC = () => {
                           />
                         ))}
                     </div>
+                  </div>
+                )}
+
+                {/* A2A Orchestration Panel */}
+                {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length >= 2 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-blue-400" />
+                      Agent Orchestration
+                    </h3>
+                    <RealTimeLLMOrchestrationMonitor />
                   </div>
                 )}
 
