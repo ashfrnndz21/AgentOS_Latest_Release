@@ -30,15 +30,15 @@ export const AgentOSLogicalFlow: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [activeFlow, setActiveFlow] = useState<string[]>([]);
 
-  // Define grouped flow sections in a 3x3 grid layout for single screen view
-  // Grid: 3 columns x 3 rows with proper spacing
-  // Container: ~1000px wide, sections: 180px wide with 80px gaps
+  // Define grouped flow sections in a 4x2 grid layout for single screen view
+  // Grid: 4 columns x 2 rows with proper spacing
+  // Container: ~1200px wide, sections: 180px wide with 80px gaps
   const flowSections = [
-    // Top Row
+    // Top Row (4 columns)
     {
       id: 'user-interface',
       title: 'User Interface',
-      position: { x: 80, y: 80 },
+      position: { x: 40, y: 80 },
       width: 180,
       height: 140,
       color: 'border-blue-500/50 bg-blue-500/10',
@@ -54,7 +54,7 @@ export const AgentOSLogicalFlow: React.FC = () => {
     {
       id: 'industry-context',
       title: 'Industry Context',
-      position: { x: 340, y: 80 },
+      position: { x: 260, y: 80 },
       width: 180,
       height: 140,
       color: 'border-purple-500/50 bg-purple-500/10',
@@ -70,7 +70,7 @@ export const AgentOSLogicalFlow: React.FC = () => {
     {
       id: 'agent-dashboard',
       title: 'Agent Dashboard',
-      position: { x: 600, y: 80 },
+      position: { x: 480, y: 80 },
       width: 180,
       height: 140,
       color: 'border-cyan-500/50 bg-cyan-500/10',
@@ -83,11 +83,10 @@ export const AgentOSLogicalFlow: React.FC = () => {
         { name: 'Flask API', icon: Server, color: 'bg-cyan-300' }
       ]
     },
-    // Middle Row
     {
       id: 'command-centre',
       title: 'Agent Command Centre',
-      position: { x: 80, y: 280 },
+      position: { x: 700, y: 80 },
       width: 180,
       height: 140,
       color: 'border-green-500/50 bg-green-500/10',
@@ -100,10 +99,11 @@ export const AgentOSLogicalFlow: React.FC = () => {
         { name: 'Strands', icon: Network, color: 'bg-green-300' }
       ]
     },
+    // Bottom Row (4 columns)
     {
       id: 'mcp-gateway',
       title: 'MCP Gateway',
-      position: { x: 340, y: 280 },
+      position: { x: 40, y: 280 },
       width: 180,
       height: 140,
       color: 'border-orange-500/50 bg-orange-500/10',
@@ -119,7 +119,7 @@ export const AgentOSLogicalFlow: React.FC = () => {
     {
       id: 'multi-agent-workspace',
       title: 'Multi-Agent Workspace',
-      position: { x: 600, y: 280 },
+      position: { x: 260, y: 280 },
       width: 180,
       height: 140,
       color: 'border-teal-500/50 bg-teal-500/10',
@@ -132,11 +132,10 @@ export const AgentOSLogicalFlow: React.FC = () => {
         { name: 'ChromaDB', icon: Database, color: 'bg-teal-300' }
       ]
     },
-    // Bottom Row
     {
       id: 'agentcore-observability',
       title: 'AgentCore Observability',
-      position: { x: 80, y: 480 },
+      position: { x: 480, y: 280 },
       width: 180,
       height: 140,
       color: 'border-red-500/50 bg-red-500/10',
@@ -150,39 +149,40 @@ export const AgentOSLogicalFlow: React.FC = () => {
       ]
     },
     {
-      id: 'settings-pages',
-      title: 'Settings & Configuration',
-      position: { x: 340, y: 480 },
+      id: 'enhanced-orchestration',
+      title: 'Enhanced LLM Orchestration',
+      position: { x: 700, y: 280 },
       width: 180,
       height: 140,
-      color: 'border-gray-500/50 bg-gray-500/10',
+      color: 'border-purple-600/50 bg-purple-600/10',
       nodes: [
-        { id: 'general-settings', name: 'General Settings', icon: Settings, color: 'bg-gray-500' },
-        { id: 'logo-settings', name: 'Logo Settings', icon: Monitor, color: 'bg-gray-600' }
+        { id: 'llm-analysis', name: 'LLM Analysis Engine', icon: Brain, color: 'bg-purple-500' },
+        { id: 'orchestration-monitor', name: 'Orchestration Monitor', icon: Monitor, color: 'bg-purple-600' }
       ],
       services: [
-        { name: 'Local Storage', icon: Database, color: 'bg-gray-400' },
-        { name: 'Form Validation', icon: Shield, color: 'bg-gray-300' }
+        { name: 'llama3.2:1b', icon: Brain, color: 'bg-purple-400' },
+        { name: 'Port 5014', icon: Server, color: 'bg-purple-300' }
       ]
     }
 
   ];
 
-  // Define main flow connections optimized for 3x3 grid layout
+  // Define main flow connections optimized for 4x2 grid layout
   const sectionConnections = [
     // Top row connections
     { from: 'user-interface', to: 'industry-context', label: 'Context', type: 'user' },
     { from: 'industry-context', to: 'agent-dashboard', label: 'Templates', type: 'data' },
+    { from: 'agent-dashboard', to: 'command-centre', label: 'Create', type: 'user' },
     
-    // Vertical flows
-    { from: 'user-interface', to: 'command-centre', label: 'Create', type: 'user' },
-    { from: 'command-centre', to: 'mcp-gateway', label: 'Tools', type: 'control' },
-    { from: 'agent-dashboard', to: 'multi-agent-workspace', label: 'Deploy', type: 'data' },
+    // Vertical flows (top to bottom)
+    { from: 'user-interface', to: 'mcp-gateway', label: 'Tools', type: 'control' },
+    { from: 'industry-context', to: 'multi-agent-workspace', label: 'Deploy', type: 'data' },
+    { from: 'agent-dashboard', to: 'agentcore-observability', label: 'Monitor', type: 'control' },
+    { from: 'command-centre', to: 'enhanced-orchestration', label: 'Query', type: 'user' },
     
-    // Bottom connections
-    { from: 'command-centre', to: 'agentcore-observability', label: 'Monitor', type: 'control' },
-    { from: 'mcp-gateway', to: 'settings-pages', label: 'Config', type: 'user' },
-    { from: 'multi-agent-workspace', to: 'agentcore-observability', label: 'Runtime', type: 'control' }
+    // Enhanced Orchestration connections
+    { from: 'enhanced-orchestration', to: 'multi-agent-workspace', label: 'Route', type: 'control' },
+    { from: 'enhanced-orchestration', to: 'agentcore-observability', label: 'Execute', type: 'control' }
 
   ];
 
@@ -372,7 +372,8 @@ export const AgentOSLogicalFlow: React.FC = () => {
       </CardHeader>
       <CardContent>
         {/* Flow Diagram */}
-        <div className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 rounded-lg border-2 border-gray-700 p-6 h-[700px] overflow-hidden">
+        <div className="relative bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 rounded-lg border-2 border-gray-700 p-6 h-[700px] overflow-x-auto overflow-y-hidden">
+          <div className="min-w-[1200px] h-full">
           
           {/* Title */}
           <div className="text-center mb-4">
@@ -519,7 +520,7 @@ export const AgentOSLogicalFlow: React.FC = () => {
             <SectionComponent key={section.id} section={section} />
           ))}
 
-
+          </div>
 
           {/* Legend */}
           <div className="absolute bottom-4 right-4 bg-gray-800/90 backdrop-blur-sm rounded-lg p-3 border border-gray-600">
@@ -649,7 +650,9 @@ export const AgentOSLogicalFlow: React.FC = () => {
       'aws-guardrails': ['Content filtering', 'Safety controls', 'Compliance monitoring'],
       'agentcore': ['Agent orchestration', 'Workflow management', 'State coordination'],
       'strands': ['Multi-agent workflows', 'Complex reasoning', 'Agent coordination'],
-      'langgraph': ['Graph-based workflows', 'State machines', 'Agent orchestration']
+      'langgraph': ['Graph-based workflows', 'State machines', 'Agent orchestration'],
+      'llm-analysis': ['Query context analysis', 'Agent capability evaluation', 'Contextual matching', '5-stage processing'],
+      'orchestration-monitor': ['Real-time processing visualization', 'Performance metrics', 'Session management', 'Memory optimization']
     };
     
     return functions[nodeId] || ['Core functionality', 'System integration', 'Data processing'];
