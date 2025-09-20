@@ -222,7 +222,8 @@ export const OllamaAgentDashboard: React.FC = () => {
         
         console.log('[Dashboard] Loaded A2A agents:', {
           count: convertedAgents.length,
-          actualConnections: connectionCount
+          actualConnections: connectionCount,
+          agentsWithStrandsPrefix: convertedAgents.filter(a => a.id?.startsWith('strands_')).length
         });
       } else {
         console.error('[Dashboard] Failed to fetch A2A agents:', response.status);
@@ -497,7 +498,9 @@ export const OllamaAgentDashboard: React.FC = () => {
     try {
       const response = await fetch('http://localhost:5008/api/a2a/connections');
       const data = await response.json();
-      return data.connections?.length || 0;
+      const connectionCount = data.connections?.length || 0;
+      console.log('[Dashboard] A2A connections count:', connectionCount);
+      return connectionCount;
     } catch (error) {
       console.error('Failed to get A2A connections:', error);
       return 0;
