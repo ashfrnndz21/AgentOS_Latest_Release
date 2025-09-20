@@ -1043,30 +1043,31 @@ def orchestrate():
                 sdk_agents = sdk_agents_data.get('agents', [])
                 logger.info(f"Found {len(sdk_agents)} agents in Strands SDK")
                 
-                # Match A2A agents with SDK agents
+                # Match A2A agents with SDK agents by name (since IDs differ between services)
                 for a2a_agent in a2a_agents:
                     a2a_agent_id = a2a_agent.get('id')
-                    logger.info(f"Looking for SDK agent: {a2a_agent_id}")
+                    a2a_agent_name = a2a_agent.get('name')
+                    logger.info(f"Looking for SDK agent named: {a2a_agent_name}")
                     
-                    # Find matching SDK agent
+                    # Find matching SDK agent by name
                     matching_sdk_agent = None
                     for sdk_agent in sdk_agents:
-                        if sdk_agent.get('id') == a2a_agent_id:
+                        if sdk_agent.get('name') == a2a_agent_name:
                             matching_sdk_agent = sdk_agent
                             break
                     
                     if matching_sdk_agent:
                         agent_details.append({
-                            'id': a2a_agent_id,
+                            'id': a2a_agent_id,  # Use A2A agent ID for orchestration
                             'name': matching_sdk_agent.get('name', 'Unknown'),
                             'description': matching_sdk_agent.get('description', ''),
                             'tools': matching_sdk_agent.get('tools', []),
                             'capabilities': a2a_agent.get('capabilities', []),
                             'model': matching_sdk_agent.get('model_id', 'unknown')
                         })
-                        logger.info(f"Matched agent: {a2a_agent_id} -> {matching_sdk_agent.get('name')}")
+                        logger.info(f"Matched agent: {a2a_agent_name} -> {matching_sdk_agent.get('name')}")
                     else:
-                        logger.warning(f"No SDK agent found for A2A agent: {a2a_agent_id}")
+                        logger.warning(f"No SDK agent found for A2A agent: {a2a_agent_name}")
             else:
                 logger.error(f"Failed to get SDK agents list: {sdk_response.status_code}")
                 
