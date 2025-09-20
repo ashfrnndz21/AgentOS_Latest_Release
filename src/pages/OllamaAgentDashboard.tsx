@@ -173,26 +173,27 @@ export const OllamaAgentDashboard: React.FC = () => {
 
   const loadA2AAgents = async () => {
     try {
-      // Load A2A-enabled Strands agents
-      const response = await fetch('http://localhost:5006/api/strands-sdk/agents');
+      // Load A2A-enabled Strands agents from A2A service to get only registered agents
+      const response = await fetch('http://localhost:5008/api/a2a/agents');
       if (response.ok) {
         const data = await response.json();
-        const allStrandsAgents = data.agents || [];
+        // Only include agents with strands_ prefix to avoid duplicates
+        const strandsAgents = data.agents.filter((agent: any) => agent.id.startsWith('strands_'));
         
-        // Convert to StrandsSdkAgent format
-        const convertedAgents = allStrandsAgents.map((agent: any) => ({
+        // Convert to StrandsSdkAgent format (A2A service format)
+        const convertedAgents = strandsAgents.map((agent: any) => ({
           id: agent.id,
           name: agent.name,
           description: agent.description || '',
-          model: agent.model_id || agent.model || 'llama3.2:latest',
+          model: agent.model || 'llama3.2:latest',
           systemPrompt: agent.system_prompt || '',
-          tools: agent.tools || [],
-          temperature: agent.sdk_config?.ollama_config?.temperature || 0.7,
-          maxTokens: agent.sdk_config?.ollama_config?.max_tokens || 1000,
+          tools: agent.capabilities || [],
+          temperature: 0.7,
+          maxTokens: 1000,
           status: agent.status || 'active',
-          createdAt: agent.created_at || new Date().toISOString(),
-          updatedAt: agent.updated_at || new Date().toISOString(),
-          recent_executions: agent.recent_executions || []
+          createdAt: agent.registered_at || new Date().toISOString(),
+          updatedAt: agent.last_seen || new Date().toISOString(),
+          recent_executions: []
         }));
         
         setA2aAgents(convertedAgents);
