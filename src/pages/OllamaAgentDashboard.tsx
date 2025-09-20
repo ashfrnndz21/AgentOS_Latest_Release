@@ -558,10 +558,10 @@ export const OllamaAgentDashboard: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Bot className="text-purple-400" />
-              Ollama Agent Management
+              Agent Management
             </h1>
             <p className="text-gray-400 mt-2">
-              Create, manage, and interact with your local AI agents powered by Ollama models
+              Create, manage, and interact with your local AI agents
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -652,7 +652,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                   <Bot size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
                   <h3 className="text-xl font-semibold mb-2">No Agents Created</h3>
                   <p className="text-gray-400 mb-6">
-                    Create your first Ollama agent to get started with local AI conversations
+                    Create your first agent to get started with local AI conversations
                   </p>
                   <div className="flex gap-3">
                     <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
@@ -1239,7 +1239,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{agents.length}</div>
                   <p className="text-xs text-gray-400">
-                    Ollama agents
+                    agents
                   </p>
                 </CardContent>
               </Card>
