@@ -96,18 +96,14 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
   const handleRegisterA2A = async () => {
     setIsRegistering(true);
     try {
-      const response = await fetch('http://localhost:5008/api/a2a/agents', {
+      // Use Strands SDK's A2A registration endpoint to avoid duplicates
+      const response = await fetch(`http://localhost:5006/api/strands-sdk/a2a/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: agent.id,
-          name: agent.name,
-          description: agent.description,
-          model: (agent as any).model_id,
-          capabilities: agent.tools || [],
-          status: 'active'
+          agent_id: agent.id
         })
       });
 
