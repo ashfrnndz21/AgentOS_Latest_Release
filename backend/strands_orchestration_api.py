@@ -1106,14 +1106,15 @@ def orchestrate():
                     
                     if matching_sdk_agent:
                         agent_details.append({
-                            'id': a2a_agent_id,  # Use A2A agent ID for orchestration
+                            'id': matching_sdk_agent.get('id'),  # Use Strands SDK agent ID for execution
                             'name': matching_sdk_agent.get('name', 'Unknown'),
                             'description': matching_sdk_agent.get('description', ''),
                             'tools': matching_sdk_agent.get('tools', []),
                             'capabilities': a2a_agent.get('capabilities', []),
-                            'model': matching_sdk_agent.get('model_id', 'unknown')
+                            'model': matching_sdk_agent.get('model_id', 'unknown'),
+                            'a2a_agent_id': a2a_agent_id  # Keep A2A ID for reference
                         })
-                        logger.info(f"Matched agent: {a2a_agent_name} -> {matching_sdk_agent.get('name')}")
+                        logger.info(f"Matched agent: {a2a_agent_name} -> {matching_sdk_agent.get('name')} (SDK ID: {matching_sdk_agent.get('id')})")
                     else:
                         logger.warning(f"No SDK agent found for A2A agent: {a2a_agent_name}")
             else:
