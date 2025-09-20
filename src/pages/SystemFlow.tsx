@@ -7,7 +7,7 @@ const SystemFlow: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white mb-2">System Architecture Flow</h1>
         <p className="text-gray-400">
-          Visualize how the Agent Command Centre connects to MCP Gateway, Agent Control Panel, and the entire system workflow
+          Visualize the complete AgentOS architecture including Enhanced LLM Orchestration v2.0, Agent Command Centre, MCP Gateway, and the entire system workflow
         </p>
       </div>
       

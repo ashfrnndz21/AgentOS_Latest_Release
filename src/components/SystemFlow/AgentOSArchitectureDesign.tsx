@@ -222,6 +222,32 @@ export const AgentOSArchitectureDesign: React.FC = () => {
       parent: 'aws-services'
     },
 
+    // Enhanced LLM Orchestration Sub-components
+    {
+      id: 'enhanced-orchestration',
+      name: 'Enhanced LLM Orchestration',
+      icon: Brain,
+      color: 'bg-purple-600',
+      details: ['5-Stage Intelligent Processing', '3-Stage LLM Reasoning', 'Dynamic Agent Selection', 'Memory-Optimized Design'],
+      parent: 'enhanced-orchestration'
+    },
+    {
+      id: 'orchestration-monitor',
+      name: 'Orchestration Monitor',
+      icon: Monitor,
+      color: 'bg-purple-500',
+      details: ['Real-time Processing Visualization', 'Detailed Reasoning Display', 'Performance Metrics', 'Session Management'],
+      parent: 'enhanced-orchestration'
+    },
+    {
+      id: 'llm-analysis-engine',
+      name: 'LLM Analysis Engine',
+      icon: Zap,
+      color: 'bg-purple-400',
+      details: ['Query Context Analysis', 'Agent Capability Evaluation', 'Contextual Matching', 'Confidence Scoring'],
+      parent: 'enhanced-orchestration'
+    },
+
     // Industry Solutions Sub-components
     {
       id: 'banking-os',
@@ -384,6 +410,26 @@ export const AgentOSArchitectureDesign: React.FC = () => {
         'AWS Strands - Workflow Engine',
         'Model Context Protocol (MCP)',
         'AgentOS Runtime Environment'
+      ]
+    },
+    'enhanced-orchestration': {
+      title: 'Enhanced LLM Orchestration',
+      description: 'Advanced AI-powered orchestration system with intelligent agent selection and memory optimization',
+      icon: Brain,
+      color: 'purple',
+      architecture: [
+        '5-Stage Intelligent Processing Pipeline',
+        '3-Stage LLM Reasoning Engine',
+        'Dynamic Agent Selection System',
+        'Memory-Optimized Session Management',
+        'Real-time Orchestration Monitoring'
+      ],
+      services: [
+        'Enhanced Orchestration API (Port 5014)',
+        'LLM Analysis Engine (llama3.2:1b)',
+        'Agent Registry Integration',
+        'Session Management & Cleanup',
+        'Performance Monitoring & Analytics'
       ]
     },
     'industry-solutions': {
@@ -577,7 +623,7 @@ export const AgentOSArchitectureDesign: React.FC = () => {
               AgentOS Architecture Blueprint
             </CardTitle>
             <p className="text-gray-400 text-sm mt-1">
-              Complete AgentOS platform architecture and logical flow visualization
+              Complete AgentOS platform architecture with Enhanced LLM Orchestration v2.0 and logical flow visualization
             </p>
           </div>
         </CardHeader>
@@ -723,6 +769,23 @@ export const AgentOSArchitectureDesign: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   {detailedComponents.filter(c => c.parent === 'agent-runtime').map(component => (
+                    <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Enhanced LLM Orchestration Layer */}
+              <div 
+                className="border-2 border-purple-600/50 rounded-lg bg-purple-600/10 p-6 cursor-pointer hover:bg-purple-600/20 transition-all duration-300"
+                onClick={() => setSelectedLayer('enhanced-orchestration')}
+              >
+                <h3 className="text-purple-300 font-medium mb-4 flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Enhanced LLM Orchestration v2.0
+                  <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {detailedComponents.filter(c => c.parent === 'enhanced-orchestration').map(component => (
                     <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
                   ))}
                 </div>
