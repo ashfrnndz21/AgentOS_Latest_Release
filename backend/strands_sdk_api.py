@@ -749,11 +749,11 @@ def execute_strands_agent_stream(agent_id):
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         future = executor.submit(lambda: agent(input_text))
                         try:
-                            response = future.result(timeout=60)  # Increased timeout for Strands SDK
+                            response = future.result(timeout=180)  # Increased timeout for Strands SDK (3 minutes)
                             execution_time = time.time() - start_time
                         except concurrent.futures.TimeoutError:
                             execution_time = time.time() - start_time
-                            step_data = {'step': 'Execution timeout', 'details': 'Agent execution timed out after 60 seconds', 'status': 'error'}
+                            step_data = {'step': 'Execution timeout', 'details': 'Agent execution timed out after 180 seconds', 'status': 'error'}
                             yield f"data: {json.dumps(step_data)}\n\n"
                             return
                 except Exception as e:
@@ -1067,10 +1067,10 @@ def execute_strands_agent(agent_id):
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(execute_with_timeout)
                 try:
-                    response = future.result(timeout=60)  # Increased timeout for Strands SDK
+                    response = future.result(timeout=180)  # Increased timeout for Strands SDK (3 minutes)
                     execution_time = time.time() - start_time
                 except concurrent.futures.TimeoutError:
-                    raise TimeoutError("Agent execution timed out after 60 seconds")
+                    raise TimeoutError("Agent execution timed out after 180 seconds")
             
         except TimeoutError as e:
             execution_time = time.time() - start_time

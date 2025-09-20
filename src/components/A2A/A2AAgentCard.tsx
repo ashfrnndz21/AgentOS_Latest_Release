@@ -61,9 +61,9 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
         const response = await fetch('http://localhost:5008/api/a2a/agents');
         if (response.ok) {
           const data = await response.json();
-          // Only include agents with strands_ prefix to avoid duplicates
-          const strandsAgents = data.agents.filter((a: any) => a.id.startsWith('strands_'));
-          const otherAgents = strandsAgents.filter((a: any) => a.id !== agent.id);
+          // Get all A2A agents and filter out the current agent
+          const allAgents = data.agents || [];
+          const otherAgents = allAgents.filter((a: any) => a.id !== agent.id);
           setAvailableAgents(otherAgents);
         }
       } catch (error) {
@@ -81,11 +81,9 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
       const connectionsResponse = await fetch(`http://localhost:5008/api/a2a/connections/${agent.id}`);
       if (connectionsResponse.ok) {
         const connectionsData = await connectionsResponse.json();
-        // Only count connections to strands_ prefixed agents
-        const strandsConnections = connectionsData.connections?.filter((connId: string) => 
-          connId.startsWith('strands_')
-        ) || [];
-        setConnections(strandsConnections);
+        // Get all connections for this agent
+        const allConnections = connectionsData.connections || [];
+        setConnections(allConnections);
       }
     } catch (error) {
       console.error('Failed to fetch A2A status:', error);
