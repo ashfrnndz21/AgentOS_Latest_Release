@@ -177,11 +177,11 @@ export const OllamaAgentDashboard: React.FC = () => {
       const response = await fetch('http://localhost:5008/api/a2a/agents');
       if (response.ok) {
         const data = await response.json();
-        // Only include agents with strands_ prefix to avoid duplicates
-        const strandsAgents = data.agents.filter((agent: any) => agent.id.startsWith('strands_'));
+        // Get all A2A agents (they should match Strands SDK agents by ID)
+        const a2aAgents = data.agents || [];
         
         // Convert to StrandsSdkAgent format (A2A service format)
-        const convertedAgents = strandsAgents.map((agent: any) => ({
+        const convertedAgents = a2aAgents.map((agent: any) => ({
           id: agent.id,
           name: agent.name,
           description: agent.description || '',
@@ -508,13 +508,9 @@ export const OllamaAgentDashboard: React.FC = () => {
       const response = await fetch('http://localhost:5008/api/a2a/connections');
       const data = await response.json();
       
-      // Only count connections between strands_ prefixed agents
-      const strandsConnections = data.connections?.filter((conn: any) => 
-        conn.from_agent_id.startsWith('strands_') && conn.to_agent_id.startsWith('strands_')
-      ) || [];
-      
-      const connectionCount = strandsConnections.length;
-      console.log('[Dashboard] A2A connections count (strands only):', connectionCount);
+      // Count all A2A connections
+      const connectionCount = data.connections?.length || 0;
+      console.log('[Dashboard] A2A connections count:', connectionCount);
       return connectionCount;
     } catch (error) {
       console.error('Failed to get A2A connections:', error);
@@ -642,7 +638,7 @@ export const OllamaAgentDashboard: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="a2a" className="data-[state=active]:bg-purple-600">
               <Network className="h-4 w-4 mr-2" />
-              A2A Agents ({a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length})
+              A2A Agents ({a2aAgents.length})
             </TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -826,7 +822,8 @@ export const OllamaAgentDashboard: React.FC = () => {
 
                 {/* Strands SDK Agents */}
                 {strandsAgents.map((agent) => {
-                  const isA2ARegistered = a2aStatuses[agent.id!]?.registered || false;
+                  // Check if agent is registered in A2A service
+                  const isA2ARegistered = a2aAgents.some(a2aAgent => a2aAgent.id === agent.id) || a2aStatuses[agent.id!]?.registered || false;
                   const connections = a2aStatuses[agent.id!]?.connections || 0;
                   
                   return (
@@ -1137,22 +1134,20 @@ export const OllamaAgentDashboard: React.FC = () => {
                 {/* A2A System Status */}
                 <A2AStatusIndicator
                   isActive={true}
-                  agentsConnected={actualA2AConnections}
+                  agentsConnected={a2aAgents.length}
                   lastActivity="Just now"
                   status="idle"
                 />
 
                 {/* Registered A2A Agents */}
-                {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length > 0 && (
+                {a2aAgents.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <Network className="h-5 w-5 text-green-400" />
-                      Registered A2A Agents ({a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length})
+                      Registered A2A Agents ({a2aAgents.length})
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {a2aAgents
-                        .filter(agent => a2aStatuses[agent.id!]?.registered)
-                        .map((agent) => (
+                      {a2aAgents.map((agent) => (
                           <A2AAgentCard
                             key={`a2a-registered-${agent.id}`}
                             agent={agent}
@@ -1308,7 +1303,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{a2aAgents.length}</div>
                   <p className="text-xs text-gray-400">
-                    {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length} registered
+                    {a2aAgents.length} registered
                   </p>
                 </CardContent>
               </Card>

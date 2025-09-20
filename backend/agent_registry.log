@@ -228,3 +228,8 @@
 127.0.0.1 - - [20/Sep/2025 10:48:01] "DELETE /agents/0ad393d7-a946-4948-a90d-96a8bd605b08 HTTP/1.1" 200 -
 127.0.0.1 - - [20/Sep/2025 10:48:03] "DELETE /agents/3876a3af-a784-4238-8090-dfe3b36e4ebe HTTP/1.1" 200 -
 127.0.0.1 - - [20/Sep/2025 10:48:05] "DELETE /agents/3c658d5f-4d43-4ed6-8abd-2b37d0dfcc03 HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 11:04:00] "[33mDELETE /agents/0ccccbb1-8fb5-4840-b897-d179d359e434 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [20/Sep/2025 11:04:03] "[33mDELETE /agents/ab627a61-f7ef-4468-a7c3-17edd32e5785 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [20/Sep/2025 11:04:34] "POST /agents HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 11:10:03] "DELETE /agents/e6cd3dbe-54b9-489c-b924-230e8e005ead HTTP/1.1" 200 -
+127.0.0.1 - - [20/Sep/2025 11:10:06] "[33mDELETE /agents/51e78368-3f7d-4f1c-b13f-2f4680adf58a HTTP/1.1[0m" 404 -
