@@ -216,7 +216,7 @@ export const OllamaAgentDashboard: React.FC = () => {
         
         setA2aStatuses(statusMap);
         
-        // Load actual A2A connections count
+        // Load actual A2A connections count (only count connections between strands_ agents)
         const connectionCount = await getActualA2AConnections();
         setActualA2AConnections(connectionCount);
         
@@ -498,8 +498,14 @@ export const OllamaAgentDashboard: React.FC = () => {
     try {
       const response = await fetch('http://localhost:5008/api/a2a/connections');
       const data = await response.json();
-      const connectionCount = data.connections?.length || 0;
-      console.log('[Dashboard] A2A connections count:', connectionCount);
+      
+      // Only count connections between strands_ prefixed agents
+      const strandsConnections = data.connections?.filter((conn: any) => 
+        conn.from_agent_id.startsWith('strands_') && conn.to_agent_id.startsWith('strands_')
+      ) || [];
+      
+      const connectionCount = strandsConnections.length;
+      console.log('[Dashboard] A2A connections count (strands only):', connectionCount);
       return connectionCount;
     } catch (error) {
       console.error('Failed to get A2A connections:', error);
