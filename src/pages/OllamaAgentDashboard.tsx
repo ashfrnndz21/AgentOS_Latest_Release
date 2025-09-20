@@ -654,7 +654,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
                 <p>Loading agents...</p>
               </div>
-            ) : agents.length === 0 ? (
+            ) : strandsAgents.length === 0 ? (
               <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="text-center py-12">
                   <Bot size={64} className="mx-auto mb-4 text-gray-400 opacity-50" />
@@ -826,7 +826,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                 })}
 
                 {/* Strands SDK Agents */}
-                {false && strandsAgents.map((agent) => (
+                {strandsAgents.map((agent) => (
                   <Card key={`strands-sdk-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
                     <CardHeader>
                       <div className="flex items-center justify-between">
