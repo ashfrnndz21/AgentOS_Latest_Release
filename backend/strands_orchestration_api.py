@@ -363,6 +363,11 @@ def analyze_query_and_plan_execution(query: str, agent_details: List[Dict]) -> D
     analysis = analyze_query_with_llm(query, agent_details)
     
     # Enhance the plan with agent details
+    # Ensure analysis is a dictionary
+    if not isinstance(analysis, dict):
+        logger.warning(f"Analysis is not a dict, type: {type(analysis)}")
+        analysis = {"execution_strategy": "single", "workflow_steps": []}
+    
     orchestration_plan = {
         "query": query,
         "analysis": analysis,
