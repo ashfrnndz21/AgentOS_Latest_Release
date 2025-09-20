@@ -442,24 +442,28 @@ export const OllamaAgentDashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
     
     try {
-      // Strip strands_ prefix if present (A2A agents have strands_ prefix but Strands SDK expects original ID)
-      const originalAgentId = agentId.startsWith('strands_') ? agentId.replace('strands_', '') : agentId;
-      
-      // Use enhanced deletion with automatic cleanup
-      const result = await strandsSdkService.deleteAgentWithCleanup(originalAgentId);
+      // Delete from A2A service directly since we're dealing with A2A registered agents
+      const response = await fetch(`http://localhost:5008/api/a2a/agents/${agentId}`, {
+        method: 'DELETE'
+      });
 
-      if (result.success) {
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update UI immediately
         setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
         setA2aAgents(prev => prev.filter(agent => agent.id !== agentId));
+        
         toast({
           title: "Agent Deleted",
-          description: `Strands SDK agent has been removed successfully. Cleanup: Registry: ${result.cleanupResults?.registryRemoved ? '✅' : '❌'}, Bridge: ${result.cleanupResults?.bridgeRemoved ? '✅' : '❌'}`,
+          description: `A2A agent "${result.message || 'Unknown'}" has been removed successfully.`,
         });
         
         // Refresh A2A agents to update the UI
         await loadA2AAgents();
       } else {
-        throw new Error(result.error || 'Failed to delete agent');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete agent from A2A service');
       }
     } catch (error) {
       toast({
