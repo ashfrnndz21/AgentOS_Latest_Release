@@ -574,16 +574,22 @@ export const OllamaAgentDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={loadAgents}>
+            <Button variant="outline" onClick={() => {
+              loadAgents();
+              loadStrandsAgents();
+              loadA2AAgents();
+            }}>
               <RefreshCw size={16} className="mr-2" />
               Refresh
             </Button>
             <Button 
               variant="destructive" 
               onClick={() => {
-                if (confirm('⚠️ This will delete ALL agents and clear localStorage. Are you sure?')) {
-                  ollamaAgentService.clearAllAgents();
+                if (confirm('⚠️ This will delete ALL agents. Are you sure?')) {
+                  // Clear all agents from all services
                   setAgents([]);
+                  setStrandsAgents([]);
+                  setA2aAgents([]);
                   setSelectedAgent(null);
                   setShowChat(false);
                   toast({
@@ -597,13 +603,9 @@ export const OllamaAgentDashboard: React.FC = () => {
               <Trash2 size={16} className="mr-2" />
               Clear All
             </Button>
-            <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
               <Plus size={16} className="mr-2" />
               Create Agent
-            </Button>
-            <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-              <Sparkles size={16} className="mr-2" />
-              Create Strands Agent
             </Button>
           </div>
         </div>
@@ -664,13 +666,9 @@ export const OllamaAgentDashboard: React.FC = () => {
                     Create your first agent to get started with local AI conversations
                   </p>
                   <div className="flex gap-3">
-                    <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                       <Plus size={16} className="mr-2" />
                       Create Agent
-                    </Button>
-                    <Button onClick={() => setShowStrandsSdkDialog(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                      <Sparkles size={16} className="mr-2" />
-                      Create Strands Agent
                     </Button>
                   </div>
                 </CardContent>
@@ -827,7 +825,11 @@ export const OllamaAgentDashboard: React.FC = () => {
                 })}
 
                 {/* Strands SDK Agents */}
-                {strandsAgents.map((agent) => (
+                {strandsAgents.map((agent) => {
+                  const isA2ARegistered = a2aStatuses[agent.id!]?.registered || false;
+                  const connections = a2aStatuses[agent.id!]?.connections || 0;
+                  
+                  return (
                   <Card key={`strands-sdk-${agent.id}`} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -937,6 +939,17 @@ export const OllamaAgentDashboard: React.FC = () => {
                             <Sparkles className="h-3 w-3 mr-1" />
                             Strands SDK
                           </Badge>
+                          {isA2ARegistered ? (
+                            <Badge variant="default" className="bg-green-600 text-white">
+                              <Network className="h-3 w-3 mr-1" />
+                              A2A Enabled
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-orange-400 text-orange-400">
+                              <Network className="h-3 w-3 mr-1" />
+                              A2A Available
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <CardDescription className="text-gray-400">
@@ -1018,6 +1031,37 @@ export const OllamaAgentDashboard: React.FC = () => {
                             {(agent as any).model_id}
                           </Badge>
                         </div>
+                        {/* A2A Status Section */}
+                        {isA2ARegistered ? (
+                          <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30 mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Network className="h-4 w-4 text-green-400" />
+                              <span className="text-sm font-medium text-green-300">A2A Communication: Active</span>
+                            </div>
+                            <div className="text-xs text-green-200">
+                              Connections: {connections}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-orange-900/20 p-3 rounded-lg border border-orange-500/30 mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Network className="h-4 w-4 text-orange-400" />
+                              <span className="text-sm font-medium text-orange-300">A2A Registration Available</span>
+                            </div>
+                            <p className="text-xs text-orange-200 mb-3">
+                              This agent can be registered for agent-to-agent communication
+                            </p>
+                            <Button
+                              size="sm"
+                              onClick={() => handleRegisterA2A(agent)}
+                              className="w-full bg-orange-600 hover:bg-orange-700"
+                            >
+                              <Network className="h-3 w-3 mr-2" />
+                              Register for A2A
+                            </Button>
+                          </div>
+                        )}
+
                         <div className="flex gap-2 mt-4">
                           <Button
                             size="sm"
@@ -1058,7 +1102,8 @@ export const OllamaAgentDashboard: React.FC = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
 
               </div>
             )}
