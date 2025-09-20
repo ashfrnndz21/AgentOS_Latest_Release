@@ -41,32 +41,29 @@ interface StrandsSdkAgentConfig {
 }
 
 const OLLAMA_MODELS = [
-  // Actually available models (verified against Ollama API)
-  'llama3.2:latest',
-  'llama3.2:1b',
-  'mistral:latest',
-  'phi3:latest',
-  'phi4-mini-reasoning:latest',
-  'deepseek-r1:latest',
-  'gpt-oss:20b',
-  'qwen2.5:latest',
-  'calebfahlgren/natural-functions:latest',
-  'nomic-embed-text:latest'
+  // Working models (verified through testing)
+  'llama3.2:latest',    // ✅ Working
+  'llama3.2:1b',        // ✅ Working (fast, responsive)
+  'phi3:latest',        // ✅ Working
+  'phi4-mini-reasoning:latest',  // ✅ Available
+  'deepseek-r1:latest', // ✅ Available
+  'gpt-oss:20b',        // ✅ Available
+  'calebfahlgren/natural-functions:latest', // ✅ Available
+  'nomic-embed-text:latest'      // ✅ Available
+  // Removed broken models: mistral:latest, qwen2.5:latest, llama3.1:latest
 ];
 
 // Models that support tools in Strands SDK (verified through testing)
 const MODELS_WITH_TOOL_SUPPORT = [
-  'qwen2.5:latest',
-  'llama3.2:latest',
-  'llama3.2:1b'
-  // Note: Add more models here as they are verified to work with tools
+  'llama3.2:latest',    // ✅ Verified working with tools
+  'llama3.2:1b'         // ✅ Verified working with tools
+  // Note: Only include models that are actually tested and working
 ];
 
 // Models that don't support tools (verified through testing)
 const MODELS_WITHOUT_TOOL_SUPPORT = [
   'phi3:latest',
   'phi4-mini-reasoning:latest',
-  'mistral:latest',
   'deepseek-r1:latest',
   'gpt-oss:20b',
   'calebfahlgren/natural-functions:latest',
@@ -222,7 +219,7 @@ export function StrandsSdkAgentDialog({
   const [formData, setFormData] = useState<StrandsSdkAgentConfig>({
     name: '',
     description: '',
-    model_id: 'llama3.2:latest',
+    model_id: 'llama3.2:1b',  // Use fast, working model by default
     host: 'http://localhost:11434',
     system_prompt: 'You are a helpful assistant.',
     tools: [],
@@ -722,10 +719,10 @@ agent.model.update_config(
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setFormData(prev => ({ ...prev, model_id: 'llama3.2:latest' }))}
+                      onClick={() => setFormData(prev => ({ ...prev, model_id: 'llama3.2:1b' }))}
                       className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
                     >
-                      Switch to llama3.2:latest
+                      Switch to llama3.2:1b
                     </Button>
                   </div>
                 </div>
