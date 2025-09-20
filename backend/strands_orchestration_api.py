@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # LLM Orchestrator Configuration
-ORCHESTRATOR_MODEL = "phi3:latest"  # Use smaller model for memory efficiency
+ORCHESTRATOR_MODEL = "llama3.2:1b"  # Use working model for orchestration
 ORCHESTRATOR_OLLAMA_URL = "http://localhost:11434"
 
 # Initialize Flask app

@@ -106,7 +106,7 @@ except ImportError as e:
                 response = requests.post(
                     f"{self.host}/api/generate",
                     json=payload,
-                    timeout=60
+                    timeout=180
                 )
                 
                 if response.status_code == 200:
@@ -181,7 +181,7 @@ if 'OllamaModel' not in globals():
                 response = requests.post(
                     f"{self.host}/api/generate",
                     json=payload,
-                    timeout=60
+                    timeout=180
                 )
                 
                 if response.status_code == 200:
