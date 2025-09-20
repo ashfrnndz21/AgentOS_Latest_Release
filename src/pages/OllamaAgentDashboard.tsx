@@ -442,8 +442,11 @@ export const OllamaAgentDashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
     
     try {
+      // Strip strands_ prefix if present (A2A agents have strands_ prefix but Strands SDK expects original ID)
+      const originalAgentId = agentId.startsWith('strands_') ? agentId.replace('strands_', '') : agentId;
+      
       // Use enhanced deletion with automatic cleanup
-      const result = await strandsSdkService.deleteAgentWithCleanup(agentId);
+      const result = await strandsSdkService.deleteAgentWithCleanup(originalAgentId);
 
       if (result.success) {
         setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
