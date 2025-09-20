@@ -113,7 +113,7 @@ echo "🧹 Cleaning up any existing services..."
 
 # Additional cleanup for common ports
 echo "   Cleaning up common ports..."
-for port in 5002 5003 5004 5005 5006 5008 5009 5010 5011 5012 5173; do
+for port in 5002 5003 5004 5005 5006 5008 5009 5010 5011 5012 5014 5173; do
     if lsof -ti:$port >/dev/null 2>&1; then
         echo "   Killing process on port $port..."
         lsof -ti:$port | xargs kill -9 2>/dev/null || true
@@ -345,40 +345,10 @@ if [ $? -eq 0 ]; then
     done
 fi
 
-# Start Strands Orchestration API (Workflow Management)
-echo -e "${BLUE}8. Starting Strands Orchestration API...${NC}"
-if ! check_port 5009; then
-    echo -e "${RED}   Port 5009 is still in use!${NC}"
-    exit 1
-fi
-
-echo "   Starting Strands Orchestration API on port 5009..."
-cd backend
-source venv/bin/activate
-python strands_orchestration_api.py >strands_orchestration_api.log 2>&1 &
-STRANDS_ORCHESTRATION_PID=$!
-cd ..
-
-wait_for_service 5009 "Strands Orchestration API"
-if [ $? -eq 0 ]; then
-    # Test the service with retry logic
-    sleep 5
-    retry_count=0
-    max_retries=3
-    while [ $retry_count -lt $max_retries ]; do
-        if test_service "http://localhost:5009/api/strands-orchestration/health" "Strands Orchestration API"; then
-            break
-        fi
-        retry_count=$((retry_count + 1))
-        if [ $retry_count -lt $max_retries ]; then
-            echo "   Retrying health check in 3 seconds..."
-            sleep 3
-        fi
-    done
-fi
+# Enhanced Orchestration API replaces Strands Orchestration API
 
 # Start Resource Monitor API
-echo -e "${BLUE}9. Starting Resource Monitor API...${NC}"
+echo -e "${BLUE}8. Starting Resource Monitor API...${NC}"
 if ! check_port 5011; then
     echo -e "${RED}   Port 5011 is still in use!${NC}"
     exit 1
@@ -396,6 +366,27 @@ if [ $? -eq 0 ]; then
     # Test the service
     sleep 3
     test_service "http://localhost:5011/api/resource-monitor/health" "Resource Monitor API"
+fi
+
+# Start Enhanced Orchestration API (Dynamic LLM Orchestration)
+echo -e "${BLUE}9. Starting Enhanced Orchestration API...${NC}"
+if ! check_port 5014; then
+    echo -e "${RED}   Port 5014 is still in use!${NC}"
+    exit 1
+fi
+
+echo "   Starting Enhanced Orchestration API on port 5014..."
+cd backend
+source venv/bin/activate
+python enhanced_orchestration_api.py >enhanced_orchestration_api.log 2>&1 &
+ENHANCED_ORCHESTRATION_PID=$!
+cd ..
+
+wait_for_service 5014 "Enhanced Orchestration API"
+if [ $? -eq 0 ]; then
+    # Test the service
+    sleep 3
+    test_service "http://localhost:5014/api/enhanced-orchestration/health" "Enhanced Orchestration API"
 fi
 
 # Start Frontend Agent Bridge (Frontend-Backend Integration)
@@ -452,10 +443,10 @@ services=(
     "5005:Chat Orchestrator API"
     "5006:Strands SDK API"
     "5008:A2A Communication Service"
-    "5009:Strands Orchestration API"
     "5010:Agent Registry"
     "5011:Resource Monitor API"
     "5012:Frontend Agent Bridge"
+    "5014:Enhanced Orchestration API"
     "5173:Frontend"
 )
 
@@ -482,7 +473,7 @@ if [ "$all_running" = true ]; then
     echo "   • Frontend Agent Bridge:       http://localhost:5012  (Frontend-Backend Integration)"
     echo "   • Resource Monitor API:        http://localhost:5011  (System Monitoring)"
     echo "   • Agent Registry:              http://localhost:5010  (Agent Management)"
-    echo "   • Strands Orchestration API:   http://localhost:5009  (Workflow Management)"
+    echo "   • Enhanced Orchestration API:  http://localhost:5014  (Dynamic LLM Orchestration)"
     echo "   • A2A Communication Service:   http://localhost:5008  (Agent-to-Agent Communication)"
     echo "   • Strands SDK API:             http://localhost:5006  (Individual Agent Analytics)"
     echo "   • Chat Orchestrator:           http://localhost:5005  (Multi-Agent Chat)"

@@ -75,8 +75,8 @@ export const ServiceStatus: React.FC = () => {
       'chat_orchestrator': 'Chat Orchestrator',
       'strands_sdk': 'Strands Sdk',
       'a2a_service': 'A2a Service',
-      'strands_orchestration': 'Strands Orchestration',
-      'agent_registry': 'Agent Registry'
+      'agent_registry': 'Agent Registry',
+      'enhanced_orchestration': 'Enhanced Orchestration'
     };
     return displayNames[serviceKey] || serviceKey.replace('_', ' ').toUpperCase();
   };
@@ -90,8 +90,8 @@ export const ServiceStatus: React.FC = () => {
       'chat_orchestrator': 'Chat Orchestrator is running',
       'strands_sdk': 'Strands SDK running (mock-strands)',
       'a2a_service': 'A2A Service running (2 agents)',
-      'strands_orchestration': 'Strands Orchestration is running',
-      'agent_registry': 'Agent Registry is running'
+      'agent_registry': 'Agent Registry is running',
+      'enhanced_orchestration': 'Enhanced Orchestration running (Dynamic LLM Orchestration)'
     };
     return descriptions[serviceKey] || 'Backend service';
   };

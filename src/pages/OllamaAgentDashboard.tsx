@@ -24,7 +24,9 @@ import {
   Eye,
   Wrench,
   Network,
-  Users
+  Users,
+  MemoryStick,
+  Brain
 } from 'lucide-react';
 import { ollamaAgentService, OllamaAgentConfig } from '@/lib/services/OllamaAgentService';
 import { ollamaService } from '@/lib/services/OllamaService';
@@ -38,7 +40,7 @@ import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
 import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
 import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
-import { AdvancedOrchestrationMonitor } from '@/components/A2A/AdvancedOrchestrationMonitor';
+import { EnhancedOrchestrationMonitor } from '@/components/A2A/EnhancedOrchestrationMonitor';
 import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
@@ -439,32 +441,46 @@ export const OllamaAgentDashboard: React.FC = () => {
   };
 
   const handleDeleteStrandsAgent = async (agentId: string) => {
-    if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
+    if (!confirm('Are you sure you want to delete this agent?')) return;
     
     try {
-      // Delete from Strands SDK service
-      const response = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agentId}`, {
-        method: 'DELETE'
-      });
+      // First try to delete from Strands SDK service
+      let sdkDeleted = false;
+      try {
+        const sdkResponse = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agentId}`, {
+          method: 'DELETE'
+        });
+        sdkDeleted = sdkResponse.ok;
+      } catch (sdkError) {
+        console.log('Strands SDK deletion failed (agent may not exist there):', sdkError);
+      }
 
-      if (response.ok) {
-        const result = await response.json();
-        
-        // Update UI immediately
+      // Then delete from A2A service
+      let a2aDeleted = false;
+      try {
+        const a2aResponse = await fetch(`http://localhost:5008/api/a2a/agents/${agentId}`, {
+          method: 'DELETE'
+        });
+        a2aDeleted = a2aResponse.ok;
+      } catch (a2aError) {
+        console.log('A2A deletion failed:', a2aError);
+      }
+
+      // Update UI if either deletion succeeded
+      if (sdkDeleted || a2aDeleted) {
         setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
         setA2aAgents(prev => prev.filter(agent => agent.id !== agentId));
         
         toast({
           title: "Agent Deleted",
-          description: `Strands SDK agent has been removed successfully.`,
+          description: `Agent has been removed successfully.`,
         });
         
         // Refresh agents to update the UI
         await loadStrandsAgents();
         await loadA2AAgents();
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete agent from Strands SDK');
+        throw new Error('Failed to delete agent from both services');
       }
     } catch (error) {
       toast({
@@ -1163,16 +1179,14 @@ export const OllamaAgentDashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* A2A Orchestration Panel */}
-                {a2aAgents.filter(agent => a2aStatuses[agent.id!]?.registered).length >= 2 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-blue-400" />
-                      Agent Orchestration
-                    </h3>
-                    <AdvancedOrchestrationMonitor />
-                  </div>
-                )}
+                {/* Enhanced LLM Orchestration Panel */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-purple-400" />
+                    Enhanced LLM Orchestration (Intelligent)
+                  </h3>
+                  <EnhancedOrchestrationMonitor />
+                </div>
 
                 {/* Unregistered Agents */}
                 {a2aAgents.filter(agent => !a2aStatuses[agent.id!]?.registered).length > 0 && (

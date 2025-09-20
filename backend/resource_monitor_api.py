@@ -25,8 +25,8 @@ STRANDS_API_URL = "http://localhost:5004"
 CHAT_ORCHESTRATOR_URL = "http://localhost:5005"
 STRANDS_SDK_URL = "http://localhost:5006/api/strands-sdk"
 A2A_API_URL = "http://localhost:5008/api/a2a"
-STRANDS_ORCHESTRATION_URL = "http://localhost:5009"
 AGENT_REGISTRY_URL = "http://localhost:5010"
+ENHANCED_ORCHESTRATION_URL = "http://localhost:5014"
 
 class ResourceMonitor:
     """Monitor system resources and service status"""
@@ -255,20 +255,7 @@ class ResourceMonitor:
                 'message': 'A2A Service is not running'
             }
         
-        # Check Strands Orchestration
-        try:
-            response = requests.get(f"{STRANDS_ORCHESTRATION_URL}/api/strands-orchestration/health", timeout=3)
-            services['strands_orchestration'] = {
-                'status': 'running' if response.status_code == 200 else 'error',
-                'port': 5009,
-                'message': 'Strands Orchestration is running' if response.status_code == 200 else 'Strands Orchestration error'
-            }
-        except:
-            services['strands_orchestration'] = {
-                'status': 'stopped',
-                'port': 5009,
-                'message': 'Strands Orchestration is not running'
-            }
+        # Strands Orchestration replaced by Enhanced Orchestration
         
         # Check Agent Registry
         try:
@@ -283,6 +270,29 @@ class ResourceMonitor:
                 'status': 'stopped',
                 'port': 5010,
                 'message': 'Agent Registry is not running'
+            }
+        
+        # Check Enhanced Orchestration
+        try:
+            response = requests.get(f"{ENHANCED_ORCHESTRATION_URL}/api/enhanced-orchestration/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['enhanced_orchestration'] = {
+                    'status': 'running',
+                    'port': 5014,
+                    'message': f"Enhanced Orchestration running (Model: {data.get('orchestrator_model', 'unknown')}, Sessions: {data.get('active_sessions', 0)})"
+                }
+            else:
+                services['enhanced_orchestration'] = {
+                    'status': 'error',
+                    'port': 5014,
+                    'message': f'Enhanced Orchestration error: {response.status_code}'
+                }
+        except:
+            services['enhanced_orchestration'] = {
+                'status': 'stopped',
+                'port': 5014,
+                'message': 'Enhanced Orchestration is not running'
             }
         
         return services

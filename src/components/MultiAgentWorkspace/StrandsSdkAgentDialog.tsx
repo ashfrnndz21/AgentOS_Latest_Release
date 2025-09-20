@@ -434,8 +434,8 @@ export function StrandsSdkAgentDialog({
       const createRequest = {
         name: formData.name,
         description: formData.description,
-        model: formData.model_id, // Convert model_id to model
-        systemPrompt: formData.system_prompt, // Convert system_prompt to systemPrompt
+        model: formData.model_id, // Use 'model' for service interface
+        systemPrompt: formData.system_prompt, // Use 'systemPrompt' for service interface
         tools: formData.tools,
         temperature: formData.ollama_config.temperature,
         maxTokens: formData.ollama_config.max_tokens

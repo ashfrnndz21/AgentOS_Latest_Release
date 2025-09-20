@@ -598,7 +598,7 @@ def create_strands_agent():
             data.get('name'),
             data.get('description', ''),
             'ollama',
-            data.get('model_id', 'llama3.1'),
+            data.get('model_id', 'llama3.2:1b'),
             data.get('host', 'http://localhost:11434'),
             data.get('system_prompt', 'You are a helpful assistant.'),
             json.dumps(data.get('tools', [])),
