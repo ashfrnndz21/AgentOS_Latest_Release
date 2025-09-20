@@ -442,8 +442,8 @@ export const OllamaAgentDashboard: React.FC = () => {
     if (!confirm('Are you sure you want to delete this Strands SDK agent?')) return;
     
     try {
-      // Delete from A2A service directly since we're dealing with A2A registered agents
-      const response = await fetch(`http://localhost:5008/api/a2a/agents/${agentId}`, {
+      // Delete from Strands SDK service
+      const response = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agentId}`, {
         method: 'DELETE'
       });
 
@@ -456,14 +456,15 @@ export const OllamaAgentDashboard: React.FC = () => {
         
         toast({
           title: "Agent Deleted",
-          description: `A2A agent "${result.message || 'Unknown'}" has been removed successfully.`,
+          description: `Strands SDK agent has been removed successfully.`,
         });
         
-        // Refresh A2A agents to update the UI
+        // Refresh agents to update the UI
+        await loadStrandsAgents();
         await loadA2AAgents();
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete agent from A2A service');
+        throw new Error(errorData.error || 'Failed to delete agent from Strands SDK');
       }
     } catch (error) {
       toast({
@@ -635,7 +636,7 @@ export const OllamaAgentDashboard: React.FC = () => {
           <TabsList className="bg-gray-800">
             <TabsTrigger value="agents" className="data-[state=active]:bg-purple-600">
               <Bot className="h-4 w-4 mr-2" />
-              Agents ({agents.length})
+              Agents ({strandsAgents.length})
             </TabsTrigger>
             <TabsTrigger value="a2a" className="data-[state=active]:bg-purple-600">
               <Network className="h-4 w-4 mr-2" />
