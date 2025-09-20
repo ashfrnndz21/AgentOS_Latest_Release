@@ -195,36 +195,40 @@ def analyze_query_with_llm(query: str, available_agents: List[Dict]) -> Dict:
                 'description': agent.get('description', '')
             })
         
-        # Create LLM prompt for query analysis
-        prompt = f"""
-You are an intelligent orchestration system that analyzes user queries and determines the best execution strategy using available agents.
+        # Create LLM prompt for context-based query analysis
+        prompt = f"""You are an intelligent orchestration system that analyzes user queries using context understanding, not just keywords.
 
 Available Agents:
 {json.dumps(agent_summary, indent=2)}
 
 User Query: "{query}"
 
-Analyze this query and determine:
-1. What type of query this is (calculation, information gathering, multi-step task, etc.)
-2. Which agents are best suited to handle this query
-3. Whether this requires sequential execution, parallel execution, or multi-agent coordination
-4. What the expected workflow should be
+Analyze this query using CONTEXT UNDERSTANDING:
+- Understand the user's intent and goal
+- Consider the domain and complexity
+- Match agent capabilities to the task requirements
+- Determine the most appropriate execution strategy
 
-Respond with a JSON object containing:
+Context Analysis Guidelines:
+- Creative requests (poems, stories, art) → Creative agents
+- Technical problems (code, debugging, math) → Technical agents  
+- Learning/educational content → Learning agents
+- Information gathering → Research agents
+- Multi-step complex tasks → Coordinated execution
+
+Respond with ONLY a valid JSON object:
 {{
-    "query_type": "calculation|information|multi_step|coordination",
-    "required_capabilities": ["capability1", "capability2"],
-    "selected_agents": ["agent_id1", "agent_id2"],
+    "query_type": "creative|technical|educational|research|calculation|multi_step",
+    "required_capabilities": ["specific_capability1", "specific_capability2"],
+    "selected_agents": ["best_agent_id"],
     "execution_strategy": "single|sequential|parallel|coordinated",
     "workflow_steps": [
-        {{"step": 1, "agent_id": "agent_id", "action": "description", "depends_on": []}},
-        {{"step": 2, "agent_id": "agent_id", "action": "description", "depends_on": [1]}}
+        {{"step": 1, "agent_id": "agent_id", "action": "specific_action", "depends_on": []}}
     ],
-    "reasoning": "explanation of the analysis and decision"
+    "reasoning": "Detailed explanation of why this agent and strategy was chosen based on context"
 }}
 
-Be concise and practical. Focus on selecting the most appropriate agents for the task.
-"""
+Focus on context matching, not keyword matching."""
         
         # Call Ollama with phi3 model (smaller, memory-efficient)
         response = requests.post(f"{ORCHESTRATOR_OLLAMA_URL}/api/generate", 
@@ -242,21 +246,38 @@ Be concise and practical. Focus on selecting the most appropriate agents for the
         if response.status_code == 200:
             result = response.json()
             llm_response = result.get('response', '').strip()
+            logger.info(f"LLM Response: {llm_response[:200]}...")
             
-            # Extract JSON from LLM response
+            # Extract JSON from LLM response with multiple strategies
+            analysis = None
             try:
-                # Find JSON in the response
-                json_match = re.search(r'\{.*\}', llm_response, re.DOTALL)
-                if json_match:
-                    analysis = json.loads(json_match.group())
+                # Strategy 1: Try to parse the entire response as JSON
+                analysis = json.loads(llm_response)
+                logger.info("Successfully parsed LLM response as JSON")
+            except json.JSONDecodeError:
+                try:
+                    # Strategy 2: Find JSON object in the response
+                    json_match = re.search(r'\{.*\}', llm_response, re.DOTALL)
+                    if json_match:
+                        analysis = json.loads(json_match.group())
+                        logger.info("Successfully extracted JSON from LLM response")
+                    else:
+                        logger.warning("No JSON object found in LLM response")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse extracted JSON: {e}")
+            
+            # Validate analysis structure
+            if analysis and isinstance(analysis, dict):
+                required_keys = ['query_type', 'selected_agents', 'execution_strategy']
+                if all(key in analysis for key in required_keys):
+                    logger.info(f"LLM analysis successful: {analysis.get('query_type')} -> {analysis.get('selected_agents')}")
                     return analysis
                 else:
-                    logger.warning("No JSON found in LLM response")
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse LLM JSON response: {e}")
-                logger.error(f"LLM response: {llm_response}")
+                    logger.warning(f"LLM analysis missing required keys: {[k for k in required_keys if k not in analysis]}")
+            else:
+                logger.warning("LLM analysis is not a valid dictionary")
         
-        # Fallback to simple analysis
+        logger.info("Falling back to context-aware analysis")
         return create_fallback_analysis(query, available_agents)
         
     except Exception as e:
@@ -265,29 +286,56 @@ Be concise and practical. Focus on selecting the most appropriate agents for the
 
 
 def create_fallback_analysis(query: str, available_agents: List[Dict]) -> Dict:
-    """Create a simple fallback analysis when LLM fails"""
+    """Create a context-aware fallback analysis when LLM fails"""
     query_lower = query.lower()
     
-    # Simple keyword-based analysis
-    if any(word in query_lower for word in ['calculate', 'math', '+', '-', '*', '/', '=', 'sum', 'add']):
-        query_type = "calculation"
-        required_capabilities = ["calculator"]
-    elif any(word in query_lower for word in ['weather', 'time', 'date', 'search', 'find']):
-        query_type = "information"
-        required_capabilities = ["web_search"]
-    else:
-        query_type = "general"
-        required_capabilities = []
+    # Context-based analysis using patterns and intent
+    query_type = "general"
+    required_capabilities = []
     
-    # Select best matching agents
+    # Creative writing patterns
+    if any(pattern in query_lower for pattern in ['write', 'poem', 'story', 'creative', 'imagine', 'describe']):
+        query_type = "creative"
+        required_capabilities = ["creative_writing", "storytelling", "poetry"]
+    
+    # Technical patterns  
+    elif any(pattern in query_lower for pattern in ['code', 'debug', 'program', 'function', 'algorithm', 'technical']):
+        query_type = "technical"
+        required_capabilities = ["programming", "debugging", "code_execution"]
+    
+    # Educational patterns
+    elif any(pattern in query_lower for pattern in ['explain', 'learn', 'teach', 'understand', 'how', 'why', 'what']):
+        query_type = "educational"
+        required_capabilities = ["education", "learning", "explanation"]
+    
+    # Calculation patterns
+    elif any(pattern in query_lower for pattern in ['calculate', 'math', '+', '-', '*', '/', '=', 'sum', 'add', 'multiply']):
+        query_type = "calculation"
+        required_capabilities = ["calculator", "math"]
+    
+    # Research patterns
+    elif any(pattern in query_lower for pattern in ['search', 'find', 'look up', 'information', 'data', 'research']):
+        query_type = "research"
+        required_capabilities = ["web_search", "research"]
+    
+    # Select best matching agents based on capabilities
     selected_agents = []
+    best_match_score = 0
+    best_agent = None
+    
     for agent in available_agents:
         agent_capabilities = agent.get('capabilities', [])
-        if any(cap in agent_capabilities for cap in required_capabilities):
-            selected_agents.append(agent['id'])
+        # Calculate match score based on capability overlap
+        match_score = sum(1 for cap in required_capabilities if cap in agent_capabilities)
+        
+        if match_score > best_match_score:
+            best_match_score = match_score
+            best_agent = agent
     
-    # If no specific match, use first available agent
-    if not selected_agents and available_agents:
+    # Use best matching agent or first available
+    if best_agent:
+        selected_agents = [best_agent['id']]
+    elif available_agents:
         selected_agents = [available_agents[0]['id']]
     
     return {
@@ -299,11 +347,11 @@ def create_fallback_analysis(query: str, available_agents: List[Dict]) -> Dict:
             {
                 "step": 1,
                 "agent_id": selected_agents[0] if selected_agents else None,
-                "action": f"Execute query: {query[:50]}...",
+                "action": f"Execute {query_type} task: {query[:50]}...",
                 "depends_on": []
             }
         ],
-        "reasoning": f"Fallback analysis: {query_type} query requiring {required_capabilities}"
+        "reasoning": f"Context-aware fallback: Identified {query_type} intent requiring {required_capabilities}. Selected best matching agent based on capability overlap."
     }
 
 
