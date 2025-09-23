@@ -29,315 +29,329 @@ Werkzeug appears to be used in a production deployment. Consider switching to a 
  * Running on http://127.0.0.1:5006
  * Running on http://192.168.0.186:5006
 [33mPress CTRL+C to quit[0m
-127.0.0.1 - - [22/Sep/2025 15:48:30] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:49:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-127.0.0.1 - - [22/Sep/2025 15:50:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:50:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:51:04] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:51:07] "OPTIONS /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de/execute HTTP/1.1" 200 -
-tool=<<function python_repl at 0x10ea176a0>> | unrecognized tool specification
-127.0.0.1 - - [22/Sep/2025 15:51:21] "POST /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de/execute HTTP/1.1" 200 -
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Executing agent 3b4cd512-6fa1-47b7-9f9a-9521e44c80de with input: test...
-[Strands SDK] Agent config loaded: Technical Expert - qwen3:1.7b
-[Strands SDK] Using enhanced config: {'host': 'http://localhost:11434', 'model_id': 'qwen3:1.7b', 'temperature': 0.3, 'max_tokens': 1500}
-[Strands SDK] Agent configured with tools: ['code_execution', 'file_operations', 'calculator']
-[Strands SDK] Loaded tool: code_execution
-[Strands SDK] Warning: Tool 'file_operations' not available
-[Strands SDK] Loaded tool: calculator
-[Strands SDK] Agent will execute with 2 tools
-<think>
-Okay, the user sent "test". I need to figure out what they want. Since they didn't provide a specific query, maybe they want me to demonstrate the calculator tool or explain its features.
-
-Looking at the tools, the calculator function can handle various operations like evaluating expressions, solving equations, derivatives, integrals, limits, series expansions, and matrix operations. The user might be testing if the tool works or trying different modes.
-
-I should call the calculator with a sample expression to show it in action. Let's choose an easy expression like "2 + 2 * 3" using the evaluate mode. That way, I can show the tool processing a basic math problem and display the result. This should illustrate how the tool works and its capabilities.
-</think>
-
-
-Tool #1: calculator
-<think>
-Okay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" in evaluate mode. The tool processed it and returned the result as 8. Now, I need to confirm that the test was successful and maybe offer further assistance. Since the user didn't specify a particular task, providing a simple response reassuring them the test was successful and offering help if they need more operations is appropriate. I should keep it friendly and open-ended.
-</think>
-
-The test was successful! The calculator returned the result **8** for the expression `2 + 2 * 3`. Let me know if you'd like to explore more operations or solve equations! 😊[Strands SDK] Execution completed in 13.91s
-[Strands SDK] Response type: <class 'strands.agent.agent_result.AgentResult'>
-[Strands SDK] Response text: <think>
-Okay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...
-[Strands SDK] Listed 2 agents
-   (   )   :   
-                   x       =       5       -       2   
-                   r   e   t   u   r   n       x   
-   
-   d   e   f       c   r   e   a   t   e   _   p   o   e   m   (   r   e   s   u   l   t   )   :   
-                   l   i   n   e   s       =       [   
-                                   f   "   T   h   e       a   n   s   w   e   r       i   s       {   r   e   s   u   l   t   }   ,       a       n   u   m   b   e   r       t   h   a   t   '   s       p   e   r   f   e   c   t   .   "   ,   
-                                   f   "   I   t   '   s       t   h   e       k   e   y       t   o       s   o   l   v   i   n   g       m   y   s   t   e   r   i   e   s   ,   "   ,   
-                                   f   "   a   n   d       t   h   e       h   e   a   r   t       o   f       t   h   i   s       p   r   o   b   l   e   m   '   s       t   r   u   t   h   .   "   
-                   ]   
-                   r   e   t   u   r   n       "   \   n   "   .   j   o   i   n   (   l   i   n   e   s   )   
-   
-   r   e   s   u   l   t       =       s   o   l   v   e   _   m   a   t   h   _   p   r   o   b   l   e   m   (   )   
-   p   o   e   m       =       c   r   e   a   t   e   _   p   o   e   m   (   r   e   s   u   l   t   )   
-   p   r   i   n   t   (   p   o   e   m   )   
-   `   `   `   
-   
-   *   *   O   u   t   p   u   t   *   *   :           
-   `   `   `   
-   T   h   e       a   n   s   w   e   r       i   s       3   ,       a       n   u   m   b   e   r       t   h   a   t   '   s       p   e   r   f   e   c   t   .   
-   I   t   '   s       t   h   e       k   e   y       t   o       s   o   l   v   i   n   g       m   y   s   t   e   r   i   e   s   ,   
-   a   n   d       t   h   e       h   e   a   r   t       o   f       t   h   i   s       p   r   o   b   l   e   m   '   s       t   r   u   t   h   .   
-   `   `   `   
-   
-   -   -   -   
-   
-   #   #   #       *   *   T   i   p   s   *   *   
-   -       *   *   E   r   r   o   r       H   a   n   d   l   i   n   g   *   *   :       I   f       t   h   e       m   a   t   h       p   r   o   b   l   e   m       i   s       c   o   m   p   l   e   x       (   e   .   g   .   ,       s   o   l   v   i   n   g       $       x   ^   2       =     127.0.0.1 - - [22/Sep/2025 15:51:27] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:51:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:52:27] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-127.0.0.1 - - [22/Sep/2025 15:52:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:53:27] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:53:40] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:53:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:54:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:45] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:55:57] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:56:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:57:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:26] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:36] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:46] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:58:56] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:59:06] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:59:16] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] Listed 2 agents
-127.0.0.1 - - [22/Sep/2025 15:59:45] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:59:45] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:59:51] "GET /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de/analytics HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 15:59:51] "GET /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de/analytics HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:00] "OPTIONS /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:00] "DELETE /api/strands-sdk/agents/3b4cd512-6fa1-47b7-9f9a-9521e44c80de HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:00] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:03] "OPTIONS /api/strands-sdk/agents/a39a16a9-a605-4093-a2b8-b097ea1be948 HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:03] "DELETE /api/strands-sdk/agents/a39a16a9-a605-4093-a2b8-b097ea1be948 HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:19] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:00:49] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:01:19] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:01:49] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-[Strands SDK] First agent data: {'id': '3b4cd512-6fa1-47b7-9f9a-9521e44c80de', 'name': 'Technical Expert', 'description': 'Focused on technical problem-solving and software development guidance.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.', 'tools': ['code_execution', 'file_operations', 'calculator'], 'sdk_config': {'ollama_config': {'temperature': 0.3, 'max_tokens': 1500}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:42:11', 'updated_at': '2025-09-21 07:42:11', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test', 'output_text': '<think>\nOkay, the user asked to test the calculator tool. I called the calculator with "2 + 2 * 3" i...', 'execution_time': 13.909528017044067, 'success': True, 'timestamp': '2025-09-22 07:51:21'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 25.594798803329468, 'success': True, 'timestamp': '2025-09-21 08:12:39'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 36.30582404136658, 'success': True, 'timestamp': '2025-09-21 08:09:29'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 26.743353843688965, 'success': True, 'timestamp': '2025-09-21 08:07:14'}, {'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to write a Python script to solve a math problem and then use that outp...', 'execution_time': 35.23401594161987, 'success': True, 'timestamp': '2025-09-21 08:05:23'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] 🔄 Cleaning up A2A service for agent: Technical Expert (3b4cd512-6fa1-47b7-9f9a-9521e44c80de)
-[Strands SDK] ✅ A2A service cleanup successful for Technical Expert
-[Strands SDK] 🔄 Cleaning up Agent Registry for agent: Technical Expert
-[Strands SDK] ℹ️  Agent Technical Expert was not registered in Agent Registry
-[Strands SDK] 🔄 Cleaning up Frontend Agent Bridge for agent: Technical Expert
-[Strands SDK] ℹ️  Agent Technical Expert was not registered in Frontend Agent Bridge
-[Strands SDK] ✅ Agent deleted: Technical Expert
-[Strands SDK] 📊 Cleanup Summary: 3/3 services cleaned successfully
-[Strands SDK] 🔧 Cleanup Results: {'a2a_service': 'success', 'agent_registry': 'not_found', 'frontend_bridge': 'not_found'}
+127.0.0.1 - - [23/Sep/2025 11:31:34] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:07] "[33mGET /agent-exchange HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Sep/2025 11:32:09] "[33mGET /agent-exchange HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Sep/2025 11:32:17] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:17] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:22] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:22] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:47] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:32:47] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:33:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:33:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:33:33] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:34:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:34:33] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:35:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:35:33] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:36:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:36:33] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:37:03] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:37:33] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:19] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:19] "[31m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 400 -
+127.0.0.1 - - [23/Sep/2025 11:38:26] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:26] "POST /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:28] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:38:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:39:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:39:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 0 agents
+[Strands SDK] First agent data: No agents
+[Strands SDK] Creating agent with data: {'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_id': 'qwen3:1.7b', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': ['web_search', 'current_time'], 'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}}
+[Strands SDK] Validating agent creation with config: {'host': 'http://localhost:11434', 'model_id': 'qwen3:1.7b'}
+[Strands SDK] Enhanced model config: {'host': 'http://localhost:11434', 'model_id': 'qwen3:1.7b', 'temperature': 0.8, 'max_tokens': 2000}
+[Strands SDK] ✅ Skipping Strands SDK model validation - using direct Ollama API
+[Strands SDK] ✅ Ollama host connectivity verified
+[Strands SDK] Agent configured with tools: ['web_search', 'current_time']
+[Strands SDK] ❌ Tool not found: web_search
+[Strands SDK] Creating agent with data: {'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_id': 'qwen3:1.7b', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}}
+[Strands SDK] Validating agent creation with config: {'host': 'http://localhost:11434', 'model_id': 'qwen3:1.7b'}
+[Strands SDK] Enhanced model config: {'host': 'http://localhost:11434', 'model_id': 'qwen3:1.7b', 'temperature': 0.8, 'max_tokens': 2000}
+[Strands SDK] ✅ Skipping Strands SDK model validation - using direct Ollama API
+[Strands SDK] ✅ Ollama host connectivity verified
+[Strands SDK] ✅ Agent configuration validated - ready for direct Ollama API execution
+[Strands SDK] Agent created successfully: 1392e774-fb72-4d7f-b23f-0656d854e2d3
+[Strands SDK] Listing agents...
 [Strands SDK] Listed 1 agents
-[Strands SDK] First agent data: {'id': 'a39a16a9-a605-4093-a2b8-b097ea1be948', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-21 07:41:58', 'updated_at': '2025-09-21 07:41:58', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'I want to know how to write python to solve a maths problem and then use that to write as inputs to ...', 'output_text': '<think>\nOkay, the user wants to know how to write Python code to solve a math problem and then use t...', 'execution_time': 65.62585592269897, 'success': True, 'timestamp': '2025-09-21 08:13:45'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
-[Strands SDK] 🔄 Cleaning up A2A service for agent: Creative Assistant (a39a16a9-a605-4093-a2b8-b097ea1be948)
-[Strands SDK] ✅ A2A service cleanup successful for Creative Assistant
-[Strands SDK] 🔄 Cleaning up Agent Registry for agent: Creative Assistant
-[Strands SDK] ℹ️  Agent Creative Assistant was not registered in Agent Registry
-[Strands SDK] 🔄 Cleaning up Frontend Agent Bridge for agent: Creative Assistant
-[Strands SDK] ℹ️  Agent Creative Assistant was not registered in Frontend Agent Bridge
-[Strands SDK] ✅ Agent deleted: Creative Assistant
-[Strands SDK] 📊 Cleanup Summary: 3/3 services cleaned successfully
-[Strands SDK] 🔧 Cleanup Results: {'a2a_service': 'success', 'agent_registry': 'not_found', 'frontend_bridge': 'not_found'}
-[Strands SDK] Listed 0 agents
-[Strands SDK] First agent data: No agents
-[Strands SDK] Listed 0 agents
-[Strands SDK] First agent data: No agents
-[Strands SDK] Listed 0 agents
-[Strands SDK] First agent data: No agents
-[Strands SDK] Listed 0 agents
-[Strands SDK] First agent data: No agents
-[Strands SDK] Listed 0 agents
-[Strands SDK] First agent data: No agents
-[Strands SDK] Listed 0 agents
-e using the result to determine the theme or lines. For example, if the result is 8, the poem could be about numbers or a specific number. 
-
-Possible challenges: ensuring the math code is correct, handling different types of math problems, and integrating the output into the poem seamlessly. Also, making sure the poem is well-written and poetic.
-
-Examples would help. Let's say the user wants to solve 2 + 3 and use the result in a poem. The code would compute 5, then the poem uses that number. Maybe the poem is a simple one with lines that mention the number.
-
-I need to guide the user through each step: writing the math code, getting the result, integrating into the poem. Also, offer examples and tips on making the poem creative and meaningful.
-</think>
-
-To create a Python script that solves a math problem and uses its output as input for a poem, follow these steps:
-
----
-
-### **Step 1: Write a Math Problem in Python**
-Create a simple math problem (e.g., `2 + 3`) and solve it using Python.
-
-```python
-# Solve a math problem
-result = 2 + 3
-print("Result of 2 + 3 =", result)
-```
-
-**Output:**
-```
-Result of 2 + 3 = 5
-```
-
----
-
-### **Step 2: Integrate the Result into a Poem**
-Use the result as input to generate a poem. Here’s how:
-
-#### **Option A: Hardcoded Result**
-If the result is fixed (e.g., `5`), create a poem that references it:
-
-```python
-# Poem with hardcoded result
-poem = f"""
-The result of 2 + 3 is {result}.
-In a world of numbers, this is the key.
-{result} is the answer, a simple yet profound number.
-"""
-print(poem)
-```
-
-**Output:**
-```
-The result of 2 + 3 is 5.
-In a world of numbers, this is the key.
-5 is the answer, a simple yet profound number.
-```
-
-#### **Option B: Dynamic Result (User Input)**
-If the result is based on user input (e.g., `x + y`), use `input()` and `eval()`:
-
-```python
-# Poem with user input
-x = int(input("Enter first number: "))
-y = int(input("Enter second number: "))
-result = x + y
-poem = f"""
-The sum of {x} and {y} is {result}.
-This is the magic number that defines the poem.
-{result} is the heartbeat of this verse.
-"""
-print(poem)
-```
-
-**Example Input:**
-```
-Enter first number: 4
-Enter second number: 7
-Result: 11
-```
-
-**Output:**
-```
-The sum of 4 and 7 is 11.
-This is the magic number that defines the poem.
-11 is the heartbeat of this verse.
-```
-
----
-
-### **Step 3: Make the Poem Creative**
-Enhance the poem by adding themes, metaphors, or logic based on the result:
-
-#### **Example Poem:**
-```python
-result = 10  # Change this for different themes
-poem =127.0.0.1 - - [22/Sep/2025 16:02:19] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:02:49] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:03:20] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:03:51] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:04:22] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:04:53] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:05:24] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:05:55] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:06:26] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:06:57] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:07:28] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:07:58] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:08:28] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:08:59] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:09:29] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:09:59] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:10:30] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:11:01] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:11:32] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:12:02] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:12:32] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:17:30] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:17:30] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:18:00] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:18:30] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:19:00] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:19:04] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:19:04] "[31m[1mPOST /api/strands-sdk/agents HTTP/1.1[0m" 400 -
-127.0.0.1 - - [22/Sep/2025 16:19:30] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:19:58] "[33mGET /api/strands-sdk/tools HTTP/1.1[0m" 404 -
-127.0.0.1 - - [22/Sep/2025 16:20:00] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:10] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:10] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:11] "[33mGET /health HTTP/1.1[0m" 404 -
-127.0.0.1 - - [22/Sep/2025 16:20:20] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:26] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:26] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:27] "GET /api/strands-sdk/health HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:34] "GET /api/strands-sdk/tool-config HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:40] "OPTIONS /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:40] "POST /api/strands-sdk/agents HTTP/1.1" 200 -
-127.0.0.1 - - [22/Sep/2025 16:20:42] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 11:40:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:40:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:41:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:41:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:42:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:42:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:34] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:37] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:37] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:47] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:43:57] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:07] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:17] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:27] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:37] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:47] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:44:57] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:07] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:17] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:27] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:37] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:47] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:45:57] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:46:07] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:46:17] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:46:27] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:46:37] "GET /api/strands-sdk/health HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 11:46:45] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:46:45] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:47:05] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:47:15] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:47:45] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:48:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:48:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:49:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+           0�P                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   127.0.0.1 - - [23/Sep/2025 11:49:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:50:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:50:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:51:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:51:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:52:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:52:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:53:04] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 11:53:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:53:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:54:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:54:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:55:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:55:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:56:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:56:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 11:57:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:57:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:58:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:58:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:59:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 11:59:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:00:14] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:00:44] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 12:00:49] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:00:53] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:01:15] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:01:35] "[35m[1mPOST /api/strands-sdk/agents/1392e774-fb72-4d7f-b23f-0656d854e2d3/execute HTTP/1.1[0m" 500 -
+127.0.0.1 - - [23/Sep/2025 12:01:46] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:02:17] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:02:48] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:03:19] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:03:26] "[35m[1mPOST /api/strands-sdk/agents/1392e774-fb72-4d7f-b23f-0656d854e2d3/execute HTTP/1.1[0m" 500 -
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Executing agent 1392e774-fb72-4d7f-b23f-0656d854e2d3 with input: test message...
+[Strands SDK] Agent config loaded: Creative Assistant - http://localhost:11434
+[Strands SDK] Using enhanced config: {'host': 'http://localhost:11434', 'model_id': 'http://localhost:11434', 'temperature': 0.8, 'max_tokens': 2000}
+[Strands SDK] Using direct Ollama API call for model: http://localhost:11434
+[Strands SDK] Execution error: Ollama API error: 404 - {"error":"model 'http://localhost:11434' not found"}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test message', 'output_text': None, 'execution_time': None, 'success': False, 'timestamp': '2025-09-23 04:01:35'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test message', 'output_text': None, 'execution_time': None, 'success': False, 'timestamp': '2025-09-23 04:01:35'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test message', 'output_text': None, 'execution_time': None, 'success': False, 'timestamp': '2025-09-23 04:01:35'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+[Strands SDK] First agent data: {'id': '1392e774-fb72-4d7f-b23f-0656d854e2d3', 'name': 'Creative Assistant', 'description': 'Expert in creative writing, storytelling, and innovative content creation.', 'model_provider': 'ollama', 'model_id': 'qwen3:1.7b', 'host': 'http://localhost:11434', 'system_prompt': 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.', 'tools': [], 'sdk_config': {'ollama_config': {'temperature': 0.8, 'max_tokens': 2000}, 'enhanced_features': True, 'strands_version': '1.8.0'}, 'sdk_version': '1.0.0', 'created_at': '2025-09-23 03:38:26', 'updated_at': '2025-09-23 03:38:26', 'status': 'active', 'sdk_type': 'official-strands', 'recent_executions': [{'input_text': 'test message', 'output_text': None, 'execution_time': None, 'success': False, 'timestamp': '2025-09-23 04:01:35'}], 'a2a_status': {'registered': False, 'a2a_agent_id': None, 'a2a_status': 'unknown'}}
+[Strands SDK] Executing agent 1392e774-fb72-4d7f-b23f-0656d854e2d3 with input: test message...
+[Strands SDK] Agent config loaded: Creative Assistant - http://localhost:11434
+[Strands SDK] Using enhanced config: {'host': 'http://localhost:11434', 'model_id': 'http://localhost:11434', 'temperature': 0.8, 'max_tokens': 2000}
+[Strands SDK] Using direct Ollama API call for model: http://localhost:11434
+[Strands SDK] Execution error: Ollama API error: 404 - {"error":"model 'http://localhost:11434' not found"}
+[Strands SDK] Listing agents...
+[Strands SDK] Listed 1 agents
+127.0.0.1 - - [23/Sep/2025 12:03:50] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:04:21] "GET /api/strands-sdk/agents HTTP/1.1" 200 -
+127.0.0.1 - - [23/Sep/2025 12:04:52] "GET /api/strands-sdk/agents HTTP/1.1" 200 -

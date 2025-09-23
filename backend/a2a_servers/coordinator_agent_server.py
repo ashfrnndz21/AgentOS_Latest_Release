@@ -17,9 +17,7 @@ class CoordinatorA2AServer(BaseA2AServer):
         super().__init__(agent_name, port, host)
         self.known_agents = {
             "calculator": "http://localhost:8001",
-            "research": "http://localhost:8002",
-            "weather": "http://localhost:8003",
-            "stock": "http://localhost:8004"
+            "research": "http://localhost:8002"
         }
     
     def setup_routes(self):

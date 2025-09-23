@@ -40,7 +40,6 @@ import { StrandsSdkAgentChat } from '@/components/StrandsSdkAgentChat';
 import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsAgentAnalytics';
 import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
-import { EnhancedOrchestrationMonitor } from '@/components/A2A/EnhancedOrchestrationMonitor';
 import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
 import { OrchestratorCard } from '@/components/A2A/OrchestratorCard';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
@@ -67,6 +66,11 @@ export const OllamaAgentDashboard: React.FC = () => {
   const [configAgent, setConfigAgent] = useState<OllamaAgentConfig | null>(null);
   const [showA2ARegistrationDialog, setShowA2ARegistrationDialog] = useState(false);
   const [a2aRegistrationAgent, setA2aRegistrationAgent] = useState<StrandsSdkAgent | null>(null);
+  const [systemMetrics, setSystemMetrics] = useState<{
+    memory_usage: string;
+    active_sessions: number;
+    orchestrator_model: string;
+  } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -75,7 +79,8 @@ export const OllamaAgentDashboard: React.FC = () => {
       await Promise.all([
         loadAgents(),
         loadStrandsAgents(),
-        loadA2AAgents()
+        loadA2AAgents(),
+        loadSystemMetrics()
       ]);
     };
     
@@ -87,6 +92,7 @@ export const OllamaAgentDashboard: React.FC = () => {
       loadStrandsAgents();
       loadA2AAgents();
       loadHealthStatus();
+      loadSystemMetrics();
     }, 30000);
 
     return () => {
@@ -267,6 +273,20 @@ export const OllamaAgentDashboard: React.FC = () => {
       });
     } catch (error) {
       console.error('Failed to load health status:', error);
+    }
+  };
+
+  const loadSystemMetrics = async () => {
+    try {
+      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/health');
+      const data = await response.json();
+      setSystemMetrics({
+        memory_usage: data.memory_usage,
+        active_sessions: data.active_sessions,
+        orchestrator_model: data.orchestrator_model
+      });
+    } catch (error) {
+      console.error('Error loading system metrics:', error);
     }
   };
 
@@ -1185,13 +1205,51 @@ export const OllamaAgentDashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Enhanced LLM Orchestration Panel */}
+                {/* System Status */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-purple-400" />
-                    Enhanced LLM Orchestration (Intelligent)
+                    <MemoryStick className="h-5 w-5 text-blue-400" />
+                    System Status
                   </h3>
-                  <EnhancedOrchestrationMonitor />
+                  <Card className="bg-gray-800 border-gray-700">
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <MemoryStick className="h-5 w-5 text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Memory Usage</p>
+                            <p className="text-lg font-semibold text-white">
+                              {systemMetrics ? systemMetrics.memory_usage : 'Loading...'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-green-500/20 rounded-lg">
+                            <Users className="h-5 w-5 text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Active Sessions</p>
+                            <p className="text-lg font-semibold text-white">
+                              {systemMetrics ? `${systemMetrics.active_sessions} sessions` : 'Loading...'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-purple-500/20 rounded-lg">
+                            <Brain className="h-5 w-5 text-purple-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Model</p>
+                            <p className="text-lg font-semibold text-white">
+                              {systemMetrics ? systemMetrics.orchestrator_model : 'Loading...'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Unregistered Agents */}

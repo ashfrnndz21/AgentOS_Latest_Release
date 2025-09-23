@@ -56,7 +56,7 @@ except ImportError as e:
     
     # Test the official integration
     try:
-        test_model = OllamaModel(host="http://localhost:11434", model_id="llama3.2:latest")
+        test_model = OllamaModel(host="http://localhost:11434", model_id="qwen3:1.7b")
         print(f"[Strands SDK] ✅ Official OllamaModel test successful")
     except Exception as e:
         print(f"[Strands SDK] ⚠️  OllamaModel test warning: {e}")
@@ -68,7 +68,7 @@ except ImportError as e:
     # Real Ollama implementation when Strands SDK is not available
     class RealOllamaModel:
         """Real Ollama implementation for Strands SDK API"""
-        def __init__(self, host="http://localhost:11434", model_id="llama3.2:latest", **kwargs):
+        def __init__(self, host="http://localhost:11434", model_id="qwen3:1.7b", **kwargs):
             self.host = host
             self.model_id = model_id
             # Accept additional parameters like temperature, top_p, etc.
@@ -151,7 +151,7 @@ if 'OllamaModel' not in globals():
     # Use the RealOllamaModel from the else block
     class OllamaModel:
         """Real Ollama implementation for Strands SDK API"""
-        def __init__(self, host="http://localhost:11434", model_id="llama3.2:latest", **kwargs):
+        def __init__(self, host="http://localhost:11434", model_id="qwen3:1.7b", **kwargs):
             self.host = host
             self.model_id = model_id
             self.temperature = kwargs.get('temperature', 0.7)
@@ -517,7 +517,7 @@ def create_strands_agent():
         # Validate Strands SDK configuration
         model_config = {
             'host': data.get('host', 'http://localhost:11434'),
-            'model_id': data.get('model_id', 'llama3.2:latest')
+            'model_id': data.get('model_id', 'qwen3:1.7b')
         }
         
         # Fast agent creation validation with Strands SDK patterns
@@ -927,9 +927,9 @@ def execute_strands_agent(agent_id):
             sdk_config_json = {}
         
         # Fix the host/model_id configuration issue
-        # The database has host as model name and model_id as "ollama"
-        actual_model_id = agent_data[4]  # host field contains the actual model name
-        actual_host = "http://localhost:11434"  # Standard Ollama host
+        # The database schema: model_id=3, host=4, system_prompt=5
+        actual_model_id = agent_data[3]  # model_id field
+        actual_host = agent_data[4]      # host field
         
         agent_config = {
             'id': agent_data[0],

@@ -368,7 +368,7 @@ export class DocumentRAGService {
 }
 
 // Create service instances
-export const realDocumentRAGService = new RealDocumentRAGService();
+export const realDocumentRAGService = new RealDocumentRAGService('http://localhost:5003');
 export const documentRAGService = new DocumentRAGService();
 
 // Export both for backward compatibility

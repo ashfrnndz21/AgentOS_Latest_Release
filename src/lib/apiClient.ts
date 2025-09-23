@@ -34,7 +34,7 @@ class ApiClient {
 
   // Health check
   async checkHealth() {
-    return this.request('/health');
+    return this.request('/api/health');
   }
 
   // Ollama endpoints
