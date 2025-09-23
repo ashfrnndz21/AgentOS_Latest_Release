@@ -55,15 +55,19 @@ const OLLAMA_MODELS = [
 
 // Models that support tools in Strands SDK (verified through testing)
 const MODELS_WITH_TOOL_SUPPORT = [
-  'llama3.2:latest',    // ✅ Verified working with tools
-  'llama3.2:1b'         // ✅ Verified working with tools
+  'qwen3:1.7b',                    // ✅ Verified working with tools (excellent JSON generation)
+  'phi4-mini-reasoning:3.8b',      // ✅ Verified working with tools (reasoning model)
+  'phi4-mini-reasoning:latest',    // ✅ Verified working with tools
+  'llama3.1:latest',               // ✅ Verified working with tools
+  'llama3.2:latest',               // ✅ Verified working with tools
+  'llama3.2:1b',                   // ✅ Verified working with tools
+  'qwen2.5:latest'                 // ✅ Verified working with tools
   // Note: Only include models that are actually tested and working
 ];
 
 // Models that don't support tools (verified through testing)
 const MODELS_WITHOUT_TOOL_SUPPORT = [
   'phi3:latest',
-  'phi4-mini-reasoning:latest',
   'deepseek-r1:latest',
   'gpt-oss:20b',
   'calebfahlgren/natural-functions:latest',
@@ -844,21 +848,37 @@ agent.model.update_config(
                               <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent>
-                              {OLLAMA_MODELS.map((model) => (
-                                <SelectItem key={model} value={model}>
-                                  <div className="flex items-center gap-2">
-                                    {model}
-                                    {isModelInstalled(model) && (
+                              {installedModels.length > 0 ? (
+                                installedModels.map((model) => (
+                                  <SelectItem key={model} value={model}>
+                                    <div className="flex items-center gap-2">
+                                      {model}
                                       <CheckCircle className="h-3 w-3 text-green-400" />
-                                    )}
-                                    {modelSupportsTools(model) && (
-                                      <Badge variant="outline" className="text-xs text-blue-400 border-blue-400">
-                                        Tools
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </SelectItem>
-                              ))}
+                                      {modelSupportsTools(model) && (
+                                        <Badge variant="outline" className="text-xs text-blue-400 border-blue-400">
+                                          Tools
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                OLLAMA_MODELS.map((model) => (
+                                  <SelectItem key={model} value={model}>
+                                    <div className="flex items-center gap-2">
+                                      {model}
+                                      {isModelInstalled(model) && (
+                                        <CheckCircle className="h-3 w-3 text-green-400" />
+                                      )}
+                                      {modelSupportsTools(model) && (
+                                        <Badge variant="outline" className="text-xs text-blue-400 border-blue-400">
+                                          Tools
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <Button

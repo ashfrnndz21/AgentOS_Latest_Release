@@ -22,51 +22,62 @@ import {
 interface EnhancedOrchestrationResult {
   success: boolean;
   session_id: string;
-  stage_1_query_analysis?: {
-    user_intent: string;
-    domain: string;
-    complexity: string;
-    required_expertise: string;
-    context_reasoning: string;
-  };
-  stage_2_agent_analysis?: {
-    agent_evaluations: Array<{
-      agent_id: string;
+  orchestrator_reasoning?: string;
+  streamlined_analysis?: any;
+  agent_registry_analysis?: {
+    success: boolean;
+    total_agents_analyzed: number;
+    agent_analysis: Array<{
       agent_name: string;
-      primary_expertise: string;
-      capabilities_assessment: string;
-      tools_analysis: string;
-      system_prompt_analysis: string;
-      suitability_score: number;
+      association_score: number;
+      contextual_relevance: string;
+      role_analysis: string;
+    }>;
+    analysis_summary: string;
+  };
+  agent_selection?: {
+    success: boolean;
+    total_agents_selected: number;
+    execution_strategy: string;
+    overall_reasoning: string;
+    selected_agents: Array<{
+      agent_name: string;
+      execution_order: number;
+      confidence_score: number;
+      selection_reasoning: string;
+      task_assignment: string;
     }>;
   };
-  stage_3_contextual_matching?: {
-    selected_agent_id: string;
-    matching_reasoning: string;
-    confidence: number;
-    alternative_agents: string[];
-    match_quality: string;
+  a2a_execution?: {
+    success: boolean;
     execution_strategy: string;
+    total_agents_executed: number;
+    execution_results: Array<{
+      agent_name: string;
+      execution_order: number;
+      success: boolean;
+      execution_time: number;
+      task_assignment: string;
+      handoff_message_sent: string;
+      a2a_handoff_status: string;
+      agent_response: string;
+      agent_actual_response: string;
+    }>;
+    accumulated_output: string;
+    final_response: string;
   };
-  selected_agent?: {
-    id: string;
-    name: string;
-    description: string;
+  execution_details?: {
+    success: boolean;
+    steps_completed: number;
+    execution_time: number;
+    step_1: string;
+    step_2: string;
+    step_3: string;
+    step_4: string;
   };
-  execution_time?: number;
-  final_response?: string;
-  raw_agent_response?: any;
   error?: string;
 }
 
-interface SessionInfo {
-  session_id: string;
-  created_at: string;
-  query: string;
-  status: string;
-  stages_completed: number;
-  duration: number;
-}
 
 interface HealthInfo {
   status: string;
@@ -81,13 +92,12 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<EnhancedOrchestrationResult | null>(null);
   const [healthInfo, setHealthInfo] = useState<HealthInfo | null>(null);
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [processingStage, setProcessingStage] = useState<string>('');
 
   const fetchHealthInfo = async () => {
     try {
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/health');
+      const response = await fetch('http://localhost:5015/api/simple-orchestration/health');
       const data = await response.json();
       setHealthInfo(data);
     } catch (error) {
@@ -95,15 +105,6 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
     }
   };
 
-  const fetchSessions = async () => {
-    try {
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/sessions');
-      const data = await response.json();
-      setSessions(data.sessions || []);
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error);
-    }
-  };
 
   const processQuery = async () => {
     if (!query.trim()) return;
@@ -114,13 +115,12 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
     setProcessingStage('');
 
     try {
-      // Enhanced 5-stage orchestration process
+      // Enhanced 4-step orchestration process
       const stages = [
-        'Stage 1: Agent Discovery & Registry Access',
-        'Stage 2: LLM Query Analysis & Agent Evaluation',
-        'Stage 3: Contextual Agent Matching',
-        'Stage 4: Agent Execution & Response Generation',
-        'Stage 5: Response Synthesis & Memory Cleanup'
+        'Step 1: Orchestrator Reasoning',
+        'Step 2: Agent Registry Analysis',
+        'Step 3: Agent Selection & Sequencing',
+        'Step 4: A2A Execution & Response Synthesis'
       ];
 
       let stageIndex = 0;
@@ -133,7 +133,7 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
         }
       }, 1000);
 
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/query', {
+      const response = await fetch('http://localhost:5015/api/simple-orchestration/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,9 +151,8 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
         setError(data.error || 'Unknown error occurred');
       }
 
-      // Refresh health and sessions info
+      // Refresh health info
       await fetchHealthInfo();
-      await fetchSessions();
 
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Network error');
@@ -163,54 +162,17 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
     }
   };
 
-  const cleanupSession = async (sessionId: string) => {
-    try {
-      await fetch(`http://localhost:5014/api/enhanced-orchestration/sessions/${sessionId}`, {
-        method: 'DELETE',
-      });
-      await fetchSessions();
-    } catch (error) {
-      console.error('Failed to cleanup session:', error);
-    }
-  };
 
   useEffect(() => {
     fetchHealthInfo();
-    fetchSessions();
     
     const interval = setInterval(() => {
       fetchHealthInfo();
-      fetchSessions();
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-400" />;
-      case 'active':
-        return <Activity className="h-4 w-4 text-blue-400" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-600';
-      case 'failed':
-        return 'bg-red-600';
-      case 'active':
-        return 'bg-blue-600';
-      default:
-        return 'bg-gray-600';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -301,303 +263,178 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
         </Alert>
       )}
 
-      {/* Enhanced 5-Stage Orchestration Results */}
+      {/* Enhanced 4-Step Orchestration Results */}
       {result && (
         <div className="space-y-6">
-          {/* Stage 1: Query Analysis */}
-          {result.stage_1_query_analysis && (
+          {/* Step 1: Orchestrator Reasoning */}
+          {result.orchestrator_reasoning && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="h-5 w-5 text-blue-400" />
-                  Stage 1: Query Context Analysis
+                  Step 1: Orchestrator Reasoning
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-gray-400">User Intent</label>
-                    <p className="text-white text-sm bg-gray-700 p-2 rounded mt-1">
-                      {result.stage_1_query_analysis.user_intent}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-400">Domain</label>
-                    <Badge className="bg-blue-600 mt-1">{result.stage_1_query_analysis.domain}</Badge>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-400">Complexity</label>
-                    <Badge className="bg-green-600 mt-1">{result.stage_1_query_analysis.complexity}</Badge>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-400">Required Expertise</label>
-                    <p className="text-white text-sm bg-gray-700 p-2 rounded mt-1">
-                      {result.stage_1_query_analysis.required_expertise}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="text-sm text-gray-400">Context Reasoning</label>
-                  <p className="text-white text-sm bg-gray-700 p-3 rounded mt-1">
-                    {result.stage_1_query_analysis.context_reasoning}
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <p className="text-white text-sm">
+                    {result.orchestrator_reasoning}
                   </p>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Stage 2: Agent Analysis */}
-          {result.stage_2_agent_analysis && (
+          {/* Step 2: Agent Registry Analysis */}
+          {result.agent_registry_analysis && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Target className="h-5 w-5 text-purple-400" />
-                  Stage 2: Agent Capability Analysis
+                  Step 2: Agent Registry Analysis
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {result.stage_2_agent_analysis.agent_evaluations.map((agent, index) => (
-                    <div key={agent.agent_id} className="bg-gray-700 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-white font-medium">{agent.agent_name}</h4>
-                        <div className="flex items-center gap-2">
-                          <Badge className="bg-purple-600">Score: {(agent.suitability_score * 100).toFixed(0)}%</Badge>
-                          <Badge variant="outline">{agent.primary_expertise}</Badge>
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <p className="text-white text-sm">
+                      {result.agent_registry_analysis.analysis_summary}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {result.agent_registry_analysis.agent_analysis.map((agent, index) => (
+                      <div key={index} className="bg-gray-600 p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-white font-medium">{agent.agent_name}</h4>
+                          <Badge className="bg-purple-600">Score: {(agent.association_score * 100).toFixed(0)}%</Badge>
                         </div>
+                        <p className="text-gray-300 text-xs mb-1">{agent.role_analysis}</p>
+                        <p className="text-gray-400 text-xs">{agent.contextual_relevance}</p>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <label className="text-gray-400">Capabilities Assessment</label>
-                          <p className="text-white bg-gray-600 p-2 rounded mt-1">
-                            {agent.capabilities_assessment}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-gray-400">Tools Analysis</label>
-                          <p className="text-white bg-gray-600 p-2 rounded mt-1">
-                            {agent.tools_analysis}
-                          </p>
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="text-gray-400">System Prompt Analysis</label>
-                          <p className="text-white bg-gray-600 p-2 rounded mt-1">
-                            {agent.system_prompt_analysis}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Stage 3: Contextual Matching */}
-          {result.stage_3_contextual_matching && (
+          {/* Step 3: Agent Selection */}
+          {result.agent_selection && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Zap className="h-5 w-5 text-green-400" />
-                  Stage 3: Contextual Agent Matching
+                  Step 3: Agent Selection & Sequencing
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Selected Agent:</span>
-                    <Badge className="bg-green-600">{result.selected_agent?.name}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Confidence:</span>
-                    <Badge className="bg-blue-600">{(result.stage_3_contextual_matching.confidence * 100).toFixed(1)}%</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Match Quality:</span>
-                    <Badge className="bg-purple-600">{result.stage_3_contextual_matching.match_quality}</Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-gray-400">Matching Reasoning</label>
-                    <p className="text-white text-sm bg-gray-700 p-3 rounded mt-1">
-                      {result.stage_3_contextual_matching.matching_reasoning}
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <p className="text-white text-sm">
+                      {result.agent_selection.overall_reasoning}
                     </p>
                   </div>
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-sm text-gray-400">Execution Strategy</label>
-                      <Badge variant="outline" className="mt-1">{result.stage_3_contextual_matching.execution_strategy}</Badge>
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-400">Alternative Agents</label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {result.stage_3_contextual_matching.alternative_agents.map((agentId, index) => {
-                          const altAgent = result.stage_2_agent_analysis?.agent_evaluations.find(a => a.agent_id === agentId);
-                          return (
-                            <Badge key={agentId} variant="outline" className="text-xs">
-                              {altAgent?.agent_name || `Agent ${index + 1}`}
-                            </Badge>
-                          );
-                        })}
+                    {result.agent_selection.selected_agents.map((agent, index) => (
+                      <div key={index} className="bg-gray-600 p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-white font-medium">{agent.agent_name}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-green-600">Order: {agent.execution_order}</Badge>
+                            <Badge className="bg-blue-600">Confidence: {(agent.confidence_score * 100).toFixed(0)}%</Badge>
+                          </div>
+                        </div>
+                        <p className="text-gray-300 text-xs mb-1">{agent.selection_reasoning}</p>
+                        <p className="text-gray-400 text-xs">{agent.task_assignment}</p>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Stage 4: Agent Execution Results */}
-          {result.success && result.selected_agent && (
+          {/* Step 4: A2A Execution */}
+          {result.a2a_execution && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Activity className="h-5 w-5 text-orange-400" />
-                  Stage 4: Agent Execution & Response Generation
+                  Step 4: A2A Execution & Response Synthesis
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Executed Agent:</span>
-                    <Badge className="bg-orange-600">{result.selected_agent.name}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Execution Time:</span>
-                    <Badge className="bg-blue-600">{result.execution_time?.toFixed(2)}s</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Session ID:</span>
-                    <p className="text-white font-mono text-xs">{result.session_id}</p>
-                  </div>
-                </div>
-                
-                {result.raw_agent_response && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm text-gray-400">Agent Response Details</label>
-                      <div className="bg-gray-700 p-3 rounded-lg mt-1 text-sm">
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                          <span className="text-gray-400">Model Used:</span>
-                          <span className="text-white">{result.raw_agent_response.model_used}</span>
-                          <span className="text-gray-400">Execution ID:</span>
-                          <span className="text-white font-mono text-xs">{result.raw_agent_response.execution_id}</span>
-                          <span className="text-gray-400">SDK Powered:</span>
-                          <span className="text-white">{result.raw_agent_response.sdk_powered ? 'Yes' : 'No'}</span>
-                          <span className="text-gray-400">Tools Used:</span>
-                          <span className="text-white">{result.raw_agent_response.tools_used?.length || 0}</span>
-                        </div>
-                      </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Strategy:</span>
+                      <Badge className="bg-orange-600">{result.a2a_execution.execution_strategy}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Agents Executed:</span>
+                      <Badge className="bg-blue-600">{result.a2a_execution.total_agents_executed}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Success:</span>
+                      <Badge className={result.a2a_execution.success ? "bg-green-600" : "bg-red-600"}>
+                        {result.a2a_execution.success ? "Yes" : "No"}
+                      </Badge>
                     </div>
                   </div>
-                )}
+                  
+                  <div className="space-y-3">
+                    {result.a2a_execution.execution_results.map((execution, index) => (
+                      <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-white font-medium">{execution.agent_name}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-purple-600">Order: {execution.execution_order}</Badge>
+                            <Badge className={execution.success ? "bg-green-600" : "bg-red-600"}>
+                              {execution.success ? "Success" : "Failed"}
+                            </Badge>
+                            <Badge className="bg-blue-600">{execution.execution_time.toFixed(2)}s</Badge>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <label className="text-gray-400">Task Assignment:</label>
+                            <p className="text-white bg-gray-600 p-2 rounded mt-1">{execution.task_assignment}</p>
+                          </div>
+                          <div>
+                            <label className="text-gray-400">A2A Status:</label>
+                            <Badge variant="outline" className="mt-1">{execution.a2a_handoff_status}</Badge>
+                          </div>
+                          <div>
+                            <label className="text-gray-400">Agent Response:</label>
+                            <p className="text-white bg-gray-600 p-2 rounded mt-1">{execution.agent_response}</p>
+                          </div>
+                          {execution.agent_actual_response && execution.agent_actual_response !== "No actual response from agent" && (
+                            <div>
+                              <label className="text-gray-400">Actual Response:</label>
+                              <p className="text-white bg-gray-600 p-2 rounded mt-1">{execution.agent_actual_response}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {result.a2a_execution.final_response && (
+                    <div className="mt-4">
+                      <label className="text-sm text-gray-400">Final Synthesized Response</label>
+                      <div className="bg-gray-700 p-4 rounded-lg mt-2">
+                        <p className="text-white text-sm">{result.a2a_execution.final_response}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Stage 5: Response Synthesis & Final Result */}
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                {result.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-400" />
-                )}
-                Stage 5: Response Synthesis & Memory Cleanup
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-400">Total Processing Time</label>
-                  <Badge className="bg-green-600 mt-1">{result.execution_time?.toFixed(2)}s</Badge>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-400">Memory Management</label>
-                  <Badge variant="outline" className="mt-1">Automatic Cleanup</Badge>
-                </div>
-              </div>
 
-              {result.success && result.final_response && (
-                <div>
-                  <label className="text-sm text-gray-400">Final Synthesized Response</label>
-                  <div className="bg-gray-700 p-4 rounded-lg mt-1 border border-green-500/30">
-                    <p className="text-white whitespace-pre-wrap">
-                      {result.final_response}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {!result.success && result.error && (
-                <div>
-                  <label className="text-sm text-gray-400">Error Details</label>
-                  <div className="bg-red-900/20 p-4 rounded-lg mt-1 border border-red-500/30">
-                    <p className="text-red-200">{result.error}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
-
-      {/* Active Sessions */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="h-5 w-5 text-purple-400" />
-            Active Sessions ({sessions.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {sessions.length === 0 ? (
-            <p className="text-gray-400 text-center py-4">No active sessions</p>
-          ) : (
-            <div className="space-y-2">
-              {sessions.map((session) => (
-                <div
-                  key={session.session_id}
-                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(session.status)}
-                    <div>
-                      <p className="text-white text-sm font-mono">
-                        {session.session_id.substring(0, 8)}...
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        {session.query} • {session.duration.toFixed(1)}s ago
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(session.status)}>
-                      {session.status}
-                    </Badge>
-                    <Badge variant="outline">
-                      {session.stages_completed} stages
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => cleanupSession(session.session_id)}
-                      className="text-xs"
-                    >
-                      Cleanup
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

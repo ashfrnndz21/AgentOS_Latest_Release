@@ -169,5 +169,5 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient('http://localhost:5002');
 export default apiClient;

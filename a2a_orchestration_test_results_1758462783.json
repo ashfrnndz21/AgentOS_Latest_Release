@@ -1,0 +1,103 @@
+{
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 4,
+    "failed_tests": 2,
+    "success_rate": 66.66666666666666,
+    "duration_seconds": 143.688473
+  },
+  "test_results": {
+    "Service Health": true,
+    "Agent Creation with A2A": true,
+    "A2A Agent Discovery": true,
+    "Enhanced Orchestration Reasoning": false,
+    "A2A Communication": false,
+    "Agent Cleanup": true
+  },
+  "detailed_logs": [
+    {
+      "test_name": "Strands SDK Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:50:39.683871"
+    },
+    {
+      "test_name": "A2A Service Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:50:39.685386"
+    },
+    {
+      "test_name": "Enhanced Orchestration Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:50:39.687352"
+    },
+    {
+      "test_name": "Agent Creation with A2A",
+      "success": true,
+      "details": "Agent 5f61c1f5-d365-466d-ab2e-b9c7b7a23cf5 created and registered with A2A",
+      "timestamp": "2025-09-21T21:50:39.691859"
+    },
+    {
+      "test_name": "A2A Agent Discovery",
+      "success": true,
+      "details": "Found 2 registered agents",
+      "timestamp": "2025-09-21T21:50:39.693071"
+    },
+    {
+      "test_name": "Test Agent A2A Registration",
+      "success": true,
+      "details": "Test agent found in A2A registry: 5f61c1f5-d365-466d-ab2e-b9c7b7a23cf5",
+      "timestamp": "2025-09-21T21:50:39.693080"
+    },
+    {
+      "test_name": "Orchestration Reasoning 1",
+      "success": true,
+      "details": "Strategy: sequential, Quality: excellent",
+      "timestamp": "2025-09-21T21:51:35.019410"
+    },
+    {
+      "test_name": "Strategy Match 1",
+      "success": true,
+      "details": "Strategy correctly identified as sequential",
+      "timestamp": "2025-09-21T21:51:35.019525"
+    },
+    {
+      "test_name": "Orchestration Reasoning 2",
+      "success": true,
+      "details": "Strategy: sequential, Quality: excellent",
+      "timestamp": "2025-09-21T21:52:03.298664"
+    },
+    {
+      "test_name": "Strategy Match 2",
+      "success": false,
+      "details": "Expected: single, Got: sequential",
+      "timestamp": "2025-09-21T21:52:03.298789"
+    },
+    {
+      "test_name": "Orchestration Query 3",
+      "success": false,
+      "details": "Exception: HTTPConnectionPool(host='localhost', port=5014): Read timed out. (read timeout=60)",
+      "timestamp": "2025-09-21T21:53:03.304885"
+    },
+    {
+      "test_name": "A2A Message Sending",
+      "success": true,
+      "details": "Message sent successfully: d3d555d3-a87c-4f04-9a7e-4f70f3d04589",
+      "timestamp": "2025-09-21T21:53:03.322200"
+    },
+    {
+      "test_name": "A2A Message History",
+      "success": false,
+      "details": "HTTP 404",
+      "timestamp": "2025-09-21T21:53:03.327350"
+    },
+    {
+      "test_name": "Agent Cleanup 5f61c1f5-d365-466d-ab2e-b9c7b7a23cf5",
+      "success": true,
+      "details": "Agent deleted and A2A unregistered",
+      "timestamp": "2025-09-21T21:53:03.363933"
+    }
+  ]
+}

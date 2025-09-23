@@ -653,6 +653,38 @@ def ollama_terminal():
                         "suggestion": "Start Ollama with 'ollama serve'"
                     })
             
+            elif cmd.startswith('rm '):
+                model_name = cmd[3:].strip()
+                if not model_name:
+                    return jsonify({
+                        "success": False,
+                        "error": "Model name is required",
+                        "suggestion": "Usage: ollama rm <model_name>"
+                    })
+                
+                try:
+                    response = requests.delete(f"{OLLAMA_BASE_URL}/api/delete", 
+                                             json={"name": model_name}, 
+                                             timeout=30)
+                    if response.status_code == 200:
+                        return jsonify({
+                            "success": True,
+                            "stdout": f"Successfully removed {model_name}",
+                            "stderr": ""
+                        })
+                    else:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Failed to remove {model_name}",
+                            "suggestion": "Check if the model name is correct and exists"
+                        })
+                except requests.exceptions.ConnectionError:
+                    return jsonify({
+                        "success": False,
+                        "error": "Cannot connect to Ollama service",
+                        "suggestion": "Start Ollama with 'ollama serve'"
+                    })
+            
             elif cmd.startswith('run '):
                 parts = cmd[4:].strip().split(' ', 1)
                 model_name = parts[0]
@@ -712,6 +744,7 @@ def ollama_terminal():
   ollama list                    List installed models
   ollama pull <model>           Download a model
   ollama show <model>           Show model information
+  ollama rm <model>             Remove a model
   ollama run <model> [prompt]   Run a model with optional prompt
   ollama help                   Show this help message
 
@@ -719,6 +752,7 @@ Examples:
   ollama list
   ollama pull llama3.2
   ollama show llama3.2
+  ollama rm mistral:latest
   ollama run llama3.2 "Hello, how are you?"
 """
                 return jsonify({

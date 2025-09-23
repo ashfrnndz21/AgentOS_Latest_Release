@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # LLM Orchestrator Configuration
-ORCHESTRATOR_MODEL = "llama3.2:1b"  # Use working model for orchestration
+ORCHESTRATOR_MODEL = "qwen3:1.7b"  # Use working model for orchestration
 ORCHESTRATOR_OLLAMA_URL = "http://localhost:11434"
 
 # Initialize Flask app
@@ -183,9 +183,8 @@ def init_database():
 
 def analyze_query_with_llm(query: str, available_agents: List[Dict]) -> Dict:
     """Use LLM to analyze query and determine execution strategy"""
-    # Temporarily disable LLM analysis due to model issues - use fallback only
-    logger.info("LLM analysis disabled - using fallback analysis only")
-    return create_fallback_analysis(query, available_agents)
+    # Enable LLM analysis with improved examples and error handling
+    logger.info("Using LLM analysis with enhanced examples")
     
     try:
         # Create agent capability summary
@@ -199,38 +198,103 @@ def analyze_query_with_llm(query: str, available_agents: List[Dict]) -> Dict:
                 'description': agent.get('description', '')
             })
         
-        # Create LLM prompt for context-based query analysis
-        prompt = f"""You are an intelligent orchestration system that analyzes user queries and selects the most appropriate agent based on their descriptions and capabilities.
+        # Create LLM prompt for context-based query analysis with enhanced examples
+        prompt = f"""You are an intelligent orchestration system that analyzes user queries and determines the optimal execution strategy (sequential vs parallel) and selects appropriate agents.
 
 Available Agents:
 {json.dumps(agent_summary, indent=2)}
 
 User Query: "{query}"
 
-IMPORTANT: Match the query to the agent whose DESCRIPTION best fits the user's intent:
-- Read each agent's description carefully
-- Consider the agent's name and capabilities
-- Select the agent that specializes in the query domain
+ANALYSIS TASK:
+1. Determine if this query requires SEQUENTIAL or PARALLEL execution
+2. Select the most appropriate agent(s) based on their descriptions and capabilities
+3. Provide reasoning for your decisions
 
-Agent Selection Guidelines:
-- Creative requests (poems, stories, writing) → Look for agents with "creative", "writing", "storytelling" in description
-- Weather questions → Look for agents with "weather", "climate", "meteorology" in description  
-- Technical problems → Look for agents with "technical", "programming", "coding" in description
-- Learning/education → Look for agents with "education", "learning", "teaching" in description
-- Math/calculations → Look for agents with "calculator", "math", "arithmetic" in description
+EXECUTION STRATEGY GUIDELINES:
 
-Respond with ONLY a valid JSON object:
-{{
-    "query_type": "creative|weather|technical|educational|calculation|research|general",
-    "selected_agents": ["best_agent_id"],
-    "execution_strategy": "single",
-    "reasoning": "Explain why you selected this specific agent based on their description matching the query intent"
+SEQUENTIAL (one task after another):
+- "Calculate 2+2, then write the result to a file, then review the file"
+- "Analyze the data, then create a report, then send it via email"
+- "Read the document, then summarize it, then create a presentation"
+- "Process the image, then apply filters, then save the result"
+- Keywords: "then", "after", "next", "followed by", "step by step"
+
+PARALLEL (multiple tasks simultaneously):
+- "Analyze three different numbers: 10, 20, 30"
+- "Check the weather in New York, London, and Tokyo"
+- "Process these 5 images simultaneously"
+- "Search for information about AI, machine learning, and deep learning"
+- Keywords: "simultaneously", "at the same time", "multiple", "various", "different"
+
+SINGLE (one task, one agent):
+- "What's 5 + 3?"
+- "Write a poem about nature"
+- "What's the weather today?"
+- "Explain quantum computing"
+
+AGENT SELECTION GUIDELINES:
+- Creative requests → Look for "creative", "writing", "storytelling", "poetry" in description
+- Weather questions → Look for "weather", "climate", "meteorology" in description  
+- Technical problems → Look for "technical", "programming", "coding" in description
+- Learning/education → Look for "education", "learning", "teaching" in description
+- Math/calculations → Look for "calculator", "math", "arithmetic" in description
+- Data analysis → Look for "data", "analysis", "research" in description
+- File operations → Look for "file", "document", "storage" in description
+
+EXAMPLES:
+
+Query: "Calculate 2+2, then write the result to a file, then review the file"
+Response: {{
+    "query_type": "calculation",
+    "execution_strategy": "sequential",
+    "selected_agents": ["calculator_agent_id", "file_writer_agent_id", "reviewer_agent_id"],
+    "workflow_steps": [
+        {{"step": 1, "agent_id": "calculator_agent_id", "action": "Calculate 2+2", "depends_on": []}},
+        {{"step": 2, "agent_id": "file_writer_agent_id", "action": "Write result to file", "depends_on": [1]}},
+        {{"step": 3, "agent_id": "reviewer_agent_id", "action": "Review the file", "depends_on": [2]}}
+    ],
+    "reasoning": "Sequential execution required: calculation must complete before file writing, which must complete before review"
 }}
 
-Example for "write a poem": Select the agent with "creative writing" or "storytelling" in their description.
-Example for "what's the weather": Select the agent with "weather" or "meteorology" in their description."""
+Query: "Analyze three different numbers: 10, 20, 30"
+Response: {{
+    "query_type": "calculation",
+    "execution_strategy": "parallel",
+    "selected_agents": ["data_analyst_agent_id"],
+    "workflow_steps": [
+        {{"step": 1, "agent_id": "data_analyst_agent_id", "action": "Analyze numbers 10, 20, 30", "depends_on": []}}
+    ],
+    "reasoning": "Parallel execution: all numbers can be analyzed simultaneously by the same agent"
+}}
+
+Query: "What's 5 + 3?"
+Response: {{
+    "query_type": "calculation",
+    "execution_strategy": "single",
+    "selected_agents": ["calculator_agent_id"],
+    "workflow_steps": [
+        {{"step": 1, "agent_id": "calculator_agent_id", "action": "Calculate 5 + 3", "depends_on": []}}
+    ],
+    "reasoning": "Single execution: simple arithmetic calculation requiring one agent"
+}}
+
+Respond with ONLY a valid JSON object following this exact format:
+{{
+    "query_type": "creative|weather|technical|educational|calculation|research|general",
+    "execution_strategy": "single|sequential|parallel",
+    "selected_agents": ["agent_id1", "agent_id2", ...],
+    "workflow_steps": [
+        {{"step": 1, "agent_id": "agent_id", "action": "description", "depends_on": []}},
+        {{"step": 2, "agent_id": "agent_id", "action": "description", "depends_on": [1]}}
+    ],
+    "reasoning": "Explain your strategy selection and agent choices"
+}}"""
         
         # Call Ollama with phi3 model (smaller, memory-efficient)
+        logger.info(f"Calling Ollama with model: {ORCHESTRATOR_MODEL}")
+        logger.info(f"Prompt length: {len(prompt)} characters")
+        
         response = requests.post(f"{ORCHESTRATOR_OLLAMA_URL}/api/generate", 
                                json={
                                    "model": ORCHESTRATOR_MODEL,
@@ -242,6 +306,8 @@ Example for "what's the weather": Select the agent with "weather" or "meteorolog
                                        "max_tokens": 1000
                                    }
                                }, timeout=30)
+        
+        logger.info(f"Ollama response status: {response.status_code}")
         
         if response.status_code == 200:
             result = response.json()
@@ -292,8 +358,36 @@ Example for "what's the weather": Select the agent with "weather" or "meteorolog
 
 
 def create_fallback_analysis(query: str, available_agents: List[Dict]) -> Dict:
-    """Create a context-aware fallback analysis using agent descriptions"""
+    """Create a context-aware fallback analysis using agent descriptions with enhanced sequential/parallel detection"""
     query_lower = query.lower()
+    
+    # Enhanced execution strategy detection
+    execution_strategy = "single"
+    workflow_steps = []
+    
+    # Detect sequential patterns
+    sequential_keywords = ['then', 'after', 'next', 'followed by', 'step by step', 'first', 'second', 'third', 'finally']
+    parallel_keywords = ['simultaneously', 'at the same time', 'multiple', 'various', 'different', 'and also', 'while', 'during']
+    
+    is_sequential = any(keyword in query_lower for keyword in sequential_keywords)
+    is_parallel = any(keyword in query_lower for keyword in parallel_keywords)
+    
+    if is_sequential:
+        execution_strategy = "sequential"
+        # Parse sequential steps (simplified)
+        workflow_steps = [
+            {"step": 1, "agent_id": None, "action": f"Execute: {query[:50]}...", "depends_on": []}
+        ]
+    elif is_parallel:
+        execution_strategy = "parallel"
+        workflow_steps = [
+            {"step": 1, "agent_id": None, "action": f"Execute parallel tasks: {query[:50]}...", "depends_on": []}
+        ]
+    else:
+        execution_strategy = "single"
+        workflow_steps = [
+            {"step": 1, "agent_id": None, "action": f"Execute: {query[:50]}...", "depends_on": []}
+        ]
     
     # Context-based analysis using patterns and intent
     query_type = "general"
@@ -394,20 +488,17 @@ def create_fallback_analysis(query: str, available_agents: List[Dict]) -> Dict:
         reasoning = "Context-aware fallback: No agents available"
         logger.warning("❌ No agents available for fallback analysis")
     
+    # Update workflow steps with selected agent
+    if selected_agents and workflow_steps:
+        workflow_steps[0]["agent_id"] = selected_agents[0]
+    
     return {
         "query_type": query_type,
         "required_capabilities": [],
         "selected_agents": selected_agents,
-        "execution_strategy": "single" if len(selected_agents) == 1 else "sequential",
-        "workflow_steps": [
-            {
-                "step": 1,
-                "agent_id": selected_agents[0] if selected_agents else None,
-                "action": f"Execute {query_type} task: {query[:50]}...",
-                "depends_on": []
-            }
-        ],
-        "reasoning": reasoning
+        "execution_strategy": execution_strategy,
+        "workflow_steps": workflow_steps,
+        "reasoning": f"{reasoning} | Strategy: {execution_strategy} (detected from query patterns)"
     }
 
 
@@ -415,8 +506,20 @@ def analyze_query_and_plan_execution(query: str, agent_details: List[Dict]) -> D
     """Main orchestration planning function"""
     logger.info(f"Analyzing query: {query[:100]}...")
     
-    # Use LLM to analyze the query
-    analysis = analyze_query_with_llm(query, agent_details)
+    # Use 6-Stage Orchestrator for comprehensive analysis
+    try:
+        from enhanced_orchestrator_6stage import Enhanced6StageOrchestrator
+        orchestrator = Enhanced6StageOrchestrator()
+        analysis = orchestrator.analyze_query_with_6stage_orchestrator(query, agent_details)
+        logger.info("✅ Using 6-Stage Orchestrator for analysis")
+    except Exception as e:
+        logger.error(f"6-Stage Orchestrator failed completely: {e}")
+        # No fallback - return error response
+        return {
+            'success': False,
+            'error': f"Orchestration failed: {str(e)}",
+            'analysis': None
+        }
     
     # Enhance the plan with agent details
     # Ensure analysis is a dictionary
@@ -424,16 +527,116 @@ def analyze_query_and_plan_execution(query: str, agent_details: List[Dict]) -> D
         logger.warning(f"Analysis is not a dict, type: {type(analysis)}")
         analysis = {"execution_strategy": "single", "workflow_steps": []}
     
+    # Handle 6-stage analysis format vs legacy format
+    if 'stage_3_execution_strategy' in analysis:
+        # 6-stage analysis format
+        execution_strategy = analysis.get('stage_3_execution_strategy', {}).get('strategy', 'single')
+        workflow_steps = analysis.get('stage_2_sequence_definition', {}).get('workflow_steps', [])
+        selected_agents_info = analysis.get('stage_5_agent_matching', {}).get('selected_agents', [])
+        
+        # Convert selected agents to workflow steps if needed OR fix existing workflow steps
+        if selected_agents_info:
+            if not workflow_steps:
+                # Create new workflow steps from selected agents
+                workflow_steps = []
+                for i, agent_info in enumerate(selected_agents_info):
+                    agent_name = agent_info.get('agent_name', '')
+                    agent_id = agent_info.get('agent_id', '')
+                    
+                    # If no agent_id, try to find it by agent_name
+                    if not agent_id and agent_name:
+                        # Get agent details to find the UUID
+                        for agent_detail in agent_details:
+                            if agent_detail.get('name', '').strip() == agent_name.strip():
+                                agent_id = agent_detail.get('id', '')
+                                break
+                    
+                    workflow_steps.append({
+                        "step": i + 1,
+                        "agent_id": agent_id,
+                        "agent_name": agent_name,  # Keep name for debugging
+                        "action": agent_info.get('task_assignment', f"Execute step {i + 1}"),
+                        "depends_on": [i] if i > 0 else []
+                    })
+                    
+                    logger.info(f"Workflow step {i + 1}: agent_name='{agent_name}' -> agent_id='{agent_id}'")
+            else:
+                # Fix existing workflow steps by adding agent_id from selected_agents_info
+                logger.info(f"Fixing existing workflow steps with agent_id mapping")
+                for i, step in enumerate(workflow_steps):
+                    if not step.get('agent_id'):
+                        # Try to match by required_expertise or task
+                        step_expertise = step.get('required_expertise', '')
+                        step_task = step.get('task', '')
+                        
+                        # Find matching agent from selected_agents_info
+                        matching_agent = None
+                        for agent_info in selected_agents_info:
+                            agent_name = agent_info.get('agent_name', '')
+                            agent_task = agent_info.get('task_assignment', '')
+                            
+                            # Match by name, task, execution order, or partial name match
+                            if (agent_name in step_expertise or 
+                                agent_name in step_task or
+                                agent_info.get('execution_order', i + 1) == i + 1 or
+                                'weather' in agent_name.lower() and 'weather' in step_expertise.lower() or
+                                'singapore' in agent_name.lower() and 'weather' in step_expertise.lower() or
+                                'technical' in agent_name.lower() and 'python' in step_expertise.lower() or
+                                'creative' in agent_name.lower() and 'poem' in step_expertise.lower() or
+                                'expert' in agent_name.lower() and 'coding' in step_expertise.lower() or
+                                'assistant' in agent_name.lower() and 'generation' in step_expertise.lower() or
+                                'technical' in agent_name.lower() and 'technical' in step_expertise.lower() or
+                                'creative' in agent_name.lower() and 'creative' in step_expertise.lower()):
+                                matching_agent = agent_info
+                                break
+                        
+                        if matching_agent:
+                            agent_name = matching_agent.get('agent_name', '')
+                            agent_id = matching_agent.get('agent_id', '')
+                            
+                            # If no agent_id, try to find it by agent_name
+                            if not agent_id and agent_name:
+                                for agent_detail in agent_details:
+                                    if agent_detail.get('name', '').strip() == agent_name.strip():
+                                        agent_id = agent_detail.get('id', '')
+                                        break
+                            
+                            step['agent_id'] = agent_id
+                            step['agent_name'] = agent_name
+                            step['action'] = matching_agent.get('task_assignment', step.get('task', ''))
+                            
+                            logger.info(f"Fixed workflow step {i + 1}: agent_name='{agent_name}' -> agent_id='{agent_id}'")
+                        else:
+                            # Fallback: assign agents by order if no match found
+                            if i < len(agent_details):
+                                fallback_agent = agent_details[i]
+                                step['agent_id'] = fallback_agent.get('id', '')
+                                step['agent_name'] = fallback_agent.get('name', '')
+                                step['action'] = step.get('task', '')
+                                logger.info(f"Fallback assignment for step {i + 1}: {fallback_agent.get('name', '')} -> {fallback_agent.get('id', '')}")
+                            else:
+                                logger.warning(f"Could not find matching agent for workflow step {i + 1}")
+        
+        logger.info(f"6-Stage analysis: {execution_strategy} strategy with {len(workflow_steps)} steps")
+    else:
+        # Legacy analysis format
+        execution_strategy = analysis.get("execution_strategy", "single")
+        workflow_steps = analysis.get("workflow_steps", [])
+        logger.info(f"Legacy analysis: {execution_strategy} strategy with {len(workflow_steps)} steps")
+    
     orchestration_plan = {
         "query": query,
         "analysis": analysis,
         "available_agents": agent_details,
-        "execution_strategy": analysis.get("execution_strategy", "single"),
-        "workflow_steps": analysis.get("workflow_steps", []),
+        "execution_strategy": execution_strategy,
+        "workflow_steps": workflow_steps,
         "created_at": datetime.now().isoformat()
     }
     
-    logger.info(f"Orchestration plan created: {analysis.get('execution_strategy', 'single')} strategy")
+    logger.info(f"Orchestration plan created: {execution_strategy} strategy with {len(workflow_steps)} workflow steps")
+    for i, step in enumerate(workflow_steps):
+        logger.info(f"  Step {i+1}: agent_id='{step.get('agent_id')}', agent_name='{step.get('agent_name', 'N/A')}', action='{step.get('action', 'N/A')[:50]}...'")
+    
     return orchestration_plan
 
 
@@ -461,20 +664,67 @@ def execute_orchestration_plan(plan: Dict, session_id: str) -> Dict:
         
         elif execution_strategy == "sequential":
             # Sequential execution - execute steps in order
+            logger.info(f"Starting sequential execution with {len(workflow_steps)} steps")
             for step in workflow_steps:
                 agent_id = step.get("agent_id")
+                agent_name = step.get("agent_name", "Unknown")
+                logger.info(f"Executing step {step.get('step', 1)}: {agent_name} (ID: {agent_id})")
+                
                 if agent_id:
                     result = execute_agent_query(agent_id, plan["query"], session_id)
                     results.append({
                         "step": step.get("step", 1),
                         "agent_id": agent_id,
+                        "agent_name": agent_name,
                         "result": result,
                         "status": "completed" if result.get("success") else "failed"
                     })
                     
+                    logger.info(f"Step {step.get('step', 1)} completed: {result.get('success', False)}")
+                    
                     # If step failed, stop execution
                     if not result.get("success"):
+                        logger.warning(f"Step {step.get('step', 1)} failed, stopping execution")
                         break
+                else:
+                    logger.error(f"No agent_id found for step {step.get('step', 1)}: {step}")
+                    results.append({
+                        "step": step.get("step", 1),
+                        "agent_id": agent_id,
+                        "agent_name": agent_name,
+                        "result": {"success": False, "error": "No agent_id found"},
+                        "status": "failed"
+                    })
+        
+        elif execution_strategy == "parallel":
+            # Parallel execution - execute multiple agents simultaneously
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                future_to_step = {}
+                for step in workflow_steps:
+                    agent_id = step.get("agent_id")
+                    if agent_id:
+                        future = executor.submit(execute_agent_query, agent_id, plan["query"], session_id)
+                        future_to_step[future] = step
+                
+                # Collect results as they complete
+                for future in concurrent.futures.as_completed(future_to_step):
+                    step = future_to_step[future]
+                    try:
+                        result = future.result()
+                        results.append({
+                            "step": step.get("step", 1),
+                            "agent_id": step.get("agent_id"),
+                            "result": result,
+                            "status": "completed" if result.get("success") else "failed"
+                        })
+                    except Exception as e:
+                        results.append({
+                            "step": step.get("step", 1),
+                            "agent_id": step.get("agent_id"),
+                            "result": {"success": False, "error": str(e)},
+                            "status": "failed"
+                        })
         
         elif execution_strategy == "coordinated":
             # Multi-agent coordination using A2A communication
@@ -496,6 +746,74 @@ def execute_orchestration_plan(plan: Dict, session_id: str) -> Dict:
             "error": str(e),
             "success": False
         }
+
+
+def synthesize_agent_responses(agent_results: List[Dict], original_query: str) -> str:
+    """Synthesize responses from multiple agents into a final output"""
+    try:
+        if not agent_results:
+            return "No agent responses to synthesize."
+        
+        if len(agent_results) == 1:
+            return agent_results[0].get('result', {}).get('response', 'No response')
+        
+        # Extract responses from each agent
+        agent_responses = []
+        for i, result in enumerate(agent_results):
+            agent_name = result.get('agent_name', f'Agent {i+1}')
+            response = result.get('result', {}).get('response', 'No response')
+            agent_responses.append(f"**{agent_name}:**\n{response}")
+        
+        # Create synthesis prompt
+        synthesis_prompt = f"""
+You are a synthesis agent that combines responses from multiple specialized agents to create a comprehensive final answer.
+
+Original Query: {original_query}
+
+Agent Responses:
+{chr(10).join(agent_responses)}
+
+Please synthesize these responses into a coherent, comprehensive final answer that:
+1. Addresses the original query completely
+2. Combines insights from all agents appropriately
+3. Maintains the flow and context between different agent contributions
+4. Provides a unified, professional response
+
+Synthesized Response:
+"""
+        
+        # Use the orchestrator model for synthesis
+        synthesis_response = requests.post(
+            'http://localhost:11434/api/generate',
+            json={
+                "model": ORCHESTRATOR_MODEL,
+                "prompt": synthesis_prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.3,  # Lower temperature for more focused synthesis
+                    "top_p": 0.9,
+                    "max_tokens": 1500,  # Reduced from 2000
+                    "num_ctx": 4096      # Limit context window
+                }
+            }, timeout=30  # Reduced from 60
+        )
+        
+        if synthesis_response.status_code == 200:
+            synthesis_result = synthesis_response.json()
+            return synthesis_result.get('response', 'Synthesis failed - no response generated')
+        else:
+            # Fallback: simple concatenation
+            return f"**Synthesis of {len(agent_results)} Agent Responses:**\n\n" + "\n\n---\n\n".join(agent_responses)
+            
+    except Exception as e:
+        logger.error(f"Synthesis failed: {e}")
+        # Fallback: simple concatenation
+        agent_responses = []
+        for i, result in enumerate(agent_results):
+            agent_name = result.get('agent_name', f'Agent {i+1}')
+            response = result.get('result', {}).get('response', 'No response')
+            agent_responses.append(f"**{agent_name}:**\n{response}")
+        return f"**Synthesis of {len(agent_results)} Agent Responses:**\n\n" + "\n\n---\n\n".join(agent_responses)
 
 
 def execute_agent_query(agent_id: str, query: str, session_id: str) -> Dict:
@@ -1323,22 +1641,31 @@ def orchestrate():
         except Exception as e:
             print(f"❌ Error emitting orchestration_complete: {e}")
         
+        # Synthesize final output from all agent responses
+        synthesized_response = synthesize_agent_responses(execution_results.get('results', []), query)
+        
         # Emit final results for frontend display
         print(f"🔌 Emitting agent_conversation to room: {session_id}")
         try:
             socketio.emit('agent_conversation', {
                 'payload': {
-                    'agent_id': execution_results.get('results', [{}])[0].get('agent_id', 'unknown'),
-                    'agent_name': 'Orchestrated Agent',
+                    'agent_id': 'orchestrated_synthesis',
+                    'agent_name': 'Multi-Agent Synthesis',
                     'question': query,
-                    'llm_response': execution_results.get('results', [{}])[0].get('result', {}).get('response', 'No response'),
+                    'llm_response': synthesized_response,
                     'execution_time': execution_results.get('execution_time', 0),
-                    'tools_available': ['orchestration'],
+                    'tools_available': ['orchestration', 'synthesis'],
                     'timestamp': datetime.now().isoformat(),
-                    'session_id': session_id
+                    'session_id': session_id,
+                    'individual_responses': [
+                        {
+                            'agent_name': result.get('agent_name', 'Unknown'),
+                            'response': result.get('result', {}).get('response', 'No response')[:200] + '...' if len(result.get('result', {}).get('response', '')) > 200 else result.get('result', {}).get('response', 'No response')
+                        } for result in execution_results.get('results', [])
+                    ]
                 }
             }, room=session_id)
-            print(f"✅ Successfully emitted agent_conversation")
+            print(f"✅ Successfully emitted agent_conversation with synthesized response")
         except Exception as e:
             print(f"❌ Error emitting agent_conversation: {e}")
         
@@ -1347,6 +1674,7 @@ def orchestrate():
             'query': query,
             'orchestration_plan': orchestration_plan,
             'execution_results': execution_results,
+            'synthesized_response': synthesized_response,
             'total_agents_available': len(agent_details),
             'timestamp': datetime.now().isoformat()
         })
@@ -1446,12 +1774,41 @@ def orchestrate_query():
 @app.route('/api/strands-orchestration/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'feature_flags': get_feature_flags(),
-        'version': '1.0.0'
-    })
+    try:
+        # Check A2A service status
+        a2a_status = 'disabled'
+        try:
+            a2a_response = requests.get('http://localhost:5008/api/a2a/agents', timeout=2)
+            if a2a_response.status_code == 200:
+                a2a_status = 'enabled'
+        except:
+            pass
+        
+        # Get memory usage
+        import psutil
+        memory_usage = f"{psutil.virtual_memory().percent:.1f}%"
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'feature_flags': get_feature_flags(),
+            'version': '1.0.0',
+            'a2a_handoff_enabled': a2a_status == 'enabled',
+            'memory_usage': memory_usage,
+            'active_sessions': 0,  # TODO: Track actual sessions
+            'orchestrator_model': ORCHESTRATOR_MODEL
+        })
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e),
+            'a2a_handoff_enabled': False,
+            'memory_usage': 'N/A',
+            'active_sessions': 0,
+            'orchestrator_model': ORCHESTRATOR_MODEL
+        }), 500
 
 if __name__ == '__main__':
     print("🚀 Starting Strands Orchestration API...")

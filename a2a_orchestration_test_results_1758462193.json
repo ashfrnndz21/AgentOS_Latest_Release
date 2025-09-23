@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 4,
+    "failed_tests": 2,
+    "success_rate": 66.66666666666666,
+    "duration_seconds": 164.993517
+  },
+  "test_results": {
+    "Service Health": true,
+    "Agent Creation with A2A": true,
+    "A2A Agent Discovery": true,
+    "Enhanced Orchestration Reasoning": false,
+    "A2A Communication": false,
+    "Agent Cleanup": true
+  },
+  "detailed_logs": [
+    {
+      "test_name": "Strands SDK Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:40:28.269355"
+    },
+    {
+      "test_name": "A2A Service Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:40:28.270711"
+    },
+    {
+      "test_name": "Enhanced Orchestration Health Check",
+      "success": true,
+      "details": "Service is healthy",
+      "timestamp": "2025-09-21T21:40:28.274259"
+    },
+    {
+      "test_name": "Agent Creation with A2A",
+      "success": true,
+      "details": "Agent 2e51b006-ebd2-4622-8e14-06f15d1b0772 created and registered with A2A",
+      "timestamp": "2025-09-21T21:40:28.279531"
+    },
+    {
+      "test_name": "A2A Agent Discovery",
+      "success": true,
+      "details": "Found 2 registered agents",
+      "timestamp": "2025-09-21T21:40:28.281282"
+    },
+    {
+      "test_name": "Test Agent A2A Registration",
+      "success": true,
+      "details": "Test agent found in A2A registry: 2e51b006-ebd2-4622-8e14-06f15d1b0772",
+      "timestamp": "2025-09-21T21:40:28.281292"
+    },
+    {
+      "test_name": "Orchestration Query 1",
+      "success": false,
+      "details": "Exception: HTTPConnectionPool(host='localhost', port=5014): Read timed out. (read timeout=60)",
+      "timestamp": "2025-09-21T21:41:28.285486"
+    },
+    {
+      "test_name": "Orchestration Reasoning 2",
+      "success": true,
+      "details": "Strategy: sequential, Quality: excellent",
+      "timestamp": "2025-09-21T21:42:13.160168"
+    },
+    {
+      "test_name": "Strategy Match 2",
+      "success": false,
+      "details": "Expected: single, Got: sequential",
+      "timestamp": "2025-09-21T21:42:13.160256"
+    },
+    {
+      "test_name": "Orchestration Query 3",
+      "success": false,
+      "details": "Exception: HTTPConnectionPool(host='localhost', port=5014): Read timed out. (read timeout=60)",
+      "timestamp": "2025-09-21T21:43:13.174357"
+    },
+    {
+      "test_name": "A2A Message Sending",
+      "success": true,
+      "details": "Message sent successfully: f1559d6e-f454-4216-bee5-8b29693c033e",
+      "timestamp": "2025-09-21T21:43:13.187624"
+    },
+    {
+      "test_name": "A2A Message History",
+      "success": false,
+      "details": "HTTP 404",
+      "timestamp": "2025-09-21T21:43:13.192823"
+    },
+    {
+      "test_name": "Agent Cleanup 2e51b006-ebd2-4622-8e14-06f15d1b0772",
+      "success": true,
+      "details": "Agent deleted and A2A unregistered",
+      "timestamp": "2025-09-21T21:43:13.256170"
+    }
+  ]
+}
