@@ -1,311 +1,381 @@
-# 🚀 AgentOS Studio - Enhanced LLM Orchestration Platform
+# 🌐 AgentOS - Advanced Multi-Agent Orchestration Platform
 
 <div align="center">
 
-![AgentOS Studio](https://img.shields.io/badge/AgentOS%20Studio-v2.0-blue?style=for-the-badge&logo=robot)
-![Enhanced Orchestration](https://img.shields.io/badge/Enhanced%20Orchestration-LLM%20Powered-green?style=for-the-badge&logo=brain)
-![Memory Efficient](https://img.shields.io/badge/Memory%20Efficient-Stateless-orange?style=for-the-badge&logo=memory)
+![AgentOS Logo](https://img.shields.io/badge/AgentOS-Advanced%20Multi--Agent%20Platform-blue?style=for-the-badge&logo=robot)
+![Version](https://img.shields.io/badge/Version-1.0.0-green?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge)
 
-**Advanced Multi-Agent Orchestration Platform with Intelligent LLM-Powered Query Analysis**
+**Enterprise-grade multi-agent orchestration platform with real-time system monitoring and intelligent workflow management**
 
-[![GitHub stars](https://img.shields.io/github/stars/ashfrnndz21/AgentOS_Studio_Strands?style=social)](https://github.com/ashfrnndz21/AgentOS_Studio_Strands)
-[![GitHub forks](https://img.shields.io/github/forks/ashfrnndz21/AgentOS_Studio_Strands?style=social)](https://github.com/ashfrnndz21/AgentOS_Studio_Strands)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[🚀 Quick Start](#-quick-start) • [📖 Documentation](#-documentation) • [🏗️ Architecture](#️-architecture) • [🤖 Features](#-features) • [📊 Diagrams](#-architecture-diagrams)
 
 </div>
 
 ---
 
-## 🌟 **What's New in v2.0**
+## 🎯 Overview
 
-### **🧠 Enhanced LLM Orchestration**
-- **5-Stage Intelligent Processing**: Query analysis → Agent evaluation → Contextual matching → Execution → Synthesis
-- **3-Stage LLM Reasoning**: Deep query understanding, agent capability analysis, and intelligent matching
-- **Dynamic Agent Selection**: No hardcoded categories - LLM analyzes agent registry in real-time
-- **Memory-Optimized Design**: Stateless sessions with automatic cleanup and resource management
+**AgentOS** is a comprehensive multi-agent orchestration platform that enables enterprises to deploy, manage, and monitor AI agents across multiple industries. Built with modern microservices architecture, it provides real-time system monitoring, intelligent workflow orchestration, and seamless agent-to-agent (A2A) communication.
 
-### **🎯 Key Features**
-- **Real-time Orchestration Monitoring**: Live visualization of the entire orchestration process
-- **Intelligent Agent Routing**: LLM-powered agent selection based on query context and agent capabilities
-- **Advanced Analytics**: Detailed reasoning logs and performance metrics
-- **Memory Management**: Automatic session cleanup and resource optimization
+### ✨ Key Capabilities
+
+- **🤖 Multi-Agent Orchestration**: Deploy and coordinate multiple AI agents with intelligent routing
+- **🔄 Real-Time System Monitoring**: Live memory usage, session tracking, and performance metrics
+- **🏭 Industry-Specific Workspaces**: Tailored environments for Industrial, Banking, Telco, and more
+- **🧠 Intelligent Query Processing**: Advanced LLM-powered query analysis and agent selection
+- **🔒 Enterprise Security**: Built-in guardrails, content filtering, and governance controls
+- **📊 Comprehensive Analytics**: Performance tracking, traceability, and decision path analysis
 
 ---
 
-## 🏗️ **System Architecture**
+## 🏗️ Architecture Overview
 
-### **Service Architecture**
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                           🌐 AgentOS Cloud Infrastructure                            │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              🎯 AgentOS User Interface Layer                         │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🔐 Authentication  │  📊 Dashboard Hub   │  🎨 Industry Engine │  🔧 Settings        │
+│                     │                     │                     │                     │
+│ • Auth.tsx          │ • MainContent.tsx   │ • IndustryContext   │ • BackendControl    │
+│ • ErrorBoundary     │ • IndustrySidebar   │ • IndustryBanner    │ • ApiSettings       │
+│ • Layout.tsx        │ • Sidebar.tsx       │ • IndustrySwitcher  │ • ModelSettings     │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                            🎛️ AgentOS Command Centre                                │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  📈 Analytics       │  🔍 Data Access     │  ⚖️ Governance      │  📋 Project Mgmt    │
+│                     │                     │                     │                     │
+│ • FixedMainTabs     │ • DataAccessContent │ • GovernanceContent │ • ProjectData       │
+│ • AgentTraceability │ • DocumentChat      │ • GuardrailsPanel   │ • ProjectSelector   │
+│ • PerformanceMetrics│ • DocumentLibrary   │ • LocalGuardrails   │ • ProjectTiles      │
+│ • StrandsTraceability│ • DocumentUploader │ • GlobalGuardrails  │ • QuickActions      │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                         🤖 Multi-Agent Workspace Ecosystem                          │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🧠 Strands System  │  🏭 Industrial      │  🏦 Banking         │  📱 Telco CVM       │
+│                     │                     │                     │                     │
+│ • StrandsWorkspace  │ • ForecastingWS     │ • BankingAgentPal   │ • TelcoCvmWS        │
+│ • StrandsCanvas     │ • ProcurementWS     │ • WealthMgmtWS      │ • NetworkTwinWS     │
+│ • StrandsAgentPal   │ • SafetyWorkspace   │ • RDWorkspace       │ • CvmAgentPalette   │
+│ • WorkflowExecution │ • SafetyWorkspace   │ • ComplianceMonitor │ • NetworkAgents     │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              🔧 Core Service Layer                                  │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🦙 Ollama API      │  📚 RAG Service     │  🔗 Strands API     │  💬 Chat Orchestr. │
+│  Port: 5002         │  Port: 5003         │  Port: 5004         │  Port: 5005         │
+│                     │                     │                     │                     │
+│ • ollama_api.py     │ • rag_api.py        │ • strands_api.py    │ • chat_orchestr.py  │
+│ • Model Management  │ • Document Ingest   │ • Workflow Exec     │ • Multi-Agent Chat  │
+│ • Agent CRUD        │ • Vector Storage    │ • Node Management   │ • Context Switching │
+│ • Terminal Interface│ • Semantic Search   │ • Tool Integration  │ • Session Handling  │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                         🚀 Enhanced Orchestration Services                          │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🧠 A2A Service     │  📊 Resource Monitor│  🔄 Enhanced Orch.  │  🎯 Strands SDK     │
+│  Port: 5008         │  Port: 5011         │  Port: 5014         │  Port: 5006         │
+│                     │                     │                     │                     │
+│ • Agent-to-Agent    │ • System Metrics    │ • 6-Stage Orchestr. │ • SDK Integration   │
+│ • Communication     │ • Memory Tracking   │ • Query Analysis    │ • Model Management  │
+│ • Handover Logic    │ • Service Status    │ • Agent Selection   │ • Execution Engine  │
+│ • Session Mgmt      │ • Performance Mon.  │ • Response Synthesis│ • Tool Registry     │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                               💾 Data Storage Layer                                 │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🗃️ Agent Database  │  🔍 Vector Store    │  📊 Strands DB      │  💬 Chat DB         │
+│  (SQLite)           │  (ChromaDB)         │  (SQLite)           │  (SQLite)           │
+│                     │                     │                     │                     │
+│ • ollama_agents.db  │ • rag_documents.db  │ • strands_agents.db │ • chat_orchestr.db  │
+│ • Agent Configs     │ • Document Vectors  │ • Workflow States   │ • Chat Sessions     │
+│ • Conversations     │ • Embeddings        │ • Execution Logs    │ • Message History   │
+│ • Execution Logs    │ • Metadata Index    │ • Tool Configs      │ • Context Data      │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              🧠 AI Processing Engine                                │
+├─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┤
+│  🦙 Ollama Core     │  🛠️ Native Tools    │  🔒 Safety Layer    │  📈 Model Registry  │
+│  Port: 11434        │                     │                     │                     │
+│                     │                     │                     │                     │
+│ • Model Inference   │ • Calculator        │ • Content Filter    │ • ollamaModels.ts  │
+│ • GPU Acceleration  │ • Time Utils        │ • Guardrails        │ • modelValidator    │
+│ • Memory Management │ • Letter Counter    │ • Rate Limiting     │ • Performance Bench │
+│ • Load Balancing    │ • Python REPL       │ • Input Validation  │ • Auto-Updates      │
+└─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** 18+ and **npm/yarn**
+- **Python** 3.8+ with pip
+- **Ollama** (for local AI models)
+- **Git** for version control
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/ashfrnndz21/AgentOS_Strands_A2A_V1.0.git
+   cd AgentOS_Strands_A2A_V1.0
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Frontend dependencies
+   npm install
+   
+   # Python backend dependencies
+   pip install -r backend/requirements.txt
+   ```
+
+3. **Start Ollama service**
+   ```bash
+   # Install and start Ollama
+   curl -fsSL https://ollama.ai/install.sh | sh
+   ollama serve
+   
+   # Pull required models
+   ollama pull qwen3:1.7b
+   ```
+
+4. **Launch AgentOS**
+   ```bash
+   # Start all services (recommended)
+   ./scripts/start-all-services.sh
+   
+   # Or start manually
+   ./scripts/kill-all-services.sh  # Clean slate
+   ./scripts/start-all-services.sh # Start everything
+   ```
+
+5. **Access the platform**
+   - **Frontend**: http://localhost:5173
+   - **Backend APIs**: http://localhost:5002-5014
+   - **Ollama**: http://localhost:11434
+
+---
+
+## 🤖 Features
+
+### 🧠 Multi-Agent Orchestration
+
+**Intelligent Agent Coordination**
+- **6-Stage Orchestration**: Query analysis → Agent selection → Execution → Synthesis
+- **Real-time Monitoring**: Live agent performance and system metrics
+- **A2A Communication**: Seamless agent-to-agent handovers
+- **Context Preservation**: Maintains conversation context across agents
+
+**Supported Agent Types**
+- **Creative Assistant**: Content generation, storytelling, creative writing
+- **Technical Expert**: Code generation, technical documentation, problem solving
+- **Research Agent**: Information gathering, analysis, fact-checking
+- **Calculator Agent**: Mathematical computations, data analysis
+
+### 🎛️ Command Centre
+
+**Comprehensive Analytics**
+- **Performance Metrics**: Response times, success rates, usage patterns
+- **Agent Traceability**: Complete execution logs and decision paths
+- **Resource Monitoring**: Memory usage, CPU utilization, session tracking
+- **Real-time Dashboards**: Live system status and health indicators
+
+**Data Management**
+- **Document Processing**: Upload, ingest, and vectorize documents
+- **Semantic Search**: AI-powered document retrieval and analysis
+- **Knowledge Base**: Centralized repository for organizational knowledge
+- **Content Governance**: Automated content filtering and compliance checks
+
+### 🏭 Industry-Specific Workspaces
+
+**Industrial Sector**
+- **Forecasting Workspace**: Demand prediction, supply chain optimization
+- **Procurement Workspace**: Vendor management, cost optimization
+- **Safety Workspace**: Risk assessment, compliance monitoring
+- **R&D Workspace**: Innovation tracking, research collaboration
+
+**Banking & Finance**
+- **Wealth Management**: Portfolio optimization, investment advice
+- **Compliance Monitor**: Regulatory compliance, risk assessment
+- **Risk Assessment**: Credit analysis, market risk evaluation
+
+**Telecommunications**
+- **Customer Value Management**: Churn prediction, customer segmentation
+- **Network Twin**: Network optimization, performance monitoring
+- **CVM Analytics**: Customer behavior analysis, retention strategies
+
+---
+
+## 📖 Documentation
+
+### 🔧 Configuration
+
+**Service Ports**
 | Service | Port | Description |
 |---------|------|-------------|
-| **Frontend** | 5173 | React application with orchestration monitoring |
-| **Enhanced Orchestration** | 5014 | LLM-powered query analysis and agent routing |
-| **Agent Registry** | 5010 | Centralized agent metadata management |
-| **A2A Service** | 5008 | Agent-to-Agent communication |
-| **Strands SDK** | 5006 | Agent execution and management |
-| **Ollama Core** | 11434 | Local LLM inference engine |
-| **RAG API** | 5003 | Document processing and retrieval |
-| **Resource Monitor** | 5011 | System health and performance monitoring |
+| Ollama API | 5002 | Model and agent management |
+| RAG Service | 5003 | Document processing and search |
+| Strands API | 5004 | Workflow execution |
+| Chat Orchestrator | 5005 | Multi-agent chat coordination |
+| Strands SDK | 5006 | SDK integration layer |
+| A2A Service | 5008 | Agent-to-agent communication |
+| Resource Monitor | 5011 | System monitoring and metrics |
+| Enhanced Orchestration | 5014 | Advanced query processing |
 
----
-
-## 🔧 **Installation & Setup**
-
-### **Prerequisites**
-- **Node.js** 18+ and **npm**
-- **Python** 3.11+ with pip
-- **Ollama** installed and running
-- **Git** for cloning
-
-### **Quick Start**
-
+**Environment Variables**
 ```bash
-# Clone the repository
-git clone https://github.com/ashfrnndz21/AgentOS_Studio_Strands.git
-cd AgentOS_Studio_Strands
+# Core Services
+OLLAMA_BASE_URL=http://localhost:11434
+STRANDS_SDK_URL=http://localhost:5006
+A2A_SERVICE_URL=http://localhost:5008
 
-# Install frontend dependencies
-npm install
+# Database Configuration
+DATABASE_PATH=./backend/agents.db
+RAG_DATABASE_PATH=./backend/rag_documents.db
 
-# Install backend dependencies
-cd backend
-pip install -r requirements.txt
-cd ..
-
-# Start all services
-./start-all-services.sh
-
-# Access the application
-open http://localhost:5173
+# Model Configuration
+ORCHESTRATOR_MODEL=qwen3:1.7b
+DEFAULT_MODEL=qwen3:1.7b
 ```
 
 ---
 
-## 🧠 **Enhanced LLM Orchestration**
+## 🛠️ Development
 
-### **5-Stage Processing Pipeline**
+### 🏃‍♂️ Running in Development
 
-#### **Stage 1: Agent Discovery & Registry Access**
-```python
-# Discover available agents from all services
-a2a_agents = get_a2a_agents()
-sdk_agents = get_strands_sdk_agents()
-available_agents = match_agents(a2a_agents, sdk_agents)
-```
-
-#### **Stage 2: LLM Query Analysis**
-```python
-# Deep query understanding with LLM
-query_analysis = {
-    "user_intent": "detailed analysis of what user is asking for",
-    "domain": "specific domain or subject area", 
-    "complexity": "simple|moderate|complex",
-    "required_expertise": "type of expertise needed",
-    "context_reasoning": "detailed explanation of query context"
-}
-```
-
-#### **Stage 3: Agent Capability Analysis**
-```python
-# Evaluate each agent's capabilities
-agent_evaluations = [
-    {
-        "agent_name": "Creative Assistant",
-        "primary_expertise": "creative writing, storytelling",
-        "capabilities_assessment": "detailed analysis of capabilities",
-        "tools_analysis": "available tools and how they help",
-        "system_prompt_analysis": "how system prompt defines role",
-        "suitability_score": 0.95
-    }
-]
-```
-
-#### **Stage 4: Contextual Agent Matching**
-```python
-# Intelligent agent selection
-contextual_matching = {
-    "selected_agent_id": "best_matching_agent_id",
-    "matching_reasoning": "detailed explanation of selection",
-    "confidence": 0.95,
-    "match_quality": "excellent|good|moderate",
-    "execution_strategy": "single|sequential|parallel"
-}
-```
-
-#### **Stage 5: Response Synthesis & Memory Cleanup**
-```python
-# Execute agent and synthesize response
-agent_response = execute_agent(selected_agent, query)
-final_response = synthesize_response(agent_response, query_analysis)
-cleanup_session()  # Automatic memory management
-```
-
----
-
-## 🎯 **Use Cases & Examples**
-
-### **Example 1: Creative Writing Query**
-```json
-{
-  "query": "I need help with creative writing for a story",
-  "orchestration_result": {
-    "stage_1_query_analysis": {
-      "domain": "creative writing for a story",
-      "complexity": "moderate",
-      "required_expertise": "creative writing, storytelling, and innovative content creation"
-    },
-    "stage_2_agent_analysis": {
-      "selected_agent": "Creative Assistant",
-      "suitability_score": 0.95,
-      "reasoning": "Perfect match for creative writing tasks"
-    },
-    "stage_3_contextual_matching": {
-      "confidence": 0.95,
-      "match_quality": "excellent"
-    },
-    "final_response": "I'd be happy to assist you with your creative writing project..."
-  }
-}
-```
-
-### **Example 2: Health Coverage Query**
-```json
-{
-  "query": "looking for a health coverage plan",
-  "orchestration_result": {
-    "stage_1_query_analysis": {
-      "domain": "health_coverage_plan",
-      "complexity": "moderate",
-      "required_expertise": "health insurance expertise"
-    },
-    "stage_2_agent_analysis": {
-      "selected_agent": "Insurance Agent",
-      "suitability_score": 0.90,
-      "reasoning": "Specialized in insurance planning and coverage"
-    },
-    "stage_3_contextual_matching": {
-      "confidence": 0.95,
-      "match_quality": "excellent"
-    },
-    "final_response": "I can guide you through the process of finding a health coverage plan..."
-  }
-}
-```
-
----
-
-## 📊 **Performance & Monitoring**
-
-### **System Metrics**
-
+**Frontend Development**
 ```bash
-# Check system health
-curl http://localhost:5011/api/resource-monitor/health
-
-# View orchestration sessions
-curl http://localhost:5014/api/enhanced-orchestration/sessions
-
-# Monitor memory usage
-curl http://localhost:5014/api/enhanced-orchestration/health
+npm run dev          # Start Vite development server
+npm run build        # Build for production
+npm run preview      # Preview production build
 ```
 
-### **Performance Benchmarks**
-
-| Metric | Value |
-|--------|-------|
-| **Query Processing Time** | 3-10 seconds |
-| **Agent Selection Accuracy** | 95%+ |
-| **Memory Usage** | <2GB RAM |
-| **Concurrent Sessions** | 50+ |
-| **Response Quality** | High-quality, contextual responses |
-
----
-
-## 🚀 **Advanced Features**
-
-### **Real-time Monitoring Dashboard**
-
-- **Live Orchestration Tracking**: Real-time visualization of all 5 stages
-- **Performance Analytics**: Execution times, success rates, and error tracking
-- **Memory Usage Monitoring**: Automatic cleanup and resource optimization
-- **Agent Performance Metrics**: Individual agent success rates and response quality
-
-### **Intelligent Agent Selection**
-
-- **Dynamic Analysis**: No hardcoded categories - LLM analyzes each query contextually
-- **Capability Matching**: Detailed analysis of agent capabilities, tools, and system prompts
-- **Confidence Scoring**: Numerical confidence levels for agent selection
-- **Alternative Options**: Backup agent suggestions for complex queries
-
-### **Memory-Optimized Design**
-
-- **Stateless Sessions**: Each orchestration is independent and cleanable
-- **Automatic Cleanup**: Sessions are automatically cleaned up after completion
-- **Resource Management**: Efficient memory usage with garbage collection
-- **Scalable Architecture**: Supports multiple concurrent orchestrations
-
----
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### **Development Setup**
-
+**Backend Development**
 ```bash
-# Fork and clone the repository
-git clone https://github.com/your-username/AgentOS_Studio_Strands.git
-cd AgentOS_Studio_Strands
+# Individual services
+python backend/ollama_api.py
+python backend/rag_api.py
+python backend/enhanced_orchestration_api.py
 
-# Create a feature branch
-git checkout -b feature/amazing-feature
-
-# Set up development environment
-./start-all-services.sh
-
-# Make your changes and test
-npm test
-python -m pytest backend/tests/
-
-# Commit and push
-git commit -m "feat: add amazing feature"
-git push origin feature/amazing-feature
-
-# Create a Pull Request
+# All services
+./scripts/start-all-services.sh
 ```
 
 ---
 
-## 📄 **License**
+## 📊 Performance & Monitoring
+
+### 🔍 System Metrics
+
+**Real-Time Monitoring**
+- **Memory Usage**: Live system memory consumption tracking
+- **Active Sessions**: Real-time session count and management
+- **Model Performance**: Response times, throughput, accuracy metrics
+- **Service Health**: Comprehensive health checks across all services
+
+---
+
+## 🔒 Security & Governance
+
+### 🛡️ Security Features
+
+**Authentication & Authorization**
+- **Multi-factor Authentication**: Secure user access control
+- **Role-based Permissions**: Granular access control by user role
+- **Session Management**: Secure session handling and timeout
+- **API Security**: Rate limiting, input validation, CORS protection
+
+**Content Security**
+- **Content Filtering**: Automated inappropriate content detection
+- **Guardrails**: Built-in safety mechanisms and compliance checks
+- **Data Privacy**: GDPR-compliant data handling and processing
+- **Audit Logging**: Comprehensive activity tracking and logging
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to AgentOS! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### 🐛 Bug Reports
+- Use GitHub Issues for bug reports
+- Include system information and reproduction steps
+- Provide logs and error messages when possible
+
+### 💡 Feature Requests
+- Submit feature requests via GitHub Issues
+- Include use case descriptions and expected behavior
+- Consider implementation complexity and impact
+
+---
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 **Acknowledgments**
+## 📊 Architecture Diagrams
 
-- **Ollama Team** - For the amazing local AI runtime
-- **Strands Community** - For inspiration on agent reasoning patterns
-- **React & TypeScript Communities** - For excellent developer tools
-- **shadcn/ui** - For beautiful UI components
-- **All Contributors** - For making this project possible
+### Comprehensive System Visualization
+
+For detailed architecture diagrams and workflow visualizations, see:
+
+- **[🏗️ Architecture Diagrams](docs/ARCHITECTURE_DIAGRAMS.md)** - Complete system architecture with 10 detailed diagrams
+- **[🔄 Workflow Diagrams](docs/WORKFLOW_DIAGRAMS.md)** - User journey and system process workflows
+- **[📋 Original Architecture](ARCHITECTURE.md)** - Legacy architecture documentation
+
+### Key Diagrams Available:
+
+1. **🌐 System Architecture Overview** - Complete service orchestration architecture
+2. **🔄 Enhanced Orchestration Workflow** - 6-stage multi-agent processing
+3. **🧠 A2A Communication Flow** - Agent-to-agent handover process
+4. **📊 Real-Time System Monitoring** - Live metrics and health monitoring
+5. **🏭 Industry-Specific Workspaces** - Multi-industry agent ecosystem
+6. **🔧 Service Communication Architecture** - Inter-service communication flow
+7. **🔒 Security & Performance Architecture** - Multi-layer security and performance
+8. **🚀 Deployment Architecture** - Production deployment strategy
+9. **📈 Data Flow Architecture** - Complete information flow
+10. **🎛️ Component Architecture** - Frontend component structure
 
 ---
 
-## 📞 **Support & Community**
+## 🆘 Support
 
-- **Documentation**: [Full Documentation](https://github.com/ashfrnndz21/AgentOS_Studio_Strands/wiki)
-- **Issues**: [GitHub Issues](https://github.com/ashfrnndz21/AgentOS_Studio_Strands/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/ashfrnndz21/AgentOS_Studio_Strands/discussions)
-- **Email**: support@agentos-studio.com
+### 📚 Documentation
+- **API Documentation**: Comprehensive API reference and examples
+- **User Guide**: Step-by-step tutorials and best practices
+- **Developer Guide**: Architecture details and customization options
+- **FAQ**: Common questions and troubleshooting tips
+
+### 💬 Community
+- **GitHub Discussions**: Community support and feature discussions
+- **Stack Overflow**: Tag questions with `agentos` for community help
 
 ---
 
 <div align="center">
 
-**🚀 Built with ❤️ by the AgentOS Studio Team**
+**Built with ❤️ by the AgentOS Team**
 
-[![GitHub stars](https://img.shields.io/github/stars/ashfrnndz21/AgentOS_Studio_Strands?style=social)](https://github.com/ashfrnndz21/AgentOS_Studio_Strands)
-[![GitHub forks](https://img.shields.io/github/forks/ashfrnndz21/AgentOS_Studio_Strands?style=social)](https://github.com/ashfrnndz21/AgentOS_Studio_Strands)
+[🌐 Website](https://agentos.ai) • [📖 Docs](https://docs.agentos.ai) • [🐦 Twitter](https://twitter.com/agentos_ai) • [💼 LinkedIn](https://linkedin.com/company/agentos)
 
 </div>
