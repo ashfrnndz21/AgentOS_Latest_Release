@@ -42,6 +42,7 @@ import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
 import { EnhancedOrchestrationMonitor } from '@/components/A2A/EnhancedOrchestrationMonitor';
 import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
+import { OrchestratorCard } from '@/components/A2A/OrchestratorCard';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
 export const OllamaAgentDashboard: React.FC = () => {
@@ -645,6 +646,11 @@ export const OllamaAgentDashboard: React.FC = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* System Orchestrator - Fixed Default Component */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <OrchestratorCard />
+        </div>
 
         <Tabs defaultValue="agents" className="space-y-6">
           <TabsList className="bg-gray-800">
@@ -1288,6 +1294,7 @@ export const OllamaAgentDashboard: React.FC = () => {
               </div>
             )}
           </TabsContent>
+
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">

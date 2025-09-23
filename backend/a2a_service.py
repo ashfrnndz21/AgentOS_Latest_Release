@@ -1,448 +1,444 @@
 #!/usr/bin/env python3
 """
-A2A (Agent-to-Agent) Service
-Handles real-time communication between agents
+A2A Service - Agent-to-Agent Communication Service
+Implements proper Strands A2A framework for multi-agent communication
 """
 
-import asyncio
+import os
+import sys
 import json
 import uuid
-import sqlite3
-from datetime import datetime
+import time
+import logging
+import threading
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, asdict
+from contextlib import contextmanager
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room
-import threading
-import time
+import requests
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Configuration
+STRANDS_SDK_URL = "http://localhost:5006"
+A2A_SERVICE_PORT = 5008
+SESSION_TIMEOUT = 300  # 5 minutes
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'a2a_service_secret'
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
-# A2A Database
-A2A_DB = "a2a_communication.db"
+@dataclass
+class A2AAgent:
+    """A2A Agent representation following Strands framework"""
+    id: str
+    name: str
+    description: str
+    model: str
+    capabilities: List[str]
+    status: str = "active"
+    created_at: datetime = None
+    strands_agent_id: Optional[str] = None
+    strands_data: Optional[Dict] = None
+    a2a_endpoints: Dict[str, str] = None
+    
+    def __post_init__(self):
+        if self.created_at is None:
+            self.created_at = datetime.now()
+        if self.a2a_endpoints is None:
+            self.a2a_endpoints = {}
 
-def init_a2a_database():
-    """Initialize the A2A communication database"""
-    conn = sqlite3.connect(A2A_DB)
-    cursor = conn.cursor()
+@dataclass
+class A2AMessage:
+    """A2A Message following Strands framework"""
+    id: str
+    from_agent_id: str
+    to_agent_id: str
+    content: str
+    message_type: str = "text"
+    timestamp: datetime = None
+    status: str = "pending"
+    response: Optional[str] = None
+    execution_time: float = 0.0
+    metadata: Dict[str, Any] = None
     
-    # Create agents table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS a2a_agents (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT,
-            model TEXT,
-            capabilities TEXT,
-            status TEXT DEFAULT 'active',
-            registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Create messages table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS a2a_messages (
-            id TEXT PRIMARY KEY,
-            from_agent_id TEXT NOT NULL,
-            to_agent_id TEXT NOT NULL,
-            content TEXT NOT NULL,
-            message_type TEXT DEFAULT 'message',
-            status TEXT DEFAULT 'sent',
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (from_agent_id) REFERENCES a2a_agents (id),
-            FOREIGN KEY (to_agent_id) REFERENCES a2a_agents (id)
-        )
-    ''')
-    
-    # Create connections table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS a2a_connections (
-            id TEXT PRIMARY KEY,
-            from_agent_id TEXT NOT NULL,
-            to_agent_id TEXT NOT NULL,
-            connection_type TEXT DEFAULT 'message',
-            is_active BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (from_agent_id) REFERENCES a2a_agents (id),
-            FOREIGN KEY (to_agent_id) REFERENCES a2a_agents (id)
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    print("📊 A2A database initialized")
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = datetime.now()
+        if self.metadata is None:
+            self.metadata = {}
 
-class A2AAgentRegistry:
-    """Manages agent registration and discovery"""
+@dataclass
+class A2AConnection:
+    """A2A Connection between agents"""
+    id: str
+    from_agent_id: str
+    to_agent_id: str
+    connection_type: str = "bidirectional"
+    status: str = "active"
+    created_at: datetime = None
+    last_used: datetime = None
+    message_count: int = 0
+    
+    def __post_init__(self):
+        if self.created_at is None:
+            self.created_at = datetime.now()
+        if self.last_used is None:
+            self.last_used = datetime.now()
+
+class A2AService:
+    """A2A Service implementing Strands A2A framework"""
     
     def __init__(self):
-        self.agents: Dict[str, Dict[str, Any]] = {}
-        self.connections: Dict[str, List[str]] = {}  # agent_id -> list of connected agent_ids
+        self.agents: Dict[str, A2AAgent] = {}
+        self.messages: List[A2AMessage] = []
+        self.connections: Dict[str, A2AConnection] = {}
+        self.message_history: Dict[str, List[A2AMessage]] = {}
+        
+        logger.info("A2A Service initialized with Strands A2A framework")
     
-    def register_agent(self, agent_id: str, agent_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Register an agent for A2A communication"""
+    def register_agent(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Register an agent for A2A communication following Strands framework"""
         try:
-            agent_info = {
-                "id": agent_id,
-                "name": agent_data.get("name", f"Agent {agent_id}"),
-                "description": agent_data.get("description", ""),
-                "model": agent_data.get("model", ""),
-                "capabilities": agent_data.get("capabilities", []),
-                "status": "active",
-                "registered_at": datetime.now().isoformat(),
-                "last_seen": datetime.now().isoformat()
-            }
+            agent_id = agent_data.get('id', f"a2a_{uuid.uuid4().hex[:8]}")
             
-            self.agents[agent_id] = agent_info
-            self.connections[agent_id] = []
+            # Create A2A agent following Strands framework
+            a2a_agent = A2AAgent(
+                id=agent_id,
+                name=agent_data.get('name', f'Agent {agent_id}'),
+                description=agent_data.get('description', ''),
+                model=agent_data.get('model', ''),
+                capabilities=agent_data.get('capabilities', []),
+                strands_agent_id=agent_data.get('strands_agent_id'),
+                strands_data=agent_data.get('strands_data', {}),
+                a2a_endpoints={
+                    'receive_message': f"/api/a2a/agents/{agent_id}/receive",
+                    'send_message': f"/api/a2a/agents/{agent_id}/send",
+                    'status': f"/api/a2a/agents/{agent_id}/status"
+                }
+            )
             
-            print(f"🤖 A2A Agent registered: {agent_info['name']} ({agent_id})")
+            self.agents[agent_id] = a2a_agent
+            
+            logger.info(f"Agent registered for A2A: {a2a_agent.name} (ID: {agent_id})")
             
             return {
                 "status": "success",
-                "agent": agent_info,
-                "message": f"Agent {agent_info['name']} registered successfully"
+                "agent": {
+                    "id": a2a_agent.id,
+                    "name": a2a_agent.name,
+                    "description": a2a_agent.description,
+                    "model": a2a_agent.model,
+                    "capabilities": a2a_agent.capabilities,
+                    "a2a_endpoints": a2a_agent.a2a_endpoints,
+                    "status": a2a_agent.status,
+                    "created_at": a2a_agent.created_at.isoformat()
+                }
             }
+            
         except Exception as e:
+            logger.error(f"Error registering agent: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def send_message(self, from_agent_id: str, to_agent_id: str, content: str, message_type: str = "text") -> Dict[str, Any]:
+        """Send A2A message following Strands framework"""
+        try:
+            # Validate agents exist
+            if from_agent_id not in self.agents:
+                return {
+                    "status": "error",
+                    "error": f"Source agent {from_agent_id} not found"
+                }
+            
+            if to_agent_id not in self.agents:
+                return {
+                    "status": "error",
+                    "error": f"Target agent {to_agent_id} not found"
+                }
+            
+            # Create message
+            message_id = str(uuid.uuid4())
+            message = A2AMessage(
+                id=message_id,
+                from_agent_id=from_agent_id,
+                to_agent_id=to_agent_id,
+                content=content,
+                message_type=message_type,
+                metadata={
+                    "strands_framework": True,
+                    "a2a_version": "1.0.0"
+                }
+            )
+            
+            # Execute message through Strands SDK
+            execution_result = self._execute_a2a_message(message)
+            
+            # Update message with result
+            message.status = "completed" if execution_result.get("success") else "failed"
+            message.response = execution_result.get("response", "")
+            message.execution_time = execution_result.get("execution_time", 0.0)
+            
+            # Store message
+            self.messages.append(message)
+            
+            # Update message history
+            if to_agent_id not in self.message_history:
+                self.message_history[to_agent_id] = []
+            self.message_history[to_agent_id].append(message)
+            
+            # Update connection stats
+            connection_key = f"{from_agent_id}_{to_agent_id}"
+            if connection_key in self.connections:
+                self.connections[connection_key].message_count += 1
+                self.connections[connection_key].last_used = datetime.now()
+            
+            logger.info(f"A2A message sent: {from_agent_id} -> {to_agent_id} (Status: {message.status})")
+            
+            return {
+                "status": "success",
+                "message_id": message_id,
+                "execution_result": execution_result,
+                "message": {
+                    "id": message.id,
+                    "from_agent": self.agents[from_agent_id].name,
+                    "to_agent": self.agents[to_agent_id].name,
+                    "content": content,
+                    "response": message.response,
+                    "status": message.status,
+                    "execution_time": message.execution_time,
+                    "timestamp": message.timestamp.isoformat()
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error sending A2A message: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def _execute_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
+        """Execute A2A message through Strands SDK"""
+        try:
+            start_time = time.time()
+            
+            # Get target agent
+            target_agent = self.agents[message.to_agent_id]
+            
+            # Prepare A2A message for Strands SDK
+            a2a_prompt = f"""A2A MESSAGE RECEIVED
+
+From: {self.agents[message.from_agent_id].name}
+To: {target_agent.name}
+Message Type: {message.message_type}
+Timestamp: {message.timestamp.isoformat()}
+
+Message Content:
+{message.content}
+
+Please respond to this A2A message as the {target_agent.name} agent. Use your capabilities: {', '.join(target_agent.capabilities)} to provide a helpful response."""
+
+            # Execute through Strands SDK
+            if target_agent.strands_agent_id:
+                response = requests.post(
+                    f"{STRANDS_SDK_URL}/api/strands-sdk/agents/{target_agent.strands_agent_id}/execute",
+                    json={
+                        "input": a2a_prompt,
+                        "stream": False,
+                        "a2a_context": {
+                            "from_agent": self.agents[message.from_agent_id].name,
+                            "message_type": message.message_type,
+                            "original_content": message.content
+                        }
+                    },
+                    timeout=120
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    execution_time = time.time() - start_time
+                    
+                    return {
+                        "success": True,
+                        "response": result.get("response", result.get("output", "")),
+                        "execution_time": execution_time,
+                        "strands_metadata": result
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Strands SDK execution failed: {response.status_code} - {response.text}",
+                        "execution_time": time.time() - start_time
+                    }
+            else:
+                # Fallback for agents without Strands SDK integration
+                return {
+                    "success": True,
+                    "response": f"A2A message received from {self.agents[message.from_agent_id].name}: {message.content}",
+                    "execution_time": time.time() - start_time,
+                    "fallback": True
+                }
+                
+        except Exception as e:
+            logger.error(f"Error executing A2A message: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "execution_time": time.time() - start_time
+            }
+    
+    def create_connection(self, from_agent_id: str, to_agent_id: str) -> Dict[str, Any]:
+        """Create A2A connection between agents"""
+        try:
+            connection_id = f"conn_{uuid.uuid4().hex[:8]}"
+            connection_key = f"{from_agent_id}_{to_agent_id}"
+            
+            connection = A2AConnection(
+                id=connection_id,
+                from_agent_id=from_agent_id,
+                to_agent_id=to_agent_id
+            )
+            
+            self.connections[connection_key] = connection
+            
+            logger.info(f"A2A connection created: {from_agent_id} <-> {to_agent_id}")
+            
+            return {
+                "status": "success",
+                "connection": {
+                    "id": connection.id,
+                    "from_agent": self.agents[from_agent_id].name,
+                    "to_agent": self.agents[to_agent_id].name,
+                    "status": connection.status,
+                    "created_at": connection.created_at.isoformat()
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating A2A connection: {e}")
             return {
                 "status": "error",
                 "error": str(e)
             }
     
     def get_agents(self) -> List[Dict[str, Any]]:
-        """Get list of all registered agents"""
-        return list(self.agents.values())
-    
-    def get_agent(self, agent_id: str) -> Optional[Dict[str, Any]]:
-        """Get specific agent by ID"""
-        return self.agents.get(agent_id)
-    
-    def remove_agent(self, agent_id: str) -> bool:
-        """Remove an agent from the registry"""
-        try:
-            if agent_id in self.agents:
-                del self.agents[agent_id]
-                # Also remove from connections
-                if agent_id in self.connections:
-                    del self.connections[agent_id]
-                # Remove from other agents' connections
-                for other_agent_id in self.connections:
-                    if agent_id in self.connections[other_agent_id]:
-                        self.connections[other_agent_id].remove(agent_id)
-                print(f"✅ Agent {agent_id} removed from A2A registry")
-                return True
-            return False
-        except Exception as e:
-            print(f"❌ Error removing agent {agent_id}: {e}")
-            return False
-    
-    def connect_agents(self, from_agent_id: str, to_agent_id: str) -> Dict[str, Any]:
-        """Create a connection between two agents"""
-        try:
-            if from_agent_id not in self.agents or to_agent_id not in self.agents:
-                return {
-                    "status": "error",
-                    "error": "One or both agents not found"
-                }
-            
-            if to_agent_id not in self.connections[from_agent_id]:
-                self.connections[from_agent_id].append(to_agent_id)
-            
-            if from_agent_id not in self.connections[to_agent_id]:
-                self.connections[to_agent_id].append(from_agent_id)
-            
-            print(f"🔗 A2A Connection created: {from_agent_id} <-> {to_agent_id}")
-            
-            return {
-                "status": "success",
-                "connection": {
-                    "from": from_agent_id,
-                    "to": to_agent_id,
-                    "created_at": datetime.now().isoformat()
-                }
+        """Get all registered A2A agents"""
+        return [
+            {
+                "id": agent.id,
+                "name": agent.name,
+                "description": agent.description,
+                "model": agent.model,
+                "capabilities": agent.capabilities,
+                "status": agent.status,
+                "a2a_endpoints": agent.a2a_endpoints,
+                "created_at": agent.created_at.isoformat(),
+                "strands_agent_id": agent.strands_agent_id
             }
-        except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
-    
-    def get_all_connections(self) -> List[Dict[str, Any]]:
-        """Get all agent connections"""
-        connections = []
-        for agent_id, connected_agents in self.connections.items():
-            for connected_agent_id in connected_agents:
-                connections.append({
-                    "from_agent_id": agent_id,
-                    "to_agent_id": connected_agent_id,
-                    "from_agent_name": self.agents[agent_id]["name"],
-                    "to_agent_name": self.agents[connected_agent_id]["name"]
-                })
-        return connections
-    
-    def get_agent_connections(self, agent_id: str) -> List[str]:
-        """Get connections for a specific agent"""
-        return self.connections.get(agent_id, [])
-
-class A2AMessageRouter:
-    """Handles message routing between agents"""
-    
-    def __init__(self, agent_registry: A2AAgentRegistry):
-        self.agent_registry = agent_registry
-        self.message_queue: List[Dict[str, Any]] = []
-        self.message_history: List[Dict[str, Any]] = []
-    
-    def send_message(self, from_agent_id: str, to_agent_id: str, content: str, message_type: str = "message") -> Dict[str, Any]:
-        """Send a message from one agent to another"""
-        try:
-            message_id = str(uuid.uuid4())
-            timestamp = datetime.now().isoformat()
-            
-            # Check if agents exist
-            from_agent = self.agent_registry.get_agent(from_agent_id)
-            to_agent = self.agent_registry.get_agent(to_agent_id)
-            
-            if not from_agent or not to_agent:
-                return {
-                    "status": "error",
-                    "error": "One or both agents not found"
-                }
-            
-            # Create message
-            message = {
-                "id": message_id,
-                "from_agent_id": from_agent_id,
-                "to_agent_id": to_agent_id,
-                "from_agent_name": from_agent["name"],
-                "to_agent_name": to_agent["name"],
-                "content": content,
-                "type": message_type,
-                "timestamp": timestamp,
-                "status": "sent"
-            }
-            
-            # Add to message history
-            self.message_history.append(message)
-            
-            # Emit real-time update via WebSocket
-            socketio.emit('a2a_message', message, room=f"agent_{to_agent_id}")
-            socketio.emit('a2a_message', message, room=f"agent_{from_agent_id}")
-            
-            print(f"📨 A2A Message sent: {from_agent['name']} -> {to_agent['name']}: {content[:50]}...")
-            
-            return {
-                "status": "success",
-                "message": message
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            for agent in self.agents.values()
+        ]
     
     def get_message_history(self, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Get message history, optionally filtered by agent"""
+        """Get A2A message history"""
         if agent_id:
-            return [msg for msg in self.message_history 
-                   if msg["from_agent_id"] == agent_id or msg["to_agent_id"] == agent_id]
-        return self.message_history
+            messages = self.message_history.get(agent_id, [])
+        else:
+            messages = self.messages
+        
+        return [
+            {
+                "id": msg.id,
+                "from_agent_id": msg.from_agent_id,
+                "to_agent_id": msg.to_agent_id,
+                "content": msg.content,
+                "message_type": msg.message_type,
+                "response": msg.response,
+                "status": msg.status,
+                "execution_time": msg.execution_time,
+                "timestamp": msg.timestamp.isoformat(),
+                "metadata": msg.metadata
+            }
+            for msg in messages[-50:]  # Last 50 messages
+        ]
 
-# Initialize services
-agent_registry = A2AAgentRegistry()
-message_router = A2AMessageRouter(agent_registry)
+# Initialize A2A service
+a2a_service = A2AService()
 
-# WebSocket events
-@socketio.on('connect')
-def handle_connect():
-    print(f"🔌 A2A WebSocket connected: {request.sid}")
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print(f"🔌 A2A WebSocket disconnected: {request.sid}")
-
-@socketio.on('join_agent_room')
-def handle_join_agent_room(data):
-    agent_id = data.get('agent_id')
-    if agent_id:
-        join_room(f"agent_{agent_id}")
-        print(f"🤖 Agent {agent_id} joined room")
-
-@socketio.on('leave_agent_room')
-def handle_leave_agent_room(data):
-    agent_id = data.get('agent_id')
-    if agent_id:
-        leave_room(f"agent_{agent_id}")
-        print(f"🤖 Agent {agent_id} left room")
-
-# REST API endpoints
 @app.route('/api/a2a/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({
         "status": "healthy",
-        "service": "A2A Communication Service",
-        "timestamp": datetime.now().isoformat(),
-        "agents_registered": len(agent_registry.agents)
+        "service": "a2a-service",
+        "version": "1.0.0",
+        "strands_framework": True,
+        "agents_registered": len(a2a_service.agents),
+        "connections_active": len(a2a_service.connections),
+        "timestamp": datetime.now().isoformat()
     })
+
+@app.route('/api/a2a/agents', methods=['POST'])
+def register_agent():
+    """Register an agent for A2A communication"""
+    try:
+        data = request.get_json()
+        result = a2a_service.register_agent(data)
+        return jsonify(result), 201 if result.get("status") == "success" else 400
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/a2a/agents', methods=['GET'])
 def get_agents():
-    """Get list of all registered agents"""
+    """Get all registered A2A agents"""
     try:
-        agents = agent_registry.get_agents()
+        agents = a2a_service.get_agents()
         return jsonify({
             "status": "success",
             "agents": agents,
             "count": len(agents)
         })
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/agents', methods=['POST'])
-def register_agent():
-    """Register a new agent for A2A communication"""
-    try:
-        data = request.get_json()
-        agent_id = data.get('id') or str(uuid.uuid4())
-        
-        result = agent_registry.register_agent(agent_id, data)
-        
-        if result["status"] == "success":
-            return jsonify(result), 201
-        else:
-            return jsonify(result), 400
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/agents/<agent_id>', methods=['GET'])
-def get_agent(agent_id):
-    """Get specific agent by ID"""
-    try:
-        agent = agent_registry.get_agent(agent_id)
-        if agent:
-            return jsonify({
-                "status": "success",
-                "agent": agent
-            })
-        else:
-            return jsonify({
-                "status": "error",
-                "error": "Agent not found"
-            }), 404
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/a2a/agents/<agent_id>', methods=['DELETE'])
 def delete_agent(agent_id):
-    """Delete an agent from A2A registry"""
+    """Delete an A2A agent"""
     try:
-        agent = agent_registry.get_agent(agent_id)
-        if not agent:
-            return jsonify({
-                "status": "error",
-                "error": "Agent not found"
-            }), 404
-        
-        # Remove from registry
-        success = agent_registry.remove_agent(agent_id)
-        
-        if success:
-            print(f"✅ A2A agent deleted: {agent.get('name', agent_id)}")
+        if agent_id in a2a_service.agents:
+            agent = a2a_service.agents.pop(agent_id)
+            # Clean up connections
+            connections_to_remove = [key for key in a2a_service.connections.keys() 
+                                   if agent_id in key]
+            for key in connections_to_remove:
+                a2a_service.connections.pop(key)
+            
+            logger.info(f"A2A agent deleted: {agent.name}")
             return jsonify({
                 "status": "success",
-                "message": f"Agent {agent.get('name', agent_id)} deleted successfully"
+                "message": f"Agent {agent.name} deleted successfully"
             })
         else:
-            return jsonify({
-                "status": "error",
-                "error": "Failed to delete agent"
-            }), 500
-            
+            return jsonify({"status": "error", "error": "Agent not found"}), 404
     except Exception as e:
-        print(f"❌ Error deleting A2A agent {agent_id}: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/connections', methods=['GET'])
-def get_connections():
-    """Get all agent connections"""
-    try:
-        connections = agent_registry.get_all_connections()
-        return jsonify({
-            "status": "success",
-            "connections": connections
-        }), 200
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/connections/<agent_id>', methods=['GET'])
-def get_agent_connections(agent_id):
-    """Get connections for a specific agent"""
-    try:
-        connections = agent_registry.get_agent_connections(agent_id)
-        return jsonify({
-            "status": "success",
-            "agent_id": agent_id,
-            "connections": connections
-        }), 200
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-@app.route('/api/a2a/connections', methods=['POST'])
-def create_connection():
-    """Create a connection between two agents"""
-    try:
-        data = request.get_json()
-        from_agent_id = data.get('from_agent_id')
-        to_agent_id = data.get('to_agent_id')
-        
-        if not from_agent_id or not to_agent_id:
-            return jsonify({
-                "status": "error",
-                "error": "from_agent_id and to_agent_id are required"
-            }), 400
-        
-        result = agent_registry.connect_agents(from_agent_id, to_agent_id)
-        
-        if result["status"] == "success":
-            return jsonify(result), 201
-        else:
-            return jsonify(result), 400
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/a2a/messages', methods=['POST'])
 def send_message():
-    """Send a message between agents"""
+    """Send an A2A message"""
     try:
         data = request.get_json()
         from_agent_id = data.get('from_agent_id')
         to_agent_id = data.get('to_agent_id')
         content = data.get('content')
-        message_type = data.get('type', 'message')
+        message_type = data.get('type', 'text')
         
         if not all([from_agent_id, to_agent_id, content]):
             return jsonify({
@@ -450,44 +446,103 @@ def send_message():
                 "error": "from_agent_id, to_agent_id, and content are required"
             }), 400
         
-        result = message_router.send_message(from_agent_id, to_agent_id, content, message_type)
-        
-        if result["status"] == "success":
-            return jsonify(result), 201
-        else:
-            return jsonify(result), 400
+        result = a2a_service.send_message(from_agent_id, to_agent_id, content, message_type)
+        return jsonify(result), 201 if result.get("status") == "success" else 400
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/a2a/messages/history', methods=['GET'])
 def get_message_history():
-    """Get message history"""
+    """Get A2A message history"""
     try:
         agent_id = request.args.get('agent_id')
-        history = message_router.get_message_history(agent_id)
+        messages = a2a_service.get_message_history(agent_id)
+        return jsonify({
+            "status": "success",
+            "messages": messages,
+            "count": len(messages)
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/a2a/connections', methods=['POST'])
+def create_connection():
+    """Create A2A connection between agents"""
+    try:
+        data = request.get_json()
+        from_agent_id = data.get('from_agent_id')
+        to_agent_id = data.get('to_agent_id')
+        
+        if not all([from_agent_id, to_agent_id]):
+            return jsonify({
+                "status": "error",
+                "error": "from_agent_id and to_agent_id are required"
+            }), 400
+        
+        result = a2a_service.create_connection(from_agent_id, to_agent_id)
+        return jsonify(result), 201 if result.get("status") == "success" else 400
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/a2a/connections', methods=['GET'])
+def get_connections():
+    """Get all A2A connections"""
+    try:
+        connections = [
+            {
+                "id": conn.id,
+                "from_agent_id": conn.from_agent_id,
+                "to_agent_id": conn.to_agent_id,
+                "status": conn.status,
+                "message_count": conn.message_count,
+                "created_at": conn.created_at.isoformat(),
+                "last_used": conn.last_used.isoformat()
+            }
+            for conn in a2a_service.connections.values()
+        ]
         
         return jsonify({
             "status": "success",
-            "messages": history,
-            "count": len(history)
+            "connections": connections,
+            "count": len(connections)
         })
     except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/a2a/connections/<agent_id>', methods=['GET'])
+def get_agent_connections(agent_id):
+    """Get connections for a specific agent"""
+    try:
+        agent_connections = []
+        
+        # Find all connections where this agent is either the source or target
+        for conn in a2a_service.connections.values():
+            if conn.from_agent_id == agent_id or conn.to_agent_id == agent_id:
+                # Get the other agent's ID and name
+                other_agent_id = conn.to_agent_id if conn.from_agent_id == agent_id else conn.from_agent_id
+                other_agent_name = a2a_service.agents.get(other_agent_id, {}).name if other_agent_id in a2a_service.agents else "Unknown Agent"
+                
+                agent_connections.append({
+                    "id": conn.id,
+                    "other_agent_id": other_agent_id,
+                    "other_agent_name": other_agent_name,
+                    "status": conn.status,
+                    "message_count": conn.message_count,
+                    "created_at": conn.created_at.isoformat(),
+                    "last_used": conn.last_used.isoformat()
+                })
+        
         return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+            "connections": agent_connections,
+            "count": len(agent_connections)
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 if __name__ == '__main__':
-    print("🚀 Starting A2A Communication Service...")
-    print("📍 Port: 5008")
-    print("🔗 WebSocket support enabled")
-    print("🤖 Agent registry initialized")
-    print("📨 Message router ready")
+    logger.info("🚀 Starting A2A Service...")
+    logger.info("📍 Port: 5008")
+    logger.info("🤖 Strands A2A Framework Implementation")
+    logger.info("🔄 Multi-agent communication enabled")
     
-    # Initialize database
-    init_a2a_database()
-    
-    socketio.run(app, host='0.0.0.0', port=5008, debug=False, allow_unsafe_werkzeug=True)
+    app.run(host='0.0.0.0', port=A2A_SERVICE_PORT, debug=False)

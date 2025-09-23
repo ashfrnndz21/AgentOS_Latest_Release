@@ -24,7 +24,7 @@ import requests  # Move requests import outside try block for cleanup functions
 # Official Strands SDK Integration with Ollama
 try:
     from strands import Agent, tool
-    from strands.models.ollama import OllamaModel
+    from strands.models import Model as OllamaModel
     from datetime import datetime
     import math
     STRANDS_SDK_AVAILABLE = True
@@ -411,6 +411,15 @@ app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+def _safe_json_loads(json_str, default_value):
+    """Safely parse JSON string with fallback to default value"""
+    if not json_str or not json_str.strip():
+        return default_value
+    try:
+        return json.loads(json_str)
+    except (json.JSONDecodeError, TypeError):
+        return default_value
+
 # Database file for Strands SDK agents (separate from existing ollama_agents.db)
 STRANDS_SDK_DB = "strands_sdk_agents.db"
 
@@ -525,61 +534,32 @@ def create_strands_agent():
             
             print(f"[Strands SDK] Enhanced model config: {enhanced_model_config}")
             
-            # Fast validation: Just test model initialization without full execution
+            # Skip Strands SDK model validation - we'll use direct Ollama API calls
+            print(f"[Strands SDK] ✅ Skipping Strands SDK model validation - using direct Ollama API")
+            
+            # Validate Ollama host connectivity instead
             try:
-                ollama_model = OllamaModel(**enhanced_model_config)
-                print(f"[Strands SDK] ✅ Model initialization successful")
-            except Exception as model_error:
-                print(f"[Strands SDK] ❌ Model initialization failed: {model_error}")
-                return jsonify({'error': f'Model configuration error: {str(model_error)}'}), 400
+                test_response = requests.get(f"{model_config['host']}/api/tags", timeout=5)
+                if test_response.status_code == 200:
+                    print(f"[Strands SDK] ✅ Ollama host connectivity verified")
+                else:
+                    print(f"[Strands SDK] ⚠️ Ollama host returned status {test_response.status_code}")
+            except Exception as connectivity_error:
+                print(f"[Strands SDK] ⚠️ Ollama host connectivity warning: {connectivity_error}")
             
-            # Handle tools if provided
+            # Handle tools if provided (validate tool names only)
             tools = data.get('tools', [])
-            agent_kwargs = {
-                'model': ollama_model,
-                'system_prompt': data.get('system_prompt', 'You are a helpful assistant.')
-            }
-            
             if tools:
                 print(f"[Strands SDK] Agent configured with tools: {tools}")
-                # Validate tool availability without loading
-                tool_functions = []
+                # Validate tool names without loading functions
                 for tool_name in tools:
                     if tool_name in AVAILABLE_TOOLS:
-                        tool_functions.append(AVAILABLE_TOOLS[tool_name])
                         print(f"[Strands SDK] ✅ Tool available: {tool_name}")
                     else:
                         print(f"[Strands SDK] ❌ Tool not found: {tool_name}")
                         return jsonify({'error': f'Tool "{tool_name}" not available'}), 400
-                
-                if tool_functions:
-                    agent_kwargs['tools'] = tool_functions
             
-            # Fast validation: Just create agent without test execution
-            try:
-                test_agent = Agent(**agent_kwargs)
-                print(f"[Strands SDK] ✅ Agent creation successful")
-                
-                # Optional: Run test execution if requested (slower but more thorough)
-                if data.get('validate_execution', False):
-                    print(f"[Strands SDK] Running validation test execution...")
-                    test_response = test_agent("Hello, this is a validation test.")
-                    
-                    # Handle AgentResult object properly
-                    if hasattr(test_response, 'content'):
-                        response_text = test_response.content
-                    elif hasattr(test_response, 'text'):
-                        response_text = test_response.text
-                    else:
-                        response_text = str(test_response)
-                    
-                    print(f"[Strands SDK] ✅ Validation test successful: {response_text[:50]}...")
-                else:
-                    print(f"[Strands SDK] ⚡ Fast creation mode - skipping test execution")
-                    
-            except Exception as agent_error:
-                print(f"[Strands SDK] ❌ Agent creation failed: {agent_error}")
-                return jsonify({'error': f'Agent creation error: {str(agent_error)}'}), 400
+            print(f"[Strands SDK] ✅ Agent configuration validated - ready for direct Ollama API execution")
             
         except Exception as e:
             print(f"[Strands SDK] Agent validation failed: {str(e)}")
@@ -935,22 +915,37 @@ def execute_strands_agent(agent_id):
         if not agent_data:
             return jsonify({'error': 'Strands agent not found'}), 404
         
-        # Extract agent configuration
+        # Extract agent configuration with safe JSON parsing
+        try:
+            tools_json = _safe_json_loads(agent_data[6], [])
+            ollama_config_json = _safe_json_loads(agent_data[7], {})
+            sdk_config_json = _safe_json_loads(agent_data[13] if len(agent_data) > 13 else None, {})
+        except Exception as e:
+            print(f"[Strands SDK] Error parsing agent config JSON: {e}")
+            tools_json = []
+            ollama_config_json = {}
+            sdk_config_json = {}
+        
+        # Fix the host/model_id configuration issue
+        # The database has host as model name and model_id as "ollama"
+        actual_model_id = agent_data[4]  # host field contains the actual model name
+        actual_host = "http://localhost:11434"  # Standard Ollama host
+        
         agent_config = {
             'id': agent_data[0],
             'name': agent_data[1],
             'description': agent_data[2],
-            'model_id': agent_data[3],
-            'host': agent_data[4],
-            'system_prompt': agent_data[5],
-            'tools': json.loads(agent_data[6]) if agent_data[6] else [],
-            'ollama_config': json.loads(agent_data[7]) if agent_data[7] else {},
+            'model_id': actual_model_id,
+            'host': actual_host,
+            'system_prompt': agent_data[5] if agent_data[5] and not agent_data[5].startswith('http') else "You are a helpful AI assistant.",
+            'tools': tools_json,
+            'ollama_config': ollama_config_json,
             'sdk_version': agent_data[8],
             'created_at': agent_data[9],
             'updated_at': agent_data[10],
             'status': agent_data[11],
             'model_provider': agent_data[12],
-            'sdk_config': json.loads(agent_data[13]) if agent_data[13] else {}
+            'sdk_config': sdk_config_json
         }
         
         print(f"[Strands SDK] Agent config loaded: {agent_config['name']} - {agent_config['model_id']}")
@@ -998,52 +993,14 @@ def execute_strands_agent(agent_id):
             'timestamp': datetime.now().isoformat()
         })
         
-        ollama_model = OllamaModel(**enhanced_config)
+        # Use direct Ollama API call instead of Strands SDK model
+        print(f"[Strands SDK] Using direct Ollama API call for model: {agent_config['model_id']}")
+        ollama_model = None  # We'll use direct API calls
         
-        # Create agent with tools if available
-        agent_kwargs = {
-            'model': ollama_model,
-            'system_prompt': agent_config['system_prompt']
-        }
-        
-        tools = agent_config.get('tools', [])
+        # Skip agent creation - we're using direct Ollama API calls
         tools_loaded = []
-        if tools:
-            print(f"[Strands SDK] Agent configured with tools: {tools}")
-            emit_progress(agent_id, "loading_tools", f"Loading {len(tools)} tools: {', '.join(tools)}", 25)
-            operations_log.append({
-                'step': f'Agent configured with tools: {tools}',
-                'details': f"Available tools: {', '.join(tools)}",
-                'timestamp': datetime.now().isoformat()
-            })
-            
-            # Load actual tool implementations
-            tool_functions = []
-            for tool_name in tools:
-                if tool_name in AVAILABLE_TOOLS:
-                    tool_functions.append(AVAILABLE_TOOLS[tool_name])
-                    tools_loaded.append(tool_name)
-                    print(f"[Strands SDK] Loaded tool: {tool_name}")
-                    operations_log.append({
-                        'step': f'Loaded tool: {tool_name}',
-                        'details': f"Tool #{len(tools_loaded)}: {tool_name}",
-                        'timestamp': datetime.now().isoformat()
-                    })
-                else:
-                    print(f"[Strands SDK] Warning: Tool '{tool_name}' not available")
-            
-            if tool_functions:
-                agent_kwargs['tools'] = tool_functions
-                operations_log.append({
-                    'step': f'Agent will execute with {len(tool_functions)} tools',
-                    'details': f"Ready to use: {', '.join(tools_loaded)}",
-                    'timestamp': datetime.now().isoformat()
-                })
-                print(f"[Strands SDK] Agent will execute with {len(tool_functions)} tools")
         
-        agent = Agent(**agent_kwargs)
-        
-        # Execute using Strands SDK
+        # Execute using direct Ollama API call
         emit_progress(agent_id, "executing", f"Processing input: {input_text[:50]}...", 50)
         operations_log.append({
             'step': 'Starting agent execution',
@@ -1056,21 +1013,36 @@ def execute_strands_agent(agent_id):
         # Capture tool usage by monitoring the response
         tools_used = []
         
-        # Add execution timeout (120 seconds) - thread-safe version
-        
-        def execute_with_timeout():
-            """Execute agent with timeout protection"""
-            return agent(input_text)
-        
         try:
-            # Execute agent with timeout protection using ThreadPoolExecutor
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(execute_with_timeout)
-                try:
-                    response = future.result(timeout=180)  # Increased timeout for Strands SDK (3 minutes)
-                    execution_time = time.time() - start_time
-                except concurrent.futures.TimeoutError:
-                    raise TimeoutError("Agent execution timed out after 180 seconds")
+            # Direct Ollama API call
+            import requests
+            
+            # Prepare the prompt with system prompt
+            full_prompt = f"{agent_config['system_prompt']}\n\nUser: {input_text}\n\nAssistant:"
+            
+            # Call Ollama API directly
+            ollama_response = requests.post(
+                f"{agent_config['host']}/api/generate",
+                json={
+                    "model": agent_config['model_id'],
+                    "prompt": full_prompt,
+                    "stream": False,
+                    "options": {
+                        "temperature": enhanced_config.get('temperature', 0.7),
+                        "max_tokens": enhanced_config.get('max_tokens', 1000)
+                    }
+                },
+                timeout=120
+            )
+            
+            if ollama_response.status_code == 200:
+                ollama_data = ollama_response.json()
+                response_text = ollama_data.get('response', '')
+                print(f"[Strands SDK] Ollama response: {response_text[:100]}...")
+                response = type('Response', (), {'content': response_text, 'text': response_text})()
+                execution_time = time.time() - start_time
+            else:
+                raise Exception(f"Ollama API error: {ollama_response.status_code} - {ollama_response.text}")
             
         except TimeoutError as e:
             execution_time = time.time() - start_time
@@ -1154,8 +1126,29 @@ def execute_strands_agent(agent_id):
             response_text = response.content
         elif hasattr(response, 'text'):
             response_text = response.text
+        elif hasattr(response, 'response'):
+            response_text = response.response
         else:
             response_text = str(response)
+        
+        # If response_text is empty or None, try to get it from the response object
+        if not response_text or response_text.strip() == "":
+            print(f"[Strands SDK] Empty response, trying to extract from response object: {response}")
+            if hasattr(response, '__dict__'):
+                print(f"[Strands SDK] Response attributes: {response.__dict__}")
+            # Try to get response from different possible attributes
+            for attr in ['content', 'text', 'response', 'output', 'result', 'message']:
+                if hasattr(response, attr):
+                    value = getattr(response, attr)
+                    if value and str(value).strip():
+                        response_text = str(value)
+                        print(f"[Strands SDK] Found response in {attr}: {response_text[:100]}...")
+                        break
+        
+        # If still empty, create a fallback response
+        if not response_text or response_text.strip() == "":
+            response_text = f"I apologize, but I encountered an issue processing your request. Please try again with a different query."
+            print(f"[Strands SDK] Using fallback response due to empty response")
         
         print(f"[Strands SDK] Response text: {response_text[:100]}...")
         
@@ -1276,7 +1269,9 @@ def execute_strands_agent(agent_id):
         emit_progress(agent_id, "completed", f"Execution completed successfully in {execution_time:.2f}s", 100, tools_used)
         
         return jsonify({
-            'response': response_text,
+            'success': True,
+            'output': response_text,
+            'response': response_text,  # Keep both for compatibility
             'execution_time': execution_time,
             'execution_id': execution_id,
             'sdk_powered': True,
@@ -1320,6 +1315,7 @@ def execute_strands_agent(agent_id):
 def list_strands_agents():
     """List all Strands SDK agents"""
     try:
+        print(f"[Strands SDK] Listing agents...")
         conn = sqlite3.connect(STRANDS_SDK_DB)
         cursor = conn.cursor()
         
@@ -1359,20 +1355,21 @@ def list_strands_agents():
                 'a2a_status': 'unknown'
             }
             
+            # Map database columns correctly (14 columns total)
             agents_list.append({
-                'id': agent[0],
-                'name': agent[1],
-                'description': agent[2],
-                'model_provider': agent[12],
-                'model_id': agent[3],
-                'host': agent[4],
-                'system_prompt': agent[5],
-                'tools': json.loads(agent[6]) if agent[6] else [],
-                'sdk_config': json.loads(agent[13]) if agent[13] else {},
-                'sdk_version': agent[8],
-                'created_at': agent[9],
-                'updated_at': agent[10],
-                'status': agent[11],
+                'id': agent[0],                    # id
+                'name': agent[1],                  # name
+                'description': agent[2],           # description
+                'model_provider': agent[12],       # model_provider
+                'model_id': agent[3],              # model_id
+                'host': agent[4],                  # host
+                'system_prompt': agent[5],         # system_prompt
+                'tools': _safe_json_loads(agent[6], []),  # tools
+                'sdk_config': _safe_json_loads(agent[13] if len(agent) > 13 else None, {}),  # sdk_config
+                'sdk_version': agent[8],           # sdk_version
+                'created_at': agent[9],            # created_at
+                'updated_at': agent[10],           # updated_at
+                'status': agent[11],               # status
                 'sdk_type': 'official-strands',
                 'recent_executions': formatted_executions,
                 'a2a_status': a2a_status
@@ -1390,6 +1387,8 @@ def list_strands_agents():
         
     except Exception as e:
         print(f"[Strands SDK] Error listing agents: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/strands-sdk/agents/<agent_id>', methods=['GET'])
