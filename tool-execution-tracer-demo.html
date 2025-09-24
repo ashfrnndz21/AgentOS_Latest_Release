@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strands Tool Execution Tracer Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-center text-purple-400">
+            🔧 Strands Tool Execution Tracer
+        </h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Panel: Agent Selection -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-purple-300">Select Agent</h2>
+                <div class="space-y-3">
+                    <button 
+                        onclick="loadAgentTraces('a93a12ae-8821-4421-abe6-f29ac73b61cc', 'Creative Assistant')"
+                        class="w-full p-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-left transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sparkles" class="h-5 w-5"></i>
+                            <span class="font-medium">Creative Assistant</span>
+                        </div>
+                        <p class="text-sm text-gray-300 mt-1">Expert in creative writing and storytelling</p>
+                    </button>
+                    
+                    <button 
+                        onclick="loadAgentTraces('test-agent-id', 'Test Agent')"
+                        class="w-full p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="bot" class="h-5 w-5"></i>
+                            <span class="font-medium">Test Agent</span>
+                        </div>
+                        <p class="text-sm text-gray-300 mt-1">Test agent for demonstration</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Tool Traces -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-purple-300">Tool Execution Traces</h2>
+                    <button 
+                        onclick="refreshTraces()"
+                        class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                
+                <div id="traces-container" class="space-y-4">
+                    <div class="text-center text-gray-400 py-8">
+                        <i data-lucide="eye" class="h-12 w-12 mx-auto mb-4 opacity-50"></i>
+                        <p>Select an agent to view tool execution traces</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed View Modal -->
+        <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-purple-300">Execution Details</h3>
+                    <button 
+                        onclick="closeDetailModal()"
+                        class="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                <div id="detail-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STRANDS_SDK_URL = "http://localhost:5006";
+        let currentAgentId = null;
+        let currentAgentName = null;
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        async function loadAgentTraces(agentId, agentName) {
+            currentAgentId = agentId;
+            currentAgentName = agentName;
+            
+            const container = document.getElementById('traces-container');
+            container.innerHTML = '<div class="text-center py-8"><i data-lucide="loader-2" class="h-8 w-8 mx-auto animate-spin text-purple-400"></i><p class="mt-2 text-gray-400">Loading traces...</p></div>';
+            lucide.createIcons();
+
+            try {
+                const response = await fetch(`${STRANDS_SDK_URL}/api/strands-sdk/agents/${agentId}/tool-traces`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderTraces(data.tool_traces);
+                } else {
+                    throw new Error(data.error || 'Failed to load traces');
+                }
+            } catch (error) {
+                console.error('Error loading traces:', error);
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i data-lucide="alert-circle" class="h-8 w-8 mx-auto text-red-400 mb-2"></i>
+                        <p class="text-red-300">Error loading traces</p>
+                        <p class="text-sm text-gray-400 mt-1">${error.message}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function renderTraces(traces) {
+            const container = document.getElementById('traces-container');
+            
+            if (traces.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i data-lucide="inbox" class="h-12 w-12 mx-auto mb-4 opacity-50"></i>
+                        <p class="text-gray-400">No tool execution traces found</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const tracesHtml = traces.map((trace, index) => `
+                <div class="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors" 
+                     onclick="showTraceDetails(${JSON.stringify(trace).replace(/"/g, '&quot;')})">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-300">Execution #${index + 1}</span>
+                            ${trace.success ? 
+                                '<i data-lucide="check-circle" class="h-4 w-4 text-green-400"></i>' : 
+                                '<i data-lucide="alert-circle" class="h-4 w-4 text-red-400"></i>'
+                            }
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <i data-lucide="clock" class="h-3 w-3"></i>
+                            ${new Date(trace.timestamp).toLocaleString()}
+                            <i data-lucide="zap" class="h-3 w-3"></i>
+                            ${trace.execution_time.toFixed(2)}s
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <span class="text-sm text-gray-400">Input:</span>
+                        <p class="text-sm text-white mt-1">${trace.input_text}</p>
+                    </div>
+                    
+                    ${trace.tool_info.tools_used.length > 0 ? `
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-400">Tools:</span>
+                            <div class="flex gap-1">
+                                ${trace.tool_info.tools_used.map(tool => `
+                                    <span class="px-2 py-1 bg-purple-600 text-white text-xs rounded">
+                                        ${tool}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+
+            container.innerHTML = tracesHtml;
+            lucide.createIcons();
+        }
+
+        function showTraceDetails(trace) {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('detail-content');
+            
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-sm text-gray-400">Execution ID:</span>
+                            <p class="text-sm text-white font-mono">${trace.execution_id}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-400">Timestamp:</span>
+                            <p class="text-sm text-white">${new Date(trace.timestamp).toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-400">Execution Time:</span>
+                            <p class="text-sm text-white">${trace.execution_time.toFixed(2)}s</p>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-400">Status:</span>
+                            <p class="text-sm text-white">
+                                ${trace.success ? '<span class="text-green-400">✓ Success</span>' : '<span class="text-red-400">✗ Failed</span>'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-sm text-gray-400">Input:</span>
+                        <p class="text-sm text-white mt-1 bg-gray-700 p-2 rounded">${trace.input_text}</p>
+                    </div>
+                    
+                    <div>
+                        <span class="text-sm text-gray-400">Output:</span>
+                        <p class="text-sm text-white mt-1 bg-gray-700 p-2 rounded max-h-40 overflow-y-auto">${trace.output_text}</p>
+                    </div>
+
+                    <div>
+                        <span class="text-sm text-gray-400">Tools Used:</span>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            ${trace.tool_info.tools_used.map(tool => `
+                                <span class="px-2 py-1 bg-purple-600 text-white rounded text-xs">${tool}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-sm text-gray-400">Operations Log:</span>
+                        <div class="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                            ${trace.tool_info.operations_log.map(op => `
+                                <div class="bg-gray-700 rounded p-2">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-sm font-medium text-white">${op.step}</span>
+                                        <span class="text-xs text-gray-400">${new Date(op.timestamp).toLocaleTimeString()}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-300">${op.details}</p>
+                                    ${op.tool_input && op.tool_output ? `
+                                        <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div>
+                                                <span class="text-xs text-gray-400">Input:</span>
+                                                <p class="text-xs text-white font-mono bg-gray-600 p-1 rounded">${op.tool_input}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs text-gray-400">Output:</span>
+                                                <p class="text-xs text-white font-mono bg-gray-600 p-1 rounded">${op.tool_output}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function refreshTraces() {
+            if (currentAgentId && currentAgentName) {
+                loadAgentTraces(currentAgentId, currentAgentName);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>
+

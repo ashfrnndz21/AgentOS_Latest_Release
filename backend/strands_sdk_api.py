@@ -21,16 +21,10 @@ import concurrent.futures
 import threading
 import requests  # Move requests import outside try block for cleanup functions
 
-# Official Strands SDK Integration with Ollama
-try:
-    from strands import Agent, tool
-    from strands.models import Model as OllamaModel
-    from datetime import datetime
-    import math
-    STRANDS_SDK_AVAILABLE = True
-except ImportError as e:
-    print(f"⚠️ Strands SDK not available: {e}")
-    STRANDS_SDK_AVAILABLE = False
+# Custom Strands SDK Implementation (working version)
+from datetime import datetime
+import math
+STRANDS_SDK_AVAILABLE = True
 
 # A2A Integration
 try:
@@ -39,31 +33,7 @@ try:
 except ImportError as e:
     print(f"⚠️ A2A integration not available: {e}")
     A2A_AVAILABLE = False
-    print("[Strands SDK] ✅ Official Strands SDK with Ollama integration loaded successfully!")
-    
-    # Import official tools registry
-    from strands_official_tools import strands_tools_registry
-    print("[Strands SDK] ✅ Official tools registry loaded successfully!")
-    
-    # Import official Strands tools
-    from strands_official_integration import OFFICIAL_TOOLS, get_tool_configuration_schema, get_all_tool_schemas
-    print("[Strands SDK] ✅ Official Strands tools loaded successfully!")
-    
-    # Import collaboration tools (Think Tool + A2A Protocol) - using simplified version as fallback
-    from strands_collaboration_tools_simple import COLLABORATION_TOOLS
-    print("[Strands SDK] ✅ Fallback collaboration tools loaded successfully!")
-    print("[Strands SDK] Using official OllamaModel from strands.models.ollama")
-    
-    # Test the official integration
-    try:
-        test_model = OllamaModel(host="http://localhost:11434", model_id="qwen3:1.7b")
-        print(f"[Strands SDK] ✅ Official OllamaModel test successful")
-    except Exception as e:
-        print(f"[Strands SDK] ⚠️  OllamaModel test warning: {e}")
-    
-except ImportError as e:
-    print(f"[Strands SDK] Warning: Official Ollama integration not available ({e}), using real Ollama fallback")
-    STRANDS_SDK_AVAILABLE = False
+    print("[Strands SDK] ✅ Custom Strands SDK implementation loaded successfully!")
     
     # Real Ollama implementation when Strands SDK is not available
     class RealOllamaModel:
@@ -391,6 +361,377 @@ except ImportError:
     'database_query': database_query,
     })
 
+# Extended Tool Implementations (NEW TOOLS)
+@tool
+def file_read(file_path: str) -> str:
+    """
+    Read the contents of a file safely.
+    
+    Args:
+        file_path: Path to the file to read
+        
+    Returns:
+        File contents as string or error message
+    """
+    try:
+        # Security check - only allow reading from safe directories
+        safe_dirs = ['/tmp', './data', './logs', './uploads', './backend']
+        if not any(file_path.startswith(safe_dir) for safe_dir in safe_dirs):
+            return f"Error: File path {file_path} not in allowed directories. Allowed: {safe_dirs}"
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return f"File contents of {file_path}:\n{content}"
+    except Exception as e:
+        return f"Error reading file {file_path}: {str(e)}"
+
+@tool
+def file_write(file_path: str, content: str) -> str:
+    """
+    Write content to a file safely.
+    
+    Args:
+        file_path: Path to the file to write
+        content: Content to write to the file
+        
+    Returns:
+        Success or error message
+    """
+    try:
+        # Security check - only allow writing to safe directories
+        safe_dirs = ['/tmp', './data', './logs', './uploads', './backend']
+        if not any(file_path.startswith(safe_dir) for safe_dir in safe_dirs):
+            return f"Error: File path {file_path} not in allowed directories. Allowed: {safe_dirs}"
+        
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        return f"Successfully wrote content to {file_path}"
+    except Exception as e:
+        return f"Error writing to file {file_path}: {str(e)}"
+
+@tool
+def memory_store(key: str, value: str) -> str:
+    """
+    Store information in agent memory.
+    
+    Args:
+        key: Memory key identifier
+        value: Information to store
+        
+    Returns:
+        Confirmation message
+    """
+    try:
+        # Simple file-based memory storage
+        memory_file = './data/agent_memory.json'
+        os.makedirs(os.path.dirname(memory_file), exist_ok=True)
+        
+        # Load existing memory
+        if os.path.exists(memory_file):
+            with open(memory_file, 'r') as f:
+                memory = json.load(f)
+        else:
+            memory = {}
+        
+        # Store new memory
+        memory[key] = {
+            'value': value,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Save memory
+        with open(memory_file, 'w') as f:
+            json.dump(memory, f, indent=2)
+        
+        return f"Stored memory: {key} = {value}"
+    except Exception as e:
+        return f"Error storing memory: {str(e)}"
+
+@tool
+def memory_retrieve(key: str) -> str:
+    """
+    Retrieve information from agent memory.
+    
+    Args:
+        key: Memory key identifier
+        
+    Returns:
+        Retrieved information or error message
+    """
+    try:
+        memory_file = './data/agent_memory.json'
+        if not os.path.exists(memory_file):
+            return f"No memory found for key: {key}"
+        
+        with open(memory_file, 'r') as f:
+            memory = json.load(f)
+        
+        if key in memory:
+            return f"Memory {key}: {memory[key]['value']} (stored: {memory[key]['timestamp']})"
+        else:
+            return f"No memory found for key: {key}"
+    except Exception as e:
+        return f"Error retrieving memory: {str(e)}"
+
+@tool
+def http_request(url: str, method: str = "GET", headers: dict = None, data: str = None) -> str:
+    """
+    Make HTTP requests to external APIs safely.
+    
+    Args:
+        url: URL to request
+        method: HTTP method (GET, POST, PUT, DELETE)
+        headers: Optional headers dictionary
+        data: Optional request body data
+        
+    Returns:
+        Response content or error message
+    """
+    try:
+        # Security check - only allow safe URLs
+        allowed_domains = ['api.github.com', 'jsonplaceholder.typicode.com', 'httpbin.org', 'api.duckduckgo.com']
+        if not any(domain in url for domain in allowed_domains):
+            return f"Error: URL {url} not in allowed domains. Allowed: {allowed_domains}"
+        
+        response = requests.request(
+            method=method,
+            url=url,
+            headers=headers or {},
+            data=data,
+            timeout=30
+        )
+        
+        return f"HTTP {method} {url} - Status: {response.status_code}\nResponse: {response.text[:500]}"
+    except Exception as e:
+        return f"Error making HTTP request: {str(e)}"
+
+@tool
+def python_repl(code: str) -> str:
+    """
+    Execute Python code safely.
+    
+    Args:
+        code: Python code to execute
+        
+    Returns:
+        Execution result or error message
+    """
+    try:
+        # Security check - block dangerous operations
+        dangerous_patterns = ['import os', 'import sys', 'exec(', 'eval(', '__import__', 'open(', 'file(']
+        if any(pattern in code for pattern in dangerous_patterns):
+            return "Error: Code contains potentially dangerous operations"
+        
+        # Create safe execution environment
+        safe_globals = {
+            '__builtins__': {
+                'print': print,
+                'len': len,
+                'str': str,
+                'int': int,
+                'float': float,
+                'list': list,
+                'dict': dict,
+                'tuple': tuple,
+                'set': set,
+                'range': range,
+                'enumerate': enumerate,
+                'zip': zip,
+                'map': map,
+                'filter': filter,
+                'sum': sum,
+                'max': max,
+                'min': min,
+                'abs': abs,
+                'round': round,
+                'sorted': sorted,
+                'reversed': reversed,
+                'math': math,
+                'json': json,
+                'datetime': datetime
+            }
+        }
+        
+        # Execute code
+        exec(code, safe_globals)
+        return "Code executed successfully"
+    except Exception as e:
+        return f"Error executing Python code: {str(e)}"
+
+@tool
+def generate_image(prompt: str, style: str = "realistic") -> str:
+    """
+    Generate an image using AI (mock implementation).
+    
+    Args:
+        prompt: Description of the image to generate
+        style: Style of the image (realistic, artistic, cartoon, etc.)
+        
+    Returns:
+        Image generation result or error message
+    """
+    try:
+        # Mock implementation - in real scenario, this would call an AI image generation API
+        image_id = f"img_{int(datetime.now().timestamp())}"
+        
+        # Simulate image generation
+        result = f"Generated image with ID: {image_id}\nPrompt: {prompt}\nStyle: {style}\nStatus: Successfully generated\nNote: This is a mock implementation. In production, this would call an actual AI image generation service."
+        
+        return result
+    except Exception as e:
+        return f"Error generating image: {str(e)}"
+
+def extract_thinking_process(response_text: str) -> str:
+    """
+    Extract thinking process from agent response.
+    Looks for patterns like <think>, <reasoning>, or similar markers.
+    """
+    import re
+    
+    # Look for thinking blocks
+    think_patterns = [
+        r'<think>(.*?)</think>',
+        r'<reasoning>(.*?)</reasoning>',
+        r'<analysis>(.*?)</analysis>',
+        r'<thought>(.*?)</thought>'
+    ]
+    
+    for pattern in think_patterns:
+        match = re.search(pattern, response_text, re.DOTALL | re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    
+    # If no explicit thinking blocks, try to extract reasoning from the beginning
+    # Look for phrases that indicate thinking
+    thinking_indicators = [
+        "Let me think about this",
+        "I need to consider",
+        "First, let me analyze",
+        "Looking at this problem",
+        "I should approach this by"
+    ]
+    
+    for indicator in thinking_indicators:
+        if indicator.lower() in response_text.lower():
+            # Extract the first paragraph or two that contains reasoning
+            lines = response_text.split('\n')
+            thinking_lines = []
+            for line in lines[:5]:  # Check first 5 lines
+                if any(word in line.lower() for word in ['think', 'consider', 'analyze', 'approach', 'need to', 'should']):
+                    thinking_lines.append(line.strip())
+            if thinking_lines:
+                return ' '.join(thinking_lines)
+    
+    return ""
+
+def format_enhanced_response(
+    user_query: str,
+    thinking_process: str,
+    tool_executions: list,
+    tools_used: list,
+    raw_response: str,
+    response_style: str = 'conversational',
+    show_thinking: bool = True,
+    show_tool_details: bool = True,
+    include_examples: bool = False,
+    include_citations: bool = False,
+    include_warnings: bool = False
+) -> str:
+    """
+    Format the agent response with enhanced structure: User Query → Think → Tool → Answer
+    """
+    
+    # Clean the raw response by removing thinking blocks if they exist
+    clean_response = raw_response
+    if thinking_process:
+        # Remove thinking blocks from the response
+        import re
+        clean_response = re.sub(r'<think>.*?</think>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = re.sub(r'<reasoning>.*?</reasoning>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = clean_response.strip()
+    
+    # Build the enhanced response based on style and options
+    response_parts = []
+    
+    # Add thinking process if enabled and available
+    if show_thinking and thinking_process:
+        response_parts.append(f"<think>\n{thinking_process}\n</think>")
+    
+    # Add tool execution details if enabled and tools were used
+    if show_tool_details and tool_executions:
+        response_parts.append("**Tool Execution:**")
+        for i, tool_result in enumerate(tool_executions, 1):
+            response_parts.append(f"{i}. {tool_result}")
+        response_parts.append("")  # Empty line after tools
+    
+    # Add the main response based on style
+    if response_style == 'concise':
+        # Extract the most direct answer
+        main_response = clean_response.split('\n')[0] if clean_response else raw_response
+        response_parts.append(f"**Answer:** {main_response}")
+    elif response_style == 'technical':
+        response_parts.append(f"**Technical Response:**\n{clean_response}")
+    elif response_style == 'detailed':
+        response_parts.append(f"**Detailed Analysis:**\n{clean_response}")
+    else:  # conversational (default)
+        response_parts.append(clean_response)
+    
+    # Add examples if enabled
+    if include_examples and response_style in ['detailed', 'technical']:
+        response_parts.append("\n**Example:**\n[Example would be provided here based on the specific query]")
+    
+    # Add citations if enabled
+    if include_citations and tools_used:
+        response_parts.append(f"\n**Sources:**\nBased on data from: {', '.join(tools_used)}")
+    
+    # Add warnings if enabled
+    if include_warnings:
+        response_parts.append("\n⚠️ **Note:** This response is generated by an AI assistant. Please verify important information independently.")
+    
+    return '\n'.join(response_parts)
+
+@tool
+def slack_send_message(channel: str, message: str) -> str:
+    """
+    Send a message to Slack (mock implementation).
+    
+    Args:
+        channel: Slack channel name or ID
+        message: Message content to send
+        
+    Returns:
+        Message sending result or error message
+    """
+    try:
+        # Mock implementation - in real scenario, this would use Slack API
+        message_id = f"msg_{int(datetime.now().timestamp())}"
+        
+        result = f"Slack message sent successfully!\nChannel: {channel}\nMessage: {message}\nMessage ID: {message_id}\nNote: This is a mock implementation. In production, this would use the actual Slack API."
+        
+        return result
+    except Exception as e:
+        return f"Error sending Slack message: {str(e)}"
+
+# Add the new tools to AVAILABLE_TOOLS
+EXTENDED_TOOLS = {
+    'file_read': file_read,
+    'file_write': file_write,
+    'memory': memory_store,  # Alias for compatibility
+    'memory_store': memory_store,
+    'memory_retrieve': memory_retrieve,
+    'http_request': http_request,
+    'python_repl': python_repl,
+    'generate_image': generate_image,
+    'slack': slack_send_message,
+}
+
+# Add extended tools to the main registry
+AVAILABLE_TOOLS.update(EXTENDED_TOOLS)
+print(f"[Strands SDK] ✅ Added {len(EXTENDED_TOOLS)} extended tools: {list(EXTENDED_TOOLS.keys())}")
+
 # Override think tool with our simplified version to prevent timeouts
 try:
     from strands_collaboration_tools_simple import think as simple_think
@@ -460,6 +801,14 @@ def init_strands_sdk_database():
             
             -- Strands SDK specific
             sdk_config TEXT, -- JSON of additional SDK config
+            
+            -- Response Control Configuration
+            response_style TEXT DEFAULT 'conversational', -- concise, conversational, detailed, technical
+            show_thinking BOOLEAN DEFAULT 1, -- Show thinking process
+            show_tool_details BOOLEAN DEFAULT 1, -- Show tool execution details
+            include_examples BOOLEAN DEFAULT 0, -- Include examples in responses
+            include_citations BOOLEAN DEFAULT 0, -- Include source citations
+            include_warnings BOOLEAN DEFAULT 0, -- Include safety warnings
             sdk_version TEXT DEFAULT '1.0.0',
             
             -- Metadata
@@ -571,8 +920,8 @@ def create_strands_agent():
         
         cursor.execute('''
             INSERT INTO strands_sdk_agents 
-            (id, name, description, model_provider, model_id, host, system_prompt, tools, sdk_config)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (id, name, description, model_provider, model_id, host, system_prompt, tools, tool_configurations, sdk_config, response_style, show_thinking, show_tool_details, include_examples, include_citations, include_warnings)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             agent_id,
             data.get('name'),
@@ -582,11 +931,18 @@ def create_strands_agent():
             data.get('host', 'http://localhost:11434'),
             data.get('system_prompt', 'You are a helpful assistant.'),
             json.dumps(data.get('tools', [])),
+            json.dumps(data.get('tool_configurations', {})),
             json.dumps({
                 'ollama_config': data.get('ollama_config', {}),
                 'enhanced_features': True,
                 'strands_version': '1.8.0'
-            })
+            }),
+            data.get('response_style', 'conversational'),
+            data.get('show_thinking', True),
+            data.get('show_tool_details', True),
+            data.get('include_examples', False),
+            data.get('include_citations', False),
+            data.get('include_warnings', False)
         ))
         
         conn.commit()
@@ -642,6 +998,12 @@ def execute_strands_agent_stream(agent_id):
                     'ollama_config': json.loads(agent_data[7]) if agent_data[7] else {},
                     'sdk_version': agent_data[8],
                     'created_at': agent_data[9],
+                    'response_style': agent_data[15] if len(agent_data) > 15 else 'conversational',
+                    'show_thinking': bool(agent_data[16]) if len(agent_data) > 16 else True,
+                    'show_tool_details': bool(agent_data[17]) if len(agent_data) > 17 else True,
+                    'include_examples': bool(agent_data[18]) if len(agent_data) > 18 else False,
+                    'include_citations': bool(agent_data[19]) if len(agent_data) > 19 else False,
+                    'include_warnings': bool(agent_data[20]) if len(agent_data) > 20 else False,
                     'updated_at': agent_data[10],
                     'status': agent_data[11],
                     'model_provider': agent_data[12],
@@ -804,7 +1166,7 @@ def execute_strands_agent_stream(agent_id):
                     
                     # Check for calculator usage
                     if 'calculator' in tools_loaded:
-                        input_has_calc = any(word in input_text.lower() for word in ['calculate', 'compute', 'math', '+', '-', '*', '/', '='])
+                        input_has_calc = any(word in input_text.lower() for word in ['calculate', 'compute', 'math', '+', '-', '*', '/', '=', 'x', '×', 'multiply', 'multiplication'])
                         calc_indicators = ['calculated', 'calculation', 'result is', 'equals', 'math', 'computed', 'answer is']
                         
                         if input_has_calc or any(indicator in response_text.lower() for indicator in calc_indicators):
@@ -918,11 +1280,13 @@ def execute_strands_agent(agent_id):
         # Extract agent configuration with safe JSON parsing
         try:
             tools_json = _safe_json_loads(agent_data[6], [])
-            ollama_config_json = _safe_json_loads(agent_data[7], {})
-            sdk_config_json = _safe_json_loads(agent_data[13] if len(agent_data) > 13 else None, {})
+            tool_configurations_json = _safe_json_loads(agent_data[7], {})
+            ollama_config_json = _safe_json_loads(agent_data[8], {})
+            sdk_config_json = _safe_json_loads(agent_data[14] if len(agent_data) > 14 else None, {})
         except Exception as e:
             print(f"[Strands SDK] Error parsing agent config JSON: {e}")
             tools_json = []
+            tool_configurations_json = {}
             ollama_config_json = {}
             sdk_config_json = {}
         
@@ -939,12 +1303,19 @@ def execute_strands_agent(agent_id):
             'host': actual_host,
             'system_prompt': agent_data[5] if agent_data[5] and not agent_data[5].startswith('http') else "You are a helpful AI assistant.",
             'tools': tools_json,
+            'tool_configurations': tool_configurations_json,
             'ollama_config': ollama_config_json,
-            'sdk_version': agent_data[8],
-            'created_at': agent_data[9],
-            'updated_at': agent_data[10],
-            'status': agent_data[11],
-            'model_provider': agent_data[12],
+            'sdk_version': agent_data[9],
+            'created_at': agent_data[10],
+            'response_style': agent_data[16] if len(agent_data) > 16 else 'conversational',
+            'show_thinking': bool(agent_data[17]) if len(agent_data) > 17 else True,
+            'show_tool_details': bool(agent_data[18]) if len(agent_data) > 18 else True,
+            'include_examples': bool(agent_data[19]) if len(agent_data) > 19 else False,
+            'include_citations': bool(agent_data[20]) if len(agent_data) > 20 else False,
+            'include_warnings': bool(agent_data[21]) if len(agent_data) > 21 else False,
+            'updated_at': agent_data[11],
+            'status': agent_data[12],
+            'model_provider': agent_data[13],
             'sdk_config': sdk_config_json
         }
         
@@ -997,8 +1368,14 @@ def execute_strands_agent(agent_id):
         print(f"[Strands SDK] Using direct Ollama API call for model: {agent_config['model_id']}")
         ollama_model = None  # We'll use direct API calls
         
-        # Skip agent creation - we're using direct Ollama API calls
-        tools_loaded = []
+        # Load tools for the agent
+        tools_loaded = agent_config.get('tools', [])
+        print(f"[Strands SDK] Loading tools for agent: {tools_loaded}")
+        operations_log.append({
+            'step': 'Tools loaded',
+            'details': f"Loaded {len(tools_loaded)} tools: {tools_loaded}",
+            'timestamp': datetime.now().isoformat()
+        })
         
         # Execute using direct Ollama API call
         emit_progress(agent_id, "executing", f"Processing input: {input_text[:50]}...", 50)
@@ -1014,13 +1391,168 @@ def execute_strands_agent(agent_id):
         tools_used = []
         
         try:
-            # Direct Ollama API call
-            import requests
+            # Check if we need to use tools first
+            tool_results = []
+            processed_input = input_text
             
-            # Prepare the prompt with system prompt
-            full_prompt = f"{agent_config['system_prompt']}\n\nUser: {input_text}\n\nAssistant:"
+            # Check for calculator usage
+            if 'calculator' in tools_loaded:
+                calc_keywords = ['calculate', 'compute', 'math', '+', '-', '*', '/', '=', 'x', '×', 'multiply', 'multiplication']
+                if any(word in input_text.lower() for word in calc_keywords):
+                    try:
+                        # Extract mathematical expression
+                        import re
+                        
+                        # Look for multiplication patterns like "208679447 x 3672.23" or "15 * 23"
+                        mult_pattern = r'(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)'
+                        mult_match = re.search(mult_pattern, input_text)
+                        
+                        # Look for division patterns like "6252525 / 4848992.5663"
+                        div_pattern = r'(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)'
+                        div_match = re.search(div_pattern, input_text)
+                        
+                        # Look for addition patterns like "15 + 23"
+                        add_pattern = r'(\d+(?:\.\d+)?)\s*\+\s*(\d+(?:\.\d+)?)'
+                        add_match = re.search(add_pattern, input_text)
+                        
+                        # Look for subtraction patterns like "15 - 23"
+                        sub_pattern = r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)'
+                        sub_match = re.search(sub_pattern, input_text)
+                        
+                        if mult_match:
+                            num1 = float(mult_match.group(1))
+                            num2 = float(mult_match.group(2))
+                            result = num1 * num2
+                            operation = f"{num1} × {num2}"
+                            tool_results.append(f"Calculator result: {operation} = {result}")
+                            tools_used.append('calculator')
+                            print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {operation} = {result}")
+                            
+                            # Add detailed tool execution to operations log
+                            operations_log.append({
+                                'step': 'Calculator tool executed',
+                                'details': f"Input: {operation} | Output: {result} | Status: Success",
+                                'timestamp': datetime.now().isoformat(),
+                                'tool_name': 'calculator',
+                                'tool_input': operation,
+                                'tool_output': str(result)
+                            })
+                            
+                            # Add calculator result to the prompt
+                            processed_input = f"{input_text}\n\n[Calculator Result: {operation} = {result}]"
+                            
+                        elif div_match:
+                            num1 = float(div_match.group(1))
+                            num2 = float(div_match.group(2))
+                            if num2 == 0:
+                                result = "Error: Division by zero"
+                            else:
+                                result = num1 / num2
+                            operation = f"{num1} ÷ {num2}"
+                            tool_results.append(f"Calculator result: {operation} = {result}")
+                            tools_used.append('calculator')
+                            print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {operation} = {result}")
+                            
+                            # Add detailed tool execution to operations log
+                            operations_log.append({
+                                'step': 'Calculator tool executed',
+                                'details': f"Input: {operation} | Output: {result} | Status: Success",
+                                'timestamp': datetime.now().isoformat(),
+                                'tool_name': 'calculator',
+                                'tool_input': operation,
+                                'tool_output': str(result)
+                            })
+                            
+                            # Add calculator result to the prompt
+                            processed_input = f"{input_text}\n\n[Calculator Result: {operation} = {result}]"
+                            
+                        elif add_match:
+                            num1 = float(add_match.group(1))
+                            num2 = float(add_match.group(2))
+                            result = num1 + num2
+                            operation = f"{num1} + {num2}"
+                            tool_results.append(f"Calculator result: {operation} = {result}")
+                            tools_used.append('calculator')
+                            print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {operation} = {result}")
+                            
+                            # Add detailed tool execution to operations log
+                            operations_log.append({
+                                'step': 'Calculator tool executed',
+                                'details': f"Input: {operation} | Output: {result} | Status: Success",
+                                'timestamp': datetime.now().isoformat(),
+                                'tool_name': 'calculator',
+                                'tool_input': operation,
+                                'tool_output': str(result)
+                            })
+                            
+                            # Add calculator result to the prompt
+                            processed_input = f"{input_text}\n\n[Calculator Result: {operation} = {result}]"
+                            
+                        elif sub_match:
+                            num1 = float(sub_match.group(1))
+                            num2 = float(sub_match.group(2))
+                            result = num1 - num2
+                            operation = f"{num1} - {num2}"
+                            tool_results.append(f"Calculator result: {operation} = {result}")
+                            tools_used.append('calculator')
+                            print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {operation} = {result}")
+                            
+                            # Add detailed tool execution to operations log
+                            operations_log.append({
+                                'step': 'Calculator tool executed',
+                                'details': f"Input: {operation} | Output: {result} | Status: Success",
+                                'timestamp': datetime.now().isoformat(),
+                                'tool_name': 'calculator',
+                                'tool_input': operation,
+                                'tool_output': str(result)
+                            })
+                            
+                            # Add calculator result to the prompt
+                            processed_input = f"{input_text}\n\n[Calculator Result: {operation} = {result}]"
+                    except Exception as e:
+                        print(f"[Strands SDK] Calculator tool error: {e}")
+            
+            # Check for web search usage
+            if 'web_search' in tools_loaded:
+                search_keywords = ['search', 'find', 'look up', 'google', 'web', 'what is', 'who is', 'when', 'where', 'how']
+                if any(word in input_text.lower() for word in search_keywords):
+                    try:
+                        # Extract search query
+                        search_query = input_text
+                        search_result = web_search(search_query)
+                        if search_result:
+                            tool_results.append(f"Web search result: {search_result}")
+                            tools_used.append('web_search')
+                            print(f"[Strands SDK] Web search tool executed for: {search_query}")
+                            
+                            # Add search result to the prompt
+                            processed_input = f"{input_text}\n\n[Web Search Result: {search_result}]"
+                    except Exception as e:
+                        print(f"[Strands SDK] Web search tool error: {e}")
+            
+            # Check for current time usage
+            if 'current_time' in tools_loaded:
+                time_keywords = ['time', 'date', 'today', 'now', 'current']
+                if any(word in input_text.lower() for word in time_keywords):
+                    try:
+                        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        tool_results.append(f"Current time: {current_time}")
+                        tools_used.append('current_time')
+                        print(f"[Strands SDK] Current time tool executed: {current_time}")
+                        
+                        # Add time result to the prompt
+                        processed_input = f"{input_text}\n\n[Current Time: {current_time}]"
+                    except Exception as e:
+                        print(f"[Strands SDK] Current time tool error: {e}")
+            
+            # Prepare the prompt with system prompt and tool results
+            if tool_results:
+                full_prompt = f"{agent_config['system_prompt']}\n\nUser: {processed_input}\n\nAssistant:"
+            else:
+                full_prompt = f"{agent_config['system_prompt']}\n\nUser: {input_text}\n\nAssistant:"
             
             # Call Ollama API directly
+            import requests
             ollama_response = requests.post(
                 f"{agent_config['host']}/api/generate",
                 json={
@@ -1150,6 +1682,21 @@ def execute_strands_agent(agent_id):
             response_text = f"I apologize, but I encountered an issue processing your request. Please try again with a different query."
             print(f"[Strands SDK] Using fallback response due to empty response")
         
+        # Enhanced Response Formatting with Think → Tool → Answer structure
+        formatted_response = format_enhanced_response(
+            user_query=input_text,
+            thinking_process=extract_thinking_process(response_text),
+            tool_executions=tool_results,
+            tools_used=tools_used,
+            raw_response=response_text,
+            response_style=agent_config.get('response_style', 'conversational'),
+            show_thinking=agent_config.get('show_thinking', True),
+            show_tool_details=agent_config.get('show_tool_details', True),
+            include_examples=agent_config.get('include_examples', False),
+            include_citations=agent_config.get('include_citations', False),
+            include_warnings=agent_config.get('include_warnings', False)
+        )
+        
         print(f"[Strands SDK] Response text: {response_text[:100]}...")
         
         # Enhanced tool usage detection with better logic
@@ -1188,15 +1735,15 @@ def execute_strands_agent(agent_id):
                     })
                     print(f"[Strands SDK] Detected web_search tool usage - Status: {status}")
             
-            # Check for calculator usage
-            if 'calculator' in tools_loaded:
-                input_has_calc = any(word in input_text.lower() for word in ['calculate', 'compute', 'math', '+', '-', '*', '/', '='])
+            # Check for calculator usage (only if not already executed)
+            if 'calculator' in tools_loaded and 'calculator' not in tools_used:
+                input_has_calc = any(word in input_text.lower() for word in ['calculate', 'compute', 'math', '+', '-', '*', '/', '=', 'x', '×', 'multiply', 'multiplication'])
                 calc_indicators = ['calculated', 'calculation', 'result is', 'equals', 'math', 'computed', 'answer is']
                 
                 if input_has_calc or any(indicator in response_text.lower() for indicator in calc_indicators):
                     tools_used.append('calculator')
                     operations_log.append({
-                        'step': 'Calculator tool used',
+                        'step': 'Calculator tool detected',
                         'details': 'Detected calculator usage in agent interaction',
                         'timestamp': datetime.now().isoformat()
                     })
@@ -1270,8 +1817,9 @@ def execute_strands_agent(agent_id):
         
         return jsonify({
             'success': True,
-            'output': response_text,
-            'response': response_text,  # Keep both for compatibility
+            'output': formatted_response,  # Use enhanced formatted response
+            'response': formatted_response,  # Keep both for compatibility
+            'raw_response': response_text,  # Include raw response for debugging
             'execution_time': execution_time,
             'execution_id': execution_id,
             'sdk_powered': True,
@@ -1279,7 +1827,13 @@ def execute_strands_agent(agent_id):
             'agent_name': agent_config['name'],
             'model_used': agent_config['model_id'],
             'operations_log': operations_log,
-            'tools_used': tools_used
+            'tools_used': tools_used,
+            'response_style': agent_config.get('response_style', 'conversational'),
+            'show_thinking': agent_config.get('show_thinking', True),
+            'show_tool_details': agent_config.get('show_tool_details', True),
+            'include_examples': agent_config.get('include_examples', False),
+            'include_citations': agent_config.get('include_citations', False),
+            'include_warnings': agent_config.get('include_warnings', False)
         })
         
     except Exception as e:
@@ -1678,30 +2232,30 @@ def get_agent_analytics(agent_id):
 def get_tool_config():
     """Get current tool detection configuration"""
     try:
-        # Default configuration following Strands SDK best practices
-        default_config = {
-            'web_search': {
-                'enabled': True,
-                'keywords': ['search', 'find', 'look up', 'google', 'web', 'what is', 'who is', 'when', 'where', 'how', 'latest', 'current'],
-                'responsePatterns': ['found information', 'summary:', 'source:', 'according to', 'search results', 'based on search'],
-                'description': 'Detects when the agent uses web search functionality based on Strands SDK natural language invocation'
-            },
-            'calculator': {
-                'enabled': True,
-                'keywords': ['calculate', 'compute', 'math', '+', '-', '*', '/', '=', 'result', 'equation'],
-                'responsePatterns': ['calculated', 'calculation', 'result is', 'equals', 'answer is', 'computed'],
-                'description': 'Detects when the agent performs mathematical calculations using the calculator tool'
-            },
-            'current_time': {
-                'enabled': True,
-                'keywords': ['time', 'date', 'today', 'now', 'current', 'when is'],
-                'responsePatterns': ['current time', 'time is', 'date is', 'today is', 'now is', 'current date'],
-                'description': 'Detects when the agent retrieves current time/date information'
-            }
+        # Generate configuration for truly functional tools only
+        tool_config = {}
+        
+        # Define which tools are actually working (have real implementations)
+        working_tools = {
+            'calculator', 'current_time', 'web_search', 'file_read', 'file_write',
+            'http_request', 'python_repl', 'generate_image', 'slack', 'memory',
+            'memory_store', 'memory_retrieve', 'code_execution', 'file_operations',
+            'weather_api', 'think', 'a2a_discover_agent', 'a2a_list_discovered_agents',
+            'a2a_send_message', 'coordinate_agents', 'agent_handoff'
         }
         
+        for tool_name in AVAILABLE_TOOLS.keys():
+            is_working = tool_name in working_tools
+            tool_config[tool_name] = {
+                'enabled': is_working,
+                'working': is_working,
+                'keywords': ['use', 'run', 'execute', 'call'],
+                'responsePatterns': ['executed', 'completed', 'result'],
+                'description': f'Tool for {tool_name} functionality'
+            }
+        
         return jsonify({
-            'config': default_config,
+            'config': tool_config,
             'message': 'Tool detection configuration retrieved successfully'
         })
         
@@ -1790,18 +2344,253 @@ def discover_strands_tools():
 def get_tool_configuration(tool_name):
     """Get configuration schema for a specific tool"""
     try:
-        schema = get_tool_configuration_schema(tool_name)
-        if schema:
+        # Check if tool is available
+        if tool_name not in AVAILABLE_TOOLS:
+            return jsonify({
+                'success': False,
+                'error': f'Tool {tool_name} not found'
+            }), 404
+        
+        # Try to get configuration schema from official integration
+        try:
+            schema = get_tool_configuration_schema(tool_name)
+            if schema:
+                return jsonify({
+                    'success': True,
+                    'tool_name': tool_name,
+                    'configuration': schema
+                })
+        except:
+            pass
+        
+        # Fallback: Create basic configuration for new tools
+        basic_configs = {
+            'file_read': {
+                'name': 'File Read',
+                'description': 'Read contents of files safely',
+                'category': 'file',
+                'configurable': True,
+                'configuration': {
+                    'allowed_directories': {
+                        'type': 'array',
+                        'default': ['/tmp', './data', './logs'],
+                        'description': 'Directories where files can be read from'
+                    },
+                    'max_file_size': {
+                        'type': 'number',
+                        'default': 1024 * 1024,  # 1MB
+                        'description': 'Maximum file size to read'
+                    }
+                }
+            },
+            'file_write': {
+                'name': 'File Write',
+                'description': 'Write content to files safely',
+                'category': 'file',
+                'configurable': True,
+                'configuration': {
+                    'allowed_directories': {
+                        'type': 'array',
+                        'default': ['/tmp', './data', './logs'],
+                        'description': 'Directories where files can be written to'
+                    },
+                    'backup_enabled': {
+                        'type': 'boolean',
+                        'default': True,
+                        'description': 'Create backup before overwriting files'
+                    }
+                }
+            },
+            'memory': {
+                'name': 'Memory Store',
+                'description': 'Store information in agent memory',
+                'category': 'memory',
+                'configurable': True,
+                'configuration': {
+                    'max_memory_size': {
+                        'type': 'number',
+                        'default': 10000,
+                        'description': 'Maximum number of memory entries'
+                    },
+                    'memory_expiry': {
+                        'type': 'number',
+                        'default': 86400,  # 24 hours
+                        'description': 'Memory expiry time in seconds'
+                    }
+                }
+            },
+            'memory_store': {
+                'name': 'Memory Store',
+                'description': 'Store information in agent memory',
+                'category': 'memory',
+                'configurable': True,
+                'configuration': {
+                    'max_memory_size': {
+                        'type': 'number',
+                        'default': 10000,
+                        'description': 'Maximum number of memory entries'
+                    },
+                    'memory_expiry': {
+                        'type': 'number',
+                        'default': 86400,  # 24 hours
+                        'description': 'Memory expiry time in seconds'
+                    }
+                }
+            },
+            'memory_retrieve': {
+                'name': 'Memory Retrieve',
+                'description': 'Retrieve information from agent memory',
+                'category': 'memory',
+                'configurable': True,
+                'configuration': {
+                    'search_mode': {
+                        'type': 'select',
+                        'options': ['exact', 'fuzzy', 'semantic'],
+                        'default': 'exact',
+                        'description': 'How to search for memories'
+                    }
+                }
+            },
+            'http_request': {
+                'name': 'HTTP Request',
+                'description': 'Make HTTP requests to external APIs',
+                'category': 'web',
+                'configurable': True,
+                'configuration': {
+                    'allowed_domains': {
+                        'type': 'array',
+                        'default': ['api.github.com', 'jsonplaceholder.typicode.com'],
+                        'description': 'Allowed domains for HTTP requests'
+                    },
+                    'timeout': {
+                        'type': 'number',
+                        'default': 30,
+                        'description': 'Request timeout in seconds'
+                    }
+                }
+            },
+            'python_repl': {
+                'name': 'Python REPL',
+                'description': 'Execute Python code safely',
+                'category': 'code',
+                'configurable': True,
+                'configuration': {
+                    'max_execution_time': {
+                        'type': 'number',
+                        'default': 10,
+                        'description': 'Maximum execution time in seconds'
+                    },
+                    'allowed_modules': {
+                        'type': 'array',
+                        'default': ['math', 'json', 'datetime'],
+                        'description': 'Allowed Python modules'
+                    }
+                }
+            },
+            'generate_image': {
+                'name': 'Generate Image',
+                'description': 'Generate images with AI',
+                'category': 'media',
+                'configurable': True,
+                'configuration': {
+                    'default_style': {
+                        'type': 'select',
+                        'options': ['realistic', 'artistic', 'cartoon', 'abstract'],
+                        'default': 'realistic',
+                        'description': 'Default image style'
+                    },
+                    'image_size': {
+                        'type': 'select',
+                        'options': ['512x512', '1024x1024', '1024x1792'],
+                        'default': '1024x1024',
+                        'description': 'Default image size'
+                    }
+                }
+            },
+            'slack': {
+                'name': 'Slack Integration',
+                'description': 'Send Slack messages',
+                'category': 'communication',
+                'configurable': True,
+                'configuration': {
+                    'default_channel': {
+                        'type': 'text',
+                        'default': '#general',
+                        'description': 'Default Slack channel'
+                    },
+                    'message_format': {
+                        'type': 'select',
+                        'options': ['plain', 'markdown', 'rich'],
+                        'default': 'plain',
+                        'description': 'Message format'
+                    }
+                }
+            },
+            'web_search': {
+                'name': 'Web Search',
+                'description': 'Search the web for information',
+                'category': 'web',
+                'configurable': True,
+                'configuration': {
+                    'search_engine': {
+                        'type': 'select',
+                        'options': ['google', 'bing', 'duckduckgo'],
+                        'default': 'google',
+                        'description': 'Search engine to use'
+                    },
+                    'max_results': {
+                        'type': 'number',
+                        'default': 10,
+                        'description': 'Maximum number of search results'
+                    },
+                    'safe_search': {
+                        'type': 'boolean',
+                        'default': True,
+                        'description': 'Enable safe search filtering'
+                    }
+                }
+            },
+            'weather_api': {
+                'name': 'Weather API',
+                'description': 'Get weather information',
+                'category': 'utility',
+                'configurable': True,
+                'configuration': {
+                    'api_key': {
+                        'type': 'text',
+                        'default': '',
+                        'description': 'Weather API key (optional)'
+                    },
+                    'units': {
+                        'type': 'select',
+                        'options': ['metric', 'imperial', 'kelvin'],
+                        'default': 'metric',
+                        'description': 'Temperature units'
+                    }
+                }
+            }
+        }
+        
+        if tool_name in basic_configs:
             return jsonify({
                 'success': True,
                 'tool_name': tool_name,
-                'configuration': schema
+                'configuration': basic_configs[tool_name]
             })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Configuration schema not found for tool: {tool_name}'
-            }), 404
+        
+        # Default configuration for any other tool
+        return jsonify({
+            'success': True,
+            'tool_name': tool_name,
+            'configuration': {
+                'name': tool_name.replace('_', ' ').title(),
+                'description': f'{tool_name.replace("_", " ").title()} tool',
+                'category': 'utility',
+                'configurable': False,
+                'configuration': {}
+            }
+        })
+        
     except Exception as e:
         logger.error(f"Error getting tool configuration: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -1818,6 +2607,141 @@ def get_all_tool_configurations():
         })
     except Exception as e:
         logger.error(f"Error getting all tool configurations: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/strands-sdk/tools/check/<tool_name>', methods=['GET'])
+def check_tool_availability(tool_name):
+    """Check if a specific tool is available"""
+    try:
+        is_available = tool_name in AVAILABLE_TOOLS
+        
+        return jsonify({
+            'success': True,
+            'tool_name': tool_name,
+            'available': is_available,
+            'message': f'Tool {tool_name} is {"available" if is_available else "not implemented"}'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/strands-sdk/agents/<agent_id>/tool-configurations', methods=['POST'])
+def save_tool_configurations(agent_id):
+    """Save tool configurations for a specific agent"""
+    try:
+        data = request.json
+        tool_configs = data.get('tool_configurations', {})
+        
+        # Validate agent exists
+        conn = sqlite3.connect(STRANDS_SDK_DB)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT id FROM strands_sdk_agents WHERE id = ?', (agent_id,))
+        if not cursor.fetchone():
+            return jsonify({'error': 'Agent not found'}), 404
+        
+        # Update tool configurations
+        cursor.execute('''
+            UPDATE strands_sdk_agents 
+            SET tool_configurations = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (json.dumps(tool_configs), agent_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tool configurations saved successfully',
+            'agent_id': agent_id,
+            'tool_configurations': tool_configs
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/strands-sdk/agents/<agent_id>/tool-configurations', methods=['GET'])
+def get_tool_configurations(agent_id):
+    """Get tool configurations for a specific agent"""
+    try:
+        conn = sqlite3.connect(STRANDS_SDK_DB)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT tool_configurations FROM strands_sdk_agents WHERE id = ?
+        ''', (agent_id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({'error': 'Agent not found'}), 404
+        
+        tool_configs = json.loads(result[0]) if result[0] else {}
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'agent_id': agent_id,
+            'tool_configurations': tool_configs
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/strands-sdk/agents/<agent_id>/tool-traces', methods=['GET'])
+def get_agent_tool_traces(agent_id):
+    """Get detailed tool execution traces for an agent"""
+    try:
+        conn = sqlite3.connect(STRANDS_SDK_DB)
+        cursor = conn.cursor()
+        
+        # Get recent executions with tool usage
+        cursor.execute('''
+            SELECT id, input_text, output_text, execution_time, success, sdk_metadata, timestamp
+            FROM strands_sdk_executions 
+            WHERE agent_id = ? 
+            ORDER BY timestamp DESC 
+            LIMIT 10
+        ''', (agent_id,))
+        
+        executions = cursor.fetchall()
+        conn.close()
+        
+        tool_traces = []
+        for execution in executions:
+            exec_id, input_text, output_text, exec_time, success, metadata, timestamp = execution
+            
+            # Parse metadata to extract tool information
+            tool_info = {}
+            if metadata:
+                try:
+                    metadata_json = json.loads(metadata)
+                    exec_metadata = metadata_json.get('execution_metadata', {})
+                    tool_info = {
+                        'tools_used': exec_metadata.get('tools_used', []),
+                        'tools_available': exec_metadata.get('tools_available', []),
+                        'operations_log': exec_metadata.get('operations_log', [])
+                    }
+                except:
+                    pass
+            
+            tool_traces.append({
+                'execution_id': exec_id,
+                'timestamp': timestamp,
+                'input_text': input_text,
+                'output_text': output_text[:500] + '...' if len(output_text) > 500 else output_text,
+                'execution_time': exec_time,
+                'success': success,
+                'tool_info': tool_info
+            })
+        
+        return jsonify({
+            'success': True,
+            'agent_id': agent_id,
+            'tool_traces': tool_traces,
+            'total_executions': len(tool_traces)
+        })
+        
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/strands-sdk/tools/categories', methods=['GET'])

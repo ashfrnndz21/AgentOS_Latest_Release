@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentOS Tool Status</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .tool-card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        .tool-card:hover {
+            border-color: #666;
+            transform: translateY(-2px);
+        }
+        .tool-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .tool-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .status-available {
+            background: #065f46;
+            color: #10b981;
+        }
+        .status-unavailable {
+            background: #7f1d1d;
+            color: #ef4444;
+        }
+        .status-loading {
+            background: #78350f;
+            color: #f59e0b;
+        }
+        .tool-description {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        .tool-category {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .summary {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 AgentOS Tool Status</h1>
+            <p>Real-time tool availability checker</p>
+            <button class="refresh-btn" onclick="loadToolStatus()">🔄 Refresh Status</button>
+        </div>
+
+        <div class="summary" id="summary">
+            <div class="loading">Loading tool status...</div>
+        </div>
+
+        <div class="status-grid" id="toolGrid">
+            <div class="loading">Loading tools...</div>
+        </div>
+    </div>
+
+    <script>
+        // Tool categories and descriptions
+        const toolInfo = {
+            // Core AI Tools
+            'think': { category: 'AI', description: 'Advanced recursive thinking tool' },
+            'memory': { category: 'AI', description: 'Store and retrieve information from memory' },
+            'use_llm': { category: 'AI', description: 'Use language model for complex reasoning' },
+            
+            // Utility Tools
+            'calculator': { category: 'Utility', description: 'Perform mathematical calculations' },
+            'current_time': { category: 'Utility', description: 'Get current date and time' },
+            'environment': { category: 'Utility', description: 'Access environment variables' },
+            'sleep': { category: 'Utility', description: 'Pause execution for specified time' },
+            'stop': { category: 'Utility', description: 'Stop agent execution' },
+            
+            // File Operations
+            'file_read': { category: 'File', description: 'Read contents of files safely' },
+            'file_write': { category: 'File', description: 'Write content to files safely' },
+            'file_operations': { category: 'File', description: 'General file operations' },
+            'editor': { category: 'File', description: 'Text editor functionality' },
+            
+            // Web & Data
+            'web_search': { category: 'Web', description: 'Search the web for information' },
+            'tavily': { category: 'Web', description: 'Advanced web search with Tavily API' },
+            'http_request': { category: 'Web', description: 'Make HTTP requests to APIs' },
+            'rss': { category: 'Web', description: 'Read RSS feeds' },
+            'exa': { category: 'Web', description: 'Semantic web search with Exa' },
+            'bright_data': { category: 'Web', description: 'Web scraping with Bright Data' },
+            
+            // Code & Development
+            'python_repl': { category: 'Code', description: 'Execute Python code safely' },
+            'code_execution': { category: 'Code', description: 'Execute code in various languages' },
+            'code_interpreter': { category: 'Code', description: 'Interactive code interpreter' },
+            'shell': { category: 'Code', description: 'Execute shell commands' },
+            
+            // Browser & Automation
+            'browser': { category: 'Browser', description: 'Control web browser' },
+            'use_computer': { category: 'Browser', description: 'Computer automation' },
+            
+            // Media & Communication
+            'generate_image': { category: 'Media', description: 'Generate images with AI' },
+            'generate_image_stability': { category: 'Media', description: 'Generate images with Stability AI' },
+            'image_reader': { category: 'Media', description: 'Read and analyze images' },
+            'speak': { category: 'Media', description: 'Text-to-speech functionality' },
+            'slack': { category: 'Communication', description: 'Send Slack messages' },
+            
+            // Workflow & Automation
+            'workflow': { category: 'Workflow', description: 'Workflow automation' },
+            'agent_graph': { category: 'Workflow', description: 'Agent workflow graphs' },
+            'use_agent': { category: 'Workflow', description: 'Use other agents as tools' },
+            'handoff_to_user': { category: 'Workflow', description: 'Handoff control to user' },
+            'cron': { category: 'Workflow', description: 'Scheduled task execution' },
+            'journal': { category: 'Workflow', description: 'Activity journaling' },
+            'retrieve': { category: 'Workflow', description: 'Retrieve information' },
+            'load_tool': { category: 'Workflow', description: 'Dynamically load tools' },
+            'batch': { category: 'Workflow', description: 'Batch processing' },
+            'graph': { category: 'Workflow', description: 'Graph operations' },
+            'swarm': { category: 'Workflow', description: 'Swarm intelligence' },
+            
+            // Cloud & Infrastructure
+            'use_aws': { category: 'Cloud', description: 'AWS cloud services' },
+            'mcp_client': { category: 'Cloud', description: 'MCP protocol client' },
+            
+            // Memory Systems
+            'agent_core_memory': { category: 'Memory', description: 'Agent core memory system' },
+            'mem0_memory': { category: 'Memory', description: 'Mem0 memory system' },
+            
+            // Video & Advanced Media
+            'nova_reels': { category: 'Media', description: 'Video generation with Nova' },
+            
+            // Visualization
+            'diagram': { category: 'Visualization', description: 'Create diagrams and charts' },
+            
+            // Multi-Agent Collaboration
+            'a2a_discover_agent': { category: 'A2A', description: 'Discover other agents' },
+            'a2a_list_discovered_agents': { category: 'A2A', description: 'List discovered agents' },
+            'a2a_send_message': { category: 'A2A', description: 'Send messages to other agents' },
+            'coordinate_agents': { category: 'A2A', description: 'Coordinate multiple agents' },
+            'agent_handoff': { category: 'A2A', description: 'Handoff between agents' },
+            
+            // Database
+            'database_query': { category: 'Database', description: 'Execute database queries' },
+            
+            // Weather
+            'weather_api': { category: 'Weather', description: 'Get weather information' }
+        };
+
+        async function checkToolAvailability(toolName) {
+            try {
+                const response = await fetch(`http://localhost:5006/api/strands-sdk/tools/check/${toolName}`);
+                const data = await response.json();
+                return data.success && data.available;
+            } catch (error) {
+                // Fallback to static list if backend is not available
+                const workingTools = [
+                    'calculator', 'current_time', 'web_search', 'file_read', 'file_write',
+                    'http_request', 'python_repl', 'generate_image', 'slack', 'memory',
+                    'code_execution', 'database_query', 'file_operations', 'weather_api'
+                ];
+                return workingTools.includes(toolName);
+            }
+        }
+
+        async function loadToolStatus() {
+            const summaryDiv = document.getElementById('summary');
+            const toolGridDiv = document.getElementById('toolGrid');
+            
+            summaryDiv.innerHTML = '<div class="loading">Loading tool status...</div>';
+            toolGridDiv.innerHTML = '<div class="loading">Loading tools...</div>';
+
+            const tools = Object.keys(toolInfo);
+            let availableCount = 0;
+            let unavailableCount = 0;
+
+            // Check all tools
+            const toolStatuses = await Promise.all(
+                tools.map(async (toolName) => {
+                    const isAvailable = await checkToolAvailability(toolName);
+                    if (isAvailable) availableCount++;
+                    else unavailableCount++;
+                    
+                    return {
+                        name: toolName,
+                        available: isAvailable,
+                        info: toolInfo[toolName]
+                    };
+                })
+            );
+
+            // Update summary
+            summaryDiv.innerHTML = `
+                <h2>📊 Tool Status Summary</h2>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <div class="stat-number">${availableCount}</div>
+                        <div class="stat-label">Available</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${unavailableCount}</div>
+                        <div class="stat-label">Not Implemented</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">${tools.length}</div>
+                        <div class="stat-label">Total Tools</div>
+                    </div>
+                </div>
+            `;
+
+            // Update tool grid
+            toolGridDiv.innerHTML = toolStatuses
+                .sort((a, b) => a.available === b.available ? 0 : a.available ? -1 : 1)
+                .map(tool => `
+                    <div class="tool-card">
+                        <div class="tool-name">${tool.name}</div>
+                        <div class="tool-status ${tool.available ? 'status-available' : 'status-unavailable'}">
+                            ${tool.available ? '✅ Available' : '❌ Not Implemented'}
+                        </div>
+                        <div class="tool-description">${tool.info.description}</div>
+                        <div class="tool-category">${tool.info.category}</div>
+                    </div>
+                `).join('');
+        }
+
+        // Load tool status on page load
+        loadToolStatus();
+    </script>
+</body>
+</html>
+

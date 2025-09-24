@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Tool Selection Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            margin-bottom: 15px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .legend {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        .summary {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .working-count {
+            color: #10b981;
+        }
+        .not-implemented-count {
+            color: #ef4444;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .tool-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid;
+        }
+        .tool-item.working {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .tool-item.not-implemented {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .tool-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tool-checkbox {
+            width: 16px;
+            height: 16px;
+        }
+        .tool-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .tool-label.disabled {
+            color: #6b7280;
+        }
+        .tool-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-working {
+            background: #10b981;
+            color: white;
+        }
+        .status-not-implemented {
+            background: #ef4444;
+            color: white;
+        }
+        .gear-icon {
+            width: 16px;
+            height: 16px;
+            color: #6b7280;
+            cursor: pointer;
+        }
+        .gear-icon:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Available Tools</div>
+                <div class="legend">✅ Green = Working | ❌ Red = Not Implemented</div>
+                <div class="summary">
+                    <span class="working-count">✅ 14 Working Tools</span>
+                    <span class="not-implemented-count">❌ 39 Not Implemented</span>
+                </div>
+            </div>
+            
+            <div class="tools-grid">
+                <!-- Working Tools -->
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" checked>
+                        <span class="tool-label">Calculator</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" checked>
+                        <span class="tool-label">Current Time</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox">
+                        <span class="tool-label">Web Search</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox">
+                        <span class="tool-label">File Read</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox">
+                        <span class="tool-label">File Write</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item working">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox">
+                        <span class="tool-label">Memory</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-working">✅ Working</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <!-- Not Implemented Tools -->
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Think</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Use Llm</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Sleep</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Environment</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Stop</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Editor</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="tool-item not-implemented">
+                    <div class="tool-left">
+                        <input type="checkbox" class="tool-checkbox" disabled>
+                        <span class="tool-label disabled">Tavily</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tool-status status-not-implemented">❌ Not Implemented</span>
+                        <span class="gear-icon">⚙️</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>🎯 What You'll See Now</h3>
+            <ul>
+                <li><strong>Green borders & badges</strong> = Tools that actually work</li>
+                <li><strong>Red borders & badges</strong> = Tools that are not implemented</li>
+                <li><strong>Disabled checkboxes</strong> = You can't select non-working tools</li>
+                <li><strong>Summary counts</strong> = Shows exactly how many tools work</li>
+                <li><strong>Visual clarity</strong> = No more guessing which tools work!</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

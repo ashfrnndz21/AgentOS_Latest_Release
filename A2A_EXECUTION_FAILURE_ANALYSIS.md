@@ -201,3 +201,4 @@ const handleDocumentQuery = async (query: string, documents: string[]) => {
 ```
 
 The key is to **fix the model configuration** and **implement proper error handling** like the Intelligent Query Processing interface does.
+

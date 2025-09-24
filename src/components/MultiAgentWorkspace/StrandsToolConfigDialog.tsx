@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Settings, 
   Search, 
@@ -15,7 +16,10 @@ import {
   Clock, 
   Plus, 
   Trash2,
-  Info
+  Info,
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 interface ToolDetectionConfig {
@@ -32,11 +36,25 @@ interface StrandsToolConfig {
   [key: string]: ToolDetectionConfig;
 }
 
+interface ToolConfigurationSchema {
+  name: string;
+  description: string;
+  category: string;
+  configurable: boolean;
+  configuration: Record<string, {
+    type: 'text' | 'number' | 'boolean' | 'select' | 'array';
+    default: any;
+    description: string;
+    options?: string[];
+  }>;
+}
+
 interface StrandsToolConfigDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (config: StrandsToolConfig) => void;
   initialConfig?: StrandsToolConfig;
+  toolName?: string;
 }
 
 const defaultConfig: StrandsToolConfig = {
@@ -75,6 +93,54 @@ const defaultConfig: StrandsToolConfig = {
     keywords: ['coordinate', 'orchestrate', 'manage agents', 'multi-agent', 'collaboration'],
     responsePatterns: ['coordination complete', 'agents coordinated', 'task distributed', 'collaboration result'],
     description: 'Detects when the agent coordinates multiple agents for complex tasks'
+  },
+  file_read: {
+    enabled: true,
+    keywords: ['read', 'file', 'open', 'load', 'get file', 'file contents', 'read file'],
+    responsePatterns: ['file contents', 'read successfully', 'file content of', 'opened file'],
+    description: 'Detects when the agent reads files'
+  },
+  file_write: {
+    enabled: true,
+    keywords: ['write', 'save', 'file', 'create file', 'write to', 'save to', 'file write'],
+    responsePatterns: ['successfully wrote', 'file saved', 'content written', 'file created'],
+    description: 'Detects when the agent writes to files'
+  },
+  memory_store: {
+    enabled: true,
+    keywords: ['remember', 'store', 'save', 'memory', 'memorize', 'keep in mind'],
+    responsePatterns: ['stored memory', 'remembered', 'saved to memory', 'memory stored'],
+    description: 'Detects when the agent stores information in memory'
+  },
+  memory_retrieve: {
+    enabled: true,
+    keywords: ['recall', 'remember', 'memory', 'retrieve', 'get from memory', 'recall from'],
+    responsePatterns: ['memory retrieved', 'recalled from memory', 'memory found', 'from memory'],
+    description: 'Detects when the agent retrieves information from memory'
+  },
+  http_request: {
+    enabled: true,
+    keywords: ['http', 'request', 'api', 'call', 'fetch', 'get data', 'web request'],
+    responsePatterns: ['http request', 'api call', 'request sent', 'response received'],
+    description: 'Detects when the agent makes HTTP requests'
+  },
+  python_repl: {
+    enabled: true,
+    keywords: ['python', 'code', 'execute', 'run code', 'programming', 'script'],
+    responsePatterns: ['code executed', 'python code', 'execution result', 'script run'],
+    description: 'Detects when the agent executes Python code'
+  },
+  generate_image: {
+    enabled: true,
+    keywords: ['image', 'picture', 'generate', 'create image', 'draw', 'visual'],
+    responsePatterns: ['image generated', 'picture created', 'visual generated', 'image created'],
+    description: 'Detects when the agent generates images'
+  },
+  slack: {
+    enabled: true,
+    keywords: ['slack', 'message', 'send message', 'notify', 'chat', 'team message'],
+    responsePatterns: ['slack message', 'message sent', 'notification sent', 'team notified'],
+    description: 'Detects when the agent sends Slack messages'
   }
 };
 
@@ -82,12 +148,17 @@ const StrandsToolConfigDialog: React.FC<StrandsToolConfigDialogProps> = ({
   open,
   onClose,
   onSave,
-  initialConfig
+  initialConfig,
+  toolName
 }) => {
   const [config, setConfig] = useState<StrandsToolConfig>(initialConfig || defaultConfig);
   const [newKeyword, setNewKeyword] = useState('');
   const [newPattern, setNewPattern] = useState('');
   const [selectedTool, setSelectedTool] = useState<string>('web_search');
+  const [toolSchema, setToolSchema] = useState<ToolConfigurationSchema | null>(null);
+  const [toolConfigValues, setToolConfigValues] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update config when initialConfig changes
   React.useEffect(() => {
@@ -96,9 +167,136 @@ const StrandsToolConfigDialog: React.FC<StrandsToolConfigDialogProps> = ({
     }
   }, [initialConfig]);
 
+  // Fetch tool configuration schema when dialog opens
+  useEffect(() => {
+    if (open && toolName) {
+      fetchToolConfiguration(toolName);
+    }
+  }, [open, toolName]);
+
+  const fetchToolConfiguration = async (tool: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:5006/api/strands-sdk/tools/configuration/${tool}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch configuration: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        setToolSchema(data.configuration);
+        // Initialize config values with defaults
+        const initialValues: Record<string, any> = {};
+        Object.entries(data.configuration.configuration || {}).forEach(([key, config]: [string, any]) => {
+          initialValues[key] = config.default;
+        });
+        setToolConfigValues(initialValues);
+      } else {
+        setError(data.error || 'Failed to load configuration');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = () => {
     onSave(config);
     onClose();
+  };
+
+  const updateToolConfigValue = (key: string, value: any) => {
+    setToolConfigValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const renderConfigField = (key: string, fieldConfig: any) => {
+    const value = toolConfigValues[key] ?? fieldConfig.default;
+    
+    switch (fieldConfig.type) {
+      case 'boolean':
+        return (
+          <Switch
+            checked={value}
+            onCheckedChange={(checked) => updateToolConfigValue(key, checked)}
+            className="data-[state=checked]:bg-purple-600"
+          />
+        );
+      
+      case 'select':
+        return (
+          <Select value={value} onValueChange={(newValue) => updateToolConfigValue(key, newValue)}>
+            <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <SelectValue placeholder="Select option" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              {fieldConfig.options?.map((option: string) => (
+                <SelectItem key={option} value={option} className="text-white hover:bg-gray-700">
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'number':
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) => updateToolConfigValue(key, parseFloat(e.target.value) || 0)}
+            className="bg-gray-700 border-gray-600 text-white"
+          />
+        );
+      
+      case 'array':
+        return (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add item..."
+                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement;
+                    const newArray = [...(value || []), input.value];
+                    updateToolConfigValue(key, newArray);
+                    input.value = '';
+                  }
+                }}
+              />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {(value || []).map((item: string, index: number) => (
+                <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
+                  {item}
+                  <button
+                    onClick={() => {
+                      const newArray = value.filter((_: any, i: number) => i !== index);
+                      updateToolConfigValue(key, newArray);
+                    }}
+                    className="ml-1 hover:text-red-500"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        );
+      
+      default: // text
+        return (
+          <Input
+            value={value}
+            onChange={(e) => updateToolConfigValue(key, e.target.value)}
+            className="bg-gray-700 border-gray-600 text-white"
+          />
+        );
+    }
   };
 
   const updateToolConfig = (toolName: string, updates: Partial<ToolDetectionConfig>) => {
@@ -167,7 +365,7 @@ const StrandsToolConfigDialog: React.FC<StrandsToolConfigDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Settings className="h-5 w-5 text-purple-400" />
-            Strands Tool Detection Configuration
+            Configure Tool: {toolName || 'Unknown'}
             <Badge variant="secondary" className="bg-purple-100 text-purple-700">
               Official SDK
             </Badge>
@@ -175,146 +373,86 @@ const StrandsToolConfigDialog: React.FC<StrandsToolConfigDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="bg-purple-900/20 border border-purple-600 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <Info className="h-5 w-5 text-purple-400 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-purple-300">About Tool Detection</h4>
-                <p className="text-sm text-gray-300 mt-1">
-                  Configure how the system detects when Strands agents use tools. This follows Strands SDK patterns 
-                  where agents automatically invoke tools based on natural language, and we detect usage through 
-                  keywords and response patterns.
-                </p>
+          {loading && (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+              <span className="ml-2 text-gray-300">Loading tool configuration...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-900/20 border border-red-600 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-red-300">Configuration Error</h4>
+                  <p className="text-sm text-gray-300 mt-1">{error}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <Tabs value={selectedTool} onValueChange={setSelectedTool}>
-            <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-600">
-              {Object.keys(config || {}).map(toolName => (
-                <TabsTrigger 
-                  key={toolName} 
-                  value={toolName} 
-                  className="flex items-center gap-2 text-gray-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
-                >
-                  {getToolIcon(toolName)}
-                  {getToolDisplayName(toolName)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          {toolSchema && !loading && !error && (
+            <>
+              {/* Tool Info */}
+              <div className="bg-purple-900/20 border border-purple-600 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  {getToolIcon(toolName || '')}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{toolSchema.name}</h3>
+                    <p className="text-sm text-gray-300">{toolSchema.description}</p>
+                    <Badge variant="outline" className="mt-1 text-purple-400 border-purple-400">
+                      {toolSchema.category}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
 
-            {Object.entries(config || {}).map(([toolName, toolConfig]) => {
-              if (!toolConfig) return null;
-              
-              return (
-                <TabsContent key={toolName} value={toolName} className="space-y-4">
-                  <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-white">
-                        <div className="flex items-center gap-2">
-                          {getToolIcon(toolName)}
-                          {getToolDisplayName(toolName)} Configuration
-                        </div>
-                        <Switch
-                          checked={toolConfig.enabled}
-                          onCheckedChange={(enabled) => updateToolConfig(toolName, { enabled })}
-                        />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor={`${toolName}-description`} className="text-gray-300">Description</Label>
-                      <Textarea
-                        id={`${toolName}-description`}
-                        value={toolConfig.description}
-                        onChange={(e) => updateToolConfig(toolName, { description: e.target.value })}
-                        placeholder="Describe when this tool detection should trigger"
-                        className="mt-1 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-300">Input Keywords</Label>
-                      <p className="text-sm text-gray-400 mb-2">
-                        Keywords in user input that suggest this tool should be used
-                      </p>
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          value={newKeyword}
-                          onChange={(e) => setNewKeyword(e.target.value)}
-                          placeholder="Add keyword..."
-                          onKeyPress={(e) => e.key === 'Enter' && addKeyword(toolName)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                        />
-                        <Button onClick={() => addKeyword(toolName)} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                          <Plus className="h-4 w-4" />
-                        </Button>
+              {/* Configuration Section */}
+              {toolSchema.configurable && Object.keys(toolSchema.configuration).length > 0 && (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Settings className="h-5 w-5 text-purple-400" />
+                      Configuration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {Object.entries(toolSchema.configuration).map(([key, fieldConfig]) => (
+                      <div key={key} className="space-y-2">
+                        <Label className="text-gray-300 font-medium">
+                          {key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </Label>
+                        <p className="text-sm text-gray-400">{fieldConfig.description}</p>
+                        {renderConfigField(key, fieldConfig)}
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {toolConfig.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {keyword}
-                            <button
-                              onClick={() => removeKeyword(toolName, keyword)}
-                              className="ml-1 hover:text-red-600"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
-                    <div>
-                      <Label className="text-gray-300">Response Patterns</Label>
-                      <p className="text-sm text-gray-400 mb-2">
-                        Patterns in agent responses that indicate this tool was used
-                      </p>
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          value={newPattern}
-                          onChange={(e) => setNewPattern(e.target.value)}
-                          placeholder="Add response pattern..."
-                          onKeyPress={(e) => e.key === 'Enter' && addPattern(toolName)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                        />
-                        <Button onClick={() => addPattern(toolName)} size="sm" className="bg-purple-600 hover:bg-purple-700">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {toolConfig.responsePatterns.map((pattern, index) => (
-                          <Badge key={index} variant="outline" className="flex items-center gap-1">
-                            {pattern}
-                            <button
-                              onClick={() => removePattern(toolName, pattern)}
-                              className="ml-1 hover:text-red-600"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              );
-            })}
-          </Tabs>
+              {!toolSchema.configurable && (
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                    <span className="text-gray-300">This tool doesn't require configuration</span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
+          {/* Dialog Footer */}
           <div className="flex justify-end gap-2 pt-4 border-t border-gray-700">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
-            >
+            <Button variant="outline" onClick={onClose} className="border-gray-600 text-gray-300 hover:bg-gray-800">
               Cancel
             </Button>
             <Button 
               onClick={handleSave}
               className="bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={loading}
             >
+              <CheckCircle className="h-4 w-4 mr-2" />
               Save Configuration
             </Button>
           </div>

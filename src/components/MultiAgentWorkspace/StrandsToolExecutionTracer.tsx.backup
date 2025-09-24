@@ -1,0 +1,417 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Calculator, 
+  Search, 
+  Clock, 
+  FileText, 
+  Database, 
+  Code, 
+  Image, 
+  MessageSquare,
+  RefreshCw,
+  Download,
+  Eye,
+  Settings,
+  Zap,
+  CheckCircle,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+import { StrandsSdkToolTrace } from '@/lib/services/StrandsSdkService';
+
+// Using StrandsSdkToolTrace from service instead of local interface
+
+interface StrandsToolExecutionTracerProps {
+  agentId: string;
+  agentName: string;
+}
+
+const getToolIcon = (toolName: string) => {
+  switch (toolName) {
+    case 'calculator': return <Calculator className="h-4 w-4" />;
+    case 'web_search': return <Search className="h-4 w-4" />;
+    case 'current_time': return <Clock className="h-4 w-4" />;
+    case 'file_read': return <FileText className="h-4 w-4" />;
+    case 'file_write': return <FileText className="h-4 w-4" />;
+    case 'memory': return <Database className="h-4 w-4" />;
+    case 'memory_store': return <Database className="h-4 w-4" />;
+    case 'memory_retrieve': return <Database className="h-4 w-4" />;
+    case 'python_repl': return <Code className="h-4 w-4" />;
+    case 'generate_image': return <Image className="h-4 w-4" />;
+    case 'slack': return <MessageSquare className="h-4 w-4" />;
+    default: return <Settings className="h-4 w-4" />;
+  }
+};
+
+const getToolColor = (toolName: string) => {
+  switch (toolName) {
+    case 'calculator': return 'bg-green-600';
+    case 'web_search': return 'bg-blue-600';
+    case 'current_time': return 'bg-purple-600';
+    case 'file_read': return 'bg-orange-600';
+    case 'file_write': return 'bg-orange-600';
+    case 'memory': return 'bg-indigo-600';
+    case 'memory_store': return 'bg-indigo-600';
+    case 'memory_retrieve': return 'bg-indigo-600';
+    case 'python_repl': return 'bg-yellow-600';
+    case 'generate_image': return 'bg-pink-600';
+    case 'slack': return 'bg-green-600';
+    default: return 'bg-gray-600';
+  }
+};
+
+export const StrandsToolExecutionTracer: React.FC<StrandsToolExecutionTracerProps> = ({
+  agentId,
+  agentName
+}) => {
+  const [traces, setTraces] = useState<StrandsSdkToolTrace[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTrace, setSelectedTrace] = useState<StrandsSdkToolTrace | null>(null);
+
+  const fetchToolTraces = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:5006/api/strands-sdk/agents/${agentId}/tool-traces`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tool traces: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        setTraces(data.tool_traces);
+        // Auto-select the first trace if available and none selected
+        if (data.tool_traces.length > 0 && !selectedTrace) {
+          setSelectedTrace(data.tool_traces[0]);
+        }
+      } else {
+        setError(data.error || 'Failed to fetch tool traces');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch tool traces');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchToolTraces();
+  }, [agentId]);
+
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  const formatExecutionTime = (time: number) => {
+    return `${time.toFixed(2)}s`;
+  };
+
+  const exportTraces = () => {
+    const dataStr = JSON.stringify(traces, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tool-traces-${agentName}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="h-full bg-gray-900 text-white flex flex-col">
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Zap className="h-5 w-5 text-purple-400" />
+            <h2 className="text-lg font-semibold">Tool Execution Traces</h2>
+            <Badge variant="outline" className="text-purple-400 border-purple-400">
+              {agentName}
+            </Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchToolTraces}
+              disabled={loading}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportTraces}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {error && (
+          <div className="mx-4 mb-4 p-3 bg-red-900/20 border border-red-600 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-400" />
+              <span className="text-red-300 text-sm">{error}</span>
+            </div>
+          </div>
+        )}
+
+            <Tabs defaultValue="overview" className="flex-1 flex flex-col h-full">
+              <div className="px-4 flex-shrink-0">
+                <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-600 h-10">
+                  <TabsTrigger value="overview" className="text-gray-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-sm">
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="details" className="text-gray-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-sm">
+                    Details
+                  </TabsTrigger>
+                  <TabsTrigger value="operations" className="text-gray-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-sm">
+                    Operations
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+          <TabsContent value="overview" className="flex-1 flex flex-col p-4 space-y-4 overflow-hidden">
+            <div className="grid grid-cols-3 gap-4 flex-shrink-0">
+              <div className="bg-gray-800 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-400" />
+                  <span className="text-xs font-medium text-gray-300">Total Executions</span>
+                </div>
+                <div className="text-2xl font-bold text-white">{traces.length}</div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-blue-400" />
+                  <span className="text-xs font-medium text-gray-300">Tools Used</span>
+                </div>
+                <div className="text-2xl font-bold text-white">
+                  {traces.reduce((acc, trace) => acc + trace.tool_info.tools_used.length, 0)}
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Clock className="h-4 w-4 text-purple-400" />
+                  <span className="text-xs font-medium text-gray-300">Avg Time</span>
+                </div>
+                <div className="text-2xl font-bold text-white">
+                  {traces.length > 0 
+                    ? formatExecutionTime(traces.reduce((acc, trace) => acc + trace.execution_time, 0) / traces.length)
+                    : '0.00s'
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="space-y-3 pr-4 pb-4">
+                {traces.map((trace, index) => (
+                  <div
+                    key={trace.execution_id}
+                    className={`bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors border ${
+                      selectedTrace?.execution_id === trace.execution_id 
+                        ? 'border-purple-500 bg-purple-900/20' 
+                        : 'border-gray-700'
+                    }`}
+                    onClick={() => setSelectedTrace(trace)}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-medium text-white">#{index + 1}</span>
+                        {trace.success ? (
+                          <CheckCircle className="h-4 w-4 text-green-400" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-red-400" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTimestamp(trace.timestamp)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Zap className="h-3 w-3" />
+                          {formatExecutionTime(trace.execution_time)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <span className="text-xs font-medium text-gray-400">Input:</span>
+                      <p className="text-sm text-white mt-1 bg-gray-700 p-2 rounded text-xs line-clamp-2">{trace.input_text}</p>
+                    </div>
+                    
+                    {trace.tool_info.tools_used.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-400">Tools:</span>
+                        <div className="flex gap-1 flex-wrap">
+                          {trace.tool_info.tools_used.map((tool, toolIndex) => (
+                            <div key={toolIndex} className={`flex items-center gap-1 px-2 py-1 ${getToolColor(tool)} text-white rounded text-xs font-medium`}>
+                              {getToolIcon(tool)}
+                              <span>{tool}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="details" className="flex-1 flex flex-col p-4 overflow-hidden">
+            {selectedTrace ? (
+              <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full">
+                  <div className="space-y-4 pr-4 pb-4">
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-white mb-4">Execution Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-400">Execution ID:</span>
+                      <p className="text-sm text-white font-mono">{selectedTrace.execution_id}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-400">Timestamp:</span>
+                      <p className="text-sm text-white">{formatTimestamp(selectedTrace.timestamp)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-400">Execution Time:</span>
+                      <p className="text-sm text-white">{formatExecutionTime(selectedTrace.execution_time)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-400">Status:</span>
+                      <p className="text-sm text-white">
+                        {selectedTrace.success ? (
+                          <span className="text-green-400">✓ Success</span>
+                        ) : (
+                          <span className="text-red-400">✗ Failed</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <h3 className="text-lg font-medium text-white mb-3">Input & Output</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-400">Input:</span>
+                      <p className="text-sm text-white mt-1 bg-gray-700 p-2 rounded">{selectedTrace.input_text}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-400">Output:</span>
+                      <p className="text-sm text-white mt-1 bg-gray-700 p-2 rounded max-h-40 overflow-y-auto">
+                        {selectedTrace.output_text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <h3 className="text-lg font-medium text-white mb-3">Tools Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-sm text-gray-400">Tools Used:</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedTrace.tool_info.tools_used.map((tool, index) => (
+                          <div key={index} className={`flex items-center gap-1 px-2 py-1 ${getToolColor(tool)} text-white rounded text-xs`}>
+                            {getToolIcon(tool)}
+                            <span>{tool}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-400">Tools Available:</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedTrace.tool_info.tools_available.map((tool, index) => (
+                          <div key={index} className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded text-xs">
+                            {getToolIcon(tool)}
+                            <span>{tool}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select an execution from the Overview tab to see details</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="operations" className="flex-1 flex flex-col p-4 overflow-hidden">
+            {selectedTrace ? (
+              <div className="flex-1 overflow-hidden">
+                <div className="bg-gray-800 rounded-lg p-4 h-full flex flex-col">
+                  <h3 className="text-lg font-semibold text-white mb-3 flex-shrink-0">Operations Log</h3>
+                  <ScrollArea className="flex-1">
+                    <div className="space-y-3 pr-4 pb-4">
+                      {selectedTrace.tool_info.operations_log.map((operation, index) => (
+                        <div key={index} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-base font-medium text-white">{operation.step}</span>
+                              {operation.tool_name && (
+                                <div className={`flex items-center gap-2 px-3 py-1 ${getToolColor(operation.tool_name)} text-white rounded-lg text-sm font-medium`}>
+                                  {getToolIcon(operation.tool_name)}
+                                  <span>{operation.tool_name}</span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-400">
+                              {new Date(operation.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-3">{operation.details}</p>
+                          {operation.tool_input && operation.tool_output && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <span className="text-sm font-medium text-gray-400 mb-2 block">Input:</span>
+                                <p className="text-sm text-white font-mono bg-gray-600 p-3 rounded border">{operation.tool_input}</p>
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-400 mb-2 block">Output:</span>
+                                <p className="text-sm text-white font-mono bg-gray-600 p-3 rounded border">{operation.tool_output}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select an execution from the Overview tab to see operations</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default StrandsToolExecutionTracer;

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Code, Zap, CheckCircle, AlertCircle, Settings, Loader2, Download, RefreshCw, ArrowLeft } from 'lucide-react';
 import { strandsSdkService } from '@/lib/services/StrandsSdkService';
@@ -38,6 +38,12 @@ interface StrandsSdkAgentConfig {
   ollama_config: OllamaConfiguration;
   validate_execution?: boolean;
   a2a_enabled?: boolean;
+  response_style?: 'concise' | 'detailed' | 'conversational' | 'technical';
+  show_thinking?: boolean;
+  show_tool_details?: boolean;
+  include_examples?: boolean;
+  include_citations?: boolean;
+  include_warnings?: boolean;
 }
 
 const OLLAMA_MODELS = [
@@ -169,7 +175,10 @@ const STRANDS_TEMPLATES = [
     category: 'Creative',
     systemPrompt: 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.',
     ollama_config: { temperature: 0.8, max_tokens: 2000 },
-    tools: ['web_search', 'current_time']
+    tools: ['web_search', 'current_time'],
+    response_style: 'conversational',
+    show_thinking: true,
+    show_tool_details: true
   },
   {
     id: 'technical',
@@ -236,12 +245,22 @@ export function StrandsSdkAgentDialog({
       top_k: undefined
     },
     validate_execution: false, // Default to fast creation
-    a2a_enabled: true // Default to A2A enabled for automatic orchestration
+    a2a_enabled: true, // Default to A2A enabled for automatic orchestration
+    response_style: 'conversational',
+    show_thinking: true,
+    show_tool_details: true,
+    include_examples: false,
+    include_citations: false,
+    include_warnings: false
   });
 
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [toolAvailability, setToolAvailability] = useState<Record<string, boolean>>({});
+  const [availableTools, setAvailableTools] = useState<string[]>([]);
+  const [toolConfigurations, setToolConfigurations] = useState<Record<string, any>>({});
+  const [showToolConfigDialog, setShowToolConfigDialog] = useState<{tool: string, config: any} | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState<{[key: string]: number}>({});
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -252,6 +271,49 @@ export function StrandsSdkAgentDialog({
   const [selectedToolForConfig, setSelectedToolForConfig] = useState<string>('');
   const [showTemplateSelection, setShowTemplateSelection] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+  // Response style preview function
+  const getResponseStylePreview = (style: string) => {
+    const previews = {
+      concise: "**Answer:** The result is 42.",
+      conversational: "Hi! I'd be happy to help you with that. The answer is 42. Let me know if you need anything else!",
+      detailed: "**Detailed Analysis:**\nLet me break this down for you step by step. After analyzing the problem, I can confirm that the result is 42. This calculation involved several factors including...",
+      technical: "**Technical Response:**\nBased on the computational analysis, the output value is 42. This result was derived using the following methodology: [technical details]..."
+    };
+    return previews[style as keyof typeof previews] || previews.conversational;
+  };
+
+  // Response style templates with descriptions
+  const responseStyleTemplates = [
+    {
+      id: 'concise',
+      name: 'Concise',
+      description: 'Brief, direct answers',
+      icon: '⚡',
+      useCase: 'Quick answers, chatbots, mobile interfaces'
+    },
+    {
+      id: 'conversational',
+      name: 'Conversational',
+      description: 'Natural, friendly tone',
+      icon: '💬',
+      useCase: 'Customer service, personal assistants, general chat'
+    },
+    {
+      id: 'detailed',
+      name: 'Detailed',
+      description: 'Comprehensive explanations',
+      icon: '📚',
+      useCase: 'Educational content, tutorials, documentation'
+    },
+    {
+      id: 'technical',
+      name: 'Technical',
+      description: 'Precise, professional language',
+      icon: '🔧',
+      useCase: 'Developer tools, technical documentation, APIs'
+    }
+  ];
 
   // Ensure formData is properly initialized
   useEffect(() => {
@@ -413,8 +475,67 @@ export function StrandsSdkAgentDialog({
   React.useEffect(() => {
     if (open) {
       checkModels();
+      fetchToolAvailability();
     }
   }, [open]);
+
+  // Fetch tool availability from backend
+  const fetchToolAvailability = async () => {
+    try {
+      const response = await fetch('http://localhost:5006/api/strands-sdk/tool-config');
+      if (response.ok) {
+        const data = await response.json();
+        const tools = Object.keys(data.config || {});
+        setAvailableTools(tools);
+        
+        // Mark tools as available based on backend working status
+        const availability: Record<string, boolean> = {};
+        tools.forEach(tool => {
+          availability[tool] = data.config[tool]?.working || false;
+        });
+        setToolAvailability(availability);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tool availability:', error);
+      // Fallback to hardcoded list
+      setAvailableTools(AVAILABLE_TOOLS);
+      const availability: Record<string, boolean> = {};
+      AVAILABLE_TOOLS.forEach(tool => {
+        availability[tool] = true;
+      });
+      setToolAvailability(availability);
+    }
+  };
+
+  // Handle tool configuration
+  const handleToolConfiguration = async (toolName: string) => {
+    try {
+      const response = await fetch(`http://localhost:5006/api/strands-sdk/tools/configuration/${toolName}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.configuration?.configurable) {
+          setShowToolConfigDialog({
+            tool: toolName,
+            config: data.configuration
+          });
+        } else {
+          alert(`${toolName} doesn't require configuration`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch tool configuration:', error);
+      alert('Failed to load tool configuration');
+    }
+  };
+
+  // Save tool configuration
+  const saveToolConfiguration = (toolName: string, config: any) => {
+    setToolConfigurations(prev => ({
+      ...prev,
+      [toolName]: config
+    }));
+    setShowToolConfigDialog(null);
+  };
 
   const handleCreateAgent = async () => {
     console.log('🚀 handleCreateAgent called');
@@ -441,6 +562,7 @@ export function StrandsSdkAgentDialog({
         model: formData.model_id, // Use 'model' for service interface
         systemPrompt: formData.system_prompt, // Use 'systemPrompt' for service interface
         tools: formData.tools,
+        tool_configurations: toolConfigurations,
         temperature: formData.ollama_config.temperature,
         maxTokens: formData.ollama_config.max_tokens
       };
@@ -1015,6 +1137,125 @@ agent.model.update_config(
                   />
                 </CardContent>
               </Card>
+
+              {/* Response Control */}
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-lg text-white">Response Control</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Control how the agent formats and presents its responses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Response Style */}
+                  <div className="space-y-3">
+                    <Label className="text-white">Response Style</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {responseStyleTemplates.map((template) => (
+                        <div
+                          key={template.id}
+                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            formData.response_style === template.id
+                              ? 'border-purple-500 bg-purple-500/10'
+                              : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
+                          }`}
+                          onClick={() => handleInputChange('response_style', template.id)}
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="text-lg">{template.icon}</span>
+                            <span className="text-white font-medium">{template.name}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mb-1">{template.description}</p>
+                          <p className="text-xs text-gray-500">{template.useCase}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400">Choose how the agent should format its responses</p>
+                  </div>
+
+                  {/* Response Options */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="show_thinking"
+                        checked={formData.show_thinking || false}
+                        onChange={(e) => handleInputChange('show_thinking', e.target.checked)}
+                        className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                      />
+                      <Label htmlFor="show_thinking" className="text-white text-sm">
+                        Show Thinking Process
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="show_tool_details"
+                        checked={formData.show_tool_details || false}
+                        onChange={(e) => handleInputChange('show_tool_details', e.target.checked)}
+                        className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                      />
+                      <Label htmlFor="show_tool_details" className="text-white text-sm">
+                        Show Tool Execution Details
+                      </Label>
+                    </div>
+                  </div>
+
+                  {/* Advanced Response Customization */}
+                  <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
+                    <Label className="text-sm text-gray-300 mb-3 block">Advanced Response Customization</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="include_examples"
+                          checked={formData.include_examples || false}
+                          onChange={(e) => handleInputChange('include_examples', e.target.checked)}
+                          className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                        />
+                        <Label htmlFor="include_examples" className="text-white text-sm">
+                          Include Examples in Responses
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="include_citations"
+                          checked={formData.include_citations || false}
+                          onChange={(e) => handleInputChange('include_citations', e.target.checked)}
+                          className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                        />
+                        <Label htmlFor="include_citations" className="text-white text-sm">
+                          Include Source Citations
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="include_warnings"
+                          checked={formData.include_warnings || false}
+                          onChange={(e) => handleInputChange('include_warnings', e.target.checked)}
+                          className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                        />
+                        <Label htmlFor="include_warnings" className="text-white text-sm">
+                          Include Safety Warnings
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    These options control what information is displayed to users in the agent's responses
+                  </p>
+
+                  {/* Response Style Preview */}
+                  <div className="mt-4 p-3 bg-gray-700 rounded-lg">
+                    <Label className="text-sm text-gray-300 mb-2 block">Response Style Preview</Label>
+                    <div className="text-sm text-gray-200 bg-gray-800 p-3 rounded border">
+                      {getResponseStylePreview(formData.response_style || 'conversational')}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="ollama" className="space-y-6">
@@ -1145,36 +1386,70 @@ agent.model.update_config(
               <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-lg text-white">Available Tools</CardTitle>
+                  <div className="text-sm text-gray-400">
+                    ✅ Green = Working | ❌ Red = Not Implemented | ⚠️ Yellow = Checking
+                  </div>
+                  <div className="flex gap-4 text-sm mt-2">
+                    <span className="text-green-400">
+                      ✅ {availableTools.filter(tool => toolAvailability[tool]).length} Working Tools
+                    </span>
+                    <span className="text-red-400">
+                      ❌ {availableTools.filter(tool => !toolAvailability[tool]).length} Not Implemented
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-3">
-                    {AVAILABLE_TOOLS.map((tool) => (
-                      <div key={tool} className="flex items-center justify-between p-2 border border-gray-600 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={tool}
-                            checked={formData.tools.includes(tool)}
-                            onChange={() => handleToolToggle(tool)}
-                            className="rounded border-gray-300"
-                          />
-                          <Label htmlFor={tool} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white">
-                            {tool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          </Label>
+                    {availableTools.map((tool) => {
+                      // Check if tool is available from backend
+                      const isAvailable = toolAvailability[tool] || false;
+                      
+                      return (
+                        <div key={tool} className={`flex items-center justify-between p-2 border rounded-lg ${
+                          isAvailable 
+                            ? 'border-green-600 bg-green-900/10' 
+                            : 'border-red-600 bg-red-900/10'
+                        }`}>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={tool}
+                              checked={formData.tools.includes(tool)}
+                              onChange={() => handleToolToggle(tool)}
+                              className="rounded border-gray-300"
+                              disabled={!isAvailable}
+                            />
+                            <Label 
+                              htmlFor={tool} 
+                              className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                                isAvailable ? 'text-white' : 'text-gray-400'
+                              }`}
+                            >
+                              {tool.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {/* Availability Status Badge */}
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              isAvailable 
+                                ? 'bg-green-600 text-white' 
+                                : 'bg-red-600 text-white'
+                            }`}>
+                              {isAvailable ? '✅ Working' : '❌ Not Implemented'}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToolConfiguration(tool)}
+                              className="text-gray-400 hover:text-white"
+                              disabled={!isAvailable}
+                            >
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedToolForConfig(tool);
-                            setShowToolConfigurationDialog(true);
-                          }}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   
                   {formData.tools.length > 0 && (
@@ -1265,6 +1540,7 @@ agent.model.update_config(
           setShowToolConfig(false);
         }}
         initialConfig={toolConfig}
+        toolName={selectedToolForConfig}
       />
 
       {/* Advanced Tool Configuration Dialog */}
@@ -1278,6 +1554,114 @@ agent.model.update_config(
           setShowToolConfigurationDialog(false);
         }}
       />
+
+      {/* New Tool Configuration Dialog */}
+      {showToolConfigDialog && (
+        <Dialog open={!!showToolConfigDialog} onOpenChange={() => setShowToolConfigDialog(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Configure Tool: {showToolConfigDialog.tool}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600">
+                {showToolConfigDialog.config.description}
+              </div>
+              {showToolConfigDialog.config.configurable ? (
+                <div className="space-y-4">
+                  {Object.entries(showToolConfigDialog.config.configuration || {}).map(([key, config]: [string, any]) => (
+                    <div key={key} className="space-y-2">
+                      <Label className="text-sm font-medium">{config.description}</Label>
+                      {config.type === 'text' && (
+                        <Input
+                          placeholder={config.default}
+                          onChange={(e) => {
+                            // Update configuration
+                            const newConfig = { ...toolConfigurations[showToolConfigDialog.tool] || {} };
+                            newConfig[key] = e.target.value;
+                            setToolConfigurations(prev => ({
+                              ...prev,
+                              [showToolConfigDialog.tool]: newConfig
+                            }));
+                          }}
+                        />
+                      )}
+                      {config.type === 'number' && (
+                        <Input
+                          type="number"
+                          placeholder={config.default?.toString()}
+                          onChange={(e) => {
+                            const newConfig = { ...toolConfigurations[showToolConfigDialog.tool] || {} };
+                            newConfig[key] = Number(e.target.value);
+                            setToolConfigurations(prev => ({
+                              ...prev,
+                              [showToolConfigDialog.tool]: newConfig
+                            }));
+                          }}
+                        />
+                      )}
+                      {config.type === 'boolean' && (
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            const newConfig = { ...toolConfigurations[showToolConfigDialog.tool] || {} };
+                            newConfig[key] = e.target.checked;
+                            setToolConfigurations(prev => ({
+                              ...prev,
+                              [showToolConfigDialog.tool]: newConfig
+                            }));
+                          }}
+                        />
+                      )}
+                      {config.type === 'select' && (
+                        <select
+                          className="w-full p-2 border rounded"
+                          onChange={(e) => {
+                            const newConfig = { ...toolConfigurations[showToolConfigDialog.tool] || {} };
+                            newConfig[key] = e.target.value;
+                            setToolConfigurations(prev => ({
+                              ...prev,
+                              [showToolConfigDialog.tool]: newConfig
+                            }));
+                          }}
+                        >
+                          {config.options?.map((option: string) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      )}
+                      {config.type === 'array' && (
+                        <Input
+                          placeholder={Array.isArray(config.default) ? config.default.join(', ') : ''}
+                          onChange={(e) => {
+                            const newConfig = { ...toolConfigurations[showToolConfigDialog.tool] || {} };
+                            newConfig[key] = e.target.value.split(',').map(s => s.trim());
+                            setToolConfigurations(prev => ({
+                              ...prev,
+                              [showToolConfigDialog.tool]: newConfig
+                            }));
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">
+                  This tool doesn't require configuration
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowToolConfigDialog(null)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setShowToolConfigDialog(null)}>
+                Save Configuration
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
