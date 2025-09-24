@@ -66,7 +66,7 @@ class StrandsSdkService {
     // File operations
     const fileIndicators = ['file', 'document', 'read', 'write', 'manage'];
     if (fileIndicators.some(indicator => name.includes(indicator) || description.includes(indicator))) {
-      capabilities.push('file_operations');
+      capabilities.push('file_read', 'file_write');
     }
 
     // Tourism and travel capabilities

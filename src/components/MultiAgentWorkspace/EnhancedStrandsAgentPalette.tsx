@@ -299,10 +299,10 @@ export const EnhancedStrandsAgentPalette: React.FC<EnhancedStrandsAgentPalettePr
                     {[
                       { name: 'AI Tools', icon: Brain, color: 'text-purple-500', tools: ['think', 'memory', 'use_llm'] },
                       { name: 'Utility', icon: Calculator, color: 'text-blue-500', tools: ['calculator', 'current_time', 'environment'] },
-                      { name: 'Web & Data', icon: Globe, color: 'text-orange-500', tools: ['web_search', 'http_request', 'rss'] },
+                      { name: 'Web & Data', icon: Globe, color: 'text-orange-500', tools: ['http_request', 'rss'] },
                       { name: 'Code', icon: Code, color: 'text-red-500', tools: ['code_execution', 'python_repl', 'shell'] },
                       { name: 'Collaboration', icon: Users, color: 'text-green-500', tools: ['a2a_send_message', 'coordinate_agents', 'agent_handoff'] },
-                      { name: 'Files', icon: FileText, color: 'text-pink-500', tools: ['file_operations', 'editor', 'image_reader'] }
+                      { name: 'Files', icon: FileText, color: 'text-pink-500', tools: ['file_read', 'file_write', 'editor', 'image_reader'] }
                     ].map((category) => (
                       <Card key={category.name} className="bg-gray-800 border-gray-700">
                         <div className="p-3">

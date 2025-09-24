@@ -11,12 +11,18 @@
  * Running on http://127.0.0.1:5012
  * Running on http://192.168.0.186:5012
 [33mPress CTRL+C to quit[0m
-127.0.0.1 - - [23/Sep/2025 11:31:57] "GET /health HTTP/1.1" 200 -
-127.0.0.1 - - [23/Sep/2025 12:22:39] "[33mDELETE /agent/test-agent HTTP/1.1[0m" 404 -
-127.0.0.1 - - [23/Sep/2025 12:22:41] "[33mDELETE /agent/2fd05ef9-3360-4613-b45c-c57e8a84aae2 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [23/Sep/2025 12:22:44] "[33mDELETE /agent/effeed69-1bbf-48e6-8f0f-d93dfa5e5d16 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [23/Sep/2025 12:22:48] "[33mDELETE /agent/1392e774-fb72-4d7f-b23f-0656d854e2d3 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [23/Sep/2025 12:42:21] "[33mDELETE /agent/f9dbd572-42f0-4c45-a509-beaf5bae95c5 HTTP/1.1[0m" 404 -
-127.0.0.1 - - [23/Sep/2025 12:42:23] "[33mDELETE /agent/27f9039a-45a3-4854-a62a-15226478d02a HTTP/1.1[0m" 404 -
-127.0.0.1 - - [24/Sep/2025 09:43:14] "[33mDELETE /agent/a93a12ae-8821-4421-abe6-f29ac73b61cc HTTP/1.1[0m" 404 -
-127.0.0.1 - - [24/Sep/2025 10:39:28] "[33mDELETE /agent/85c55215-7d23-4f14-9688-3bd66b221381 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:02:00] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [24/Sep/2025 11:02:48] "[33mDELETE /agent/5f341b51-e2f3-447a-97ed-ee3e0b2a48a3 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:02:54] "[33mDELETE /agent/fd01b807-c48f-4ee6-a7f1-e44ec1c9998a HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:37:46] "[33mDELETE /agent/61ae7446-ce8d-4773-8f6d-405e5bf331e4 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:55:00] "[33mDELETE /agent/7c3962ad-5b69-42f3-9f03-131cf8670d0f HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:55:04] "[33mDELETE /agent/4b05c20f-b7ff-4867-9d6a-b68eebba1860 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:55:07] "[33mDELETE /agent/a5cf13f0-920c-4b73-aaf1-2e67893b7bc0 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 11:55:10] "[33mDELETE /agent/4d8befca-c4b7-43ce-8e09-ec2ffdb9092f HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:01:35] "[33mDELETE /agent/aee33420-9cb9-446b-b9e5-192af464399e HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:08:49] "[33mDELETE /agent/6581dc66-c36d-43f8-81d4-3f0a5244706b HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:08:53] "[33mDELETE /agent/4a9bb96c-b656-4457-882d-8d5845284c16 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:08:55] "[33mDELETE /agent/6d2a06b2-1493-4914-aff4-9aaeb48b1276 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:16:00] "[33mDELETE /agent/c5526894-b3d4-4c52-a686-66740b82d625 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:16:02] "[33mDELETE /agent/863f0683-2447-4082-a4a6-f82ef2a0112b HTTP/1.1[0m" 404 -
+127.0.0.1 - - [24/Sep/2025 12:20:28] "[33mDELETE /agent/38e80726-0813-47b5-8b88-0f2e3811fdbd HTTP/1.1[0m" 404 -

@@ -37,10 +37,11 @@ interface AgentCapabilitiesProps {
 }
 
 const availableTools = [
-  { id: 'web_search', name: 'Web Search', description: 'Search the internet for information', icon: Search },
+  { id: 'http_request', name: 'HTTP Request', description: 'Make HTTP requests to web APIs', icon: Search },
   { id: 'code_execution', name: 'Code Execution', description: 'Execute Python code and scripts', icon: Code },
   { id: 'calculator', name: 'Calculator', description: 'Perform mathematical calculations', icon: Calculator },
-  { id: 'file_operations', name: 'File Operations', description: 'Read and write files', icon: FileText },
+  { id: 'file_read', name: 'File Read', description: 'Read files from the system', icon: FileText },
+  { id: 'file_write', name: 'File Write', description: 'Write files to the system', icon: FileText },
   { id: 'api_calls', name: 'API Calls', description: 'Make HTTP requests to external APIs', icon: Globe },
   { id: 'data_analysis', name: 'Data Analysis', description: 'Analyze and visualize data', icon: Database },
   { id: 'text_processing', name: 'Text Processing', description: 'Advanced text manipulation', icon: MessageSquare }

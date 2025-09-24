@@ -32,9 +32,9 @@ export const ToolAvailabilityIndicator: React.FC<ToolAvailabilityIndicatorProps>
     } catch (error) {
       // If backend is not available, use static list of known working tools
       const workingTools = [
-        'calculator', 'current_time', 'web_search', 'file_read', 'file_write',
+        'calculator', 'current_time', 'http_request', 'file_read', 'file_write',
         'http_request', 'python_repl', 'generate_image', 'slack', 'memory',
-        'code_execution', 'database_query', 'file_operations', 'weather_api'
+        'code_execution', 'database_query', 'file_read', 'file_write', 'weather_api'
       ];
       
       setAvailability(workingTools.includes(toolName) ? 'available' : 'unavailable');
@@ -109,9 +109,9 @@ export const ToolAvailabilityChecker: React.FC = () => {
     } catch (error) {
       // Fallback to static list if backend is not available
       const workingTools = [
-        'calculator', 'current_time', 'web_search', 'file_read', 'file_write',
+        'calculator', 'current_time', 'http_request', 'file_read', 'file_write',
         'http_request', 'python_repl', 'generate_image', 'slack', 'memory',
-        'code_execution', 'database_query', 'file_operations', 'weather_api'
+        'code_execution', 'database_query', 'file_read', 'file_write', 'weather_api'
       ];
       setAvailableTools(workingTools);
     } finally {
@@ -140,4 +140,5 @@ export const ToolAvailabilityChecker: React.FC = () => {
     </div>
   );
 };
+
 

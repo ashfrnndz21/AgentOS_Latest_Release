@@ -220,7 +220,7 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
       const assistantMessage: StrandsSdkMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: execution.response || 'No response received',
+        content: (execution as any).raw_response || execution.response || 'No response received',
         timestamp: new Date(),
         execution_time: (execution as any).execution_time,
         operations: currentOperations,
@@ -413,10 +413,8 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
                                 const [thinking, ...rest] = part.split('</think>');
                                 const afterThinking = rest.join('</think>');
                                 
-                                // Truncate thinking to first 200 characters for better UX
-                                const shortThinking = thinking.length > 200 
-                                  ? thinking.substring(0, 200) + '...' 
-                                  : thinking;
+                                // Show full thinking process
+                                const fullThinking = thinking;
                                 
                                 return (
                                   <div key={index}>
@@ -425,7 +423,7 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
                                         <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
                                         <span className="text-sm font-medium text-purple-300">Agent Thinking</span>
                                       </div>
-                                      <p className="text-sm text-purple-100 whitespace-pre-wrap">{shortThinking}</p>
+                                      <p className="text-sm text-purple-100 whitespace-pre-wrap">{fullThinking}</p>
                                     </div>
                                     {afterThinking && (
                                       <p className="text-sm text-gray-100 whitespace-pre-wrap">{afterThinking}</p>

@@ -229,7 +229,7 @@ export const WorkingA2AOrchestration: React.FC = () => {
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-orange-600">
-                      {result.raw_agent_response?.coordination_results?.successful_steps || 0}
+                      {result.raw_agent_response?.agents_coordinated || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">Successful Steps</div>
                   </div>
@@ -346,4 +346,5 @@ export const WorkingA2AOrchestration: React.FC = () => {
     </div>
   );
 };
+
 

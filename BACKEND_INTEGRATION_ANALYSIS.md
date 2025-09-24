@@ -308,3 +308,4 @@ const processDocumentQuery = async (query: string, documents: string[]) => {
 - **Simple queries**: Optimized flow with document context
 - **Leverage existing A2A infrastructure** for multi-agent document processing
 
+

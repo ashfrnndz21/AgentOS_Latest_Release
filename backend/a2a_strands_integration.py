@@ -182,7 +182,8 @@ class A2AStrandsIntegration:
                     "error": "Failed to get Strands SDK agents"
                 }
             
-            strands_agents = response.json()
+            strands_data = response.json()
+            strands_agents = strands_data.get("agents", [])
             registered_count = 0
             errors = []
             

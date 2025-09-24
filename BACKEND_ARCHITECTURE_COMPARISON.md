@@ -318,3 +318,4 @@ For Document Chat enhancement, the optimal approach is a **hybrid architecture**
 
 This hybrid approach would provide the best of both worlds: **intelligence when needed** and **speed when possible**.
 
+

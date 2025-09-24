@@ -30,8 +30,9 @@ const AVAILABLE_TOOLS = [
   'think',
   'current_time',
   'calculator',
-  'web_search',
-  'file_operations',
+  'http_request',
+  'file_read',
+  'file_write',
   'data_analysis',
   'api_call',
   'database_query',
@@ -51,7 +52,7 @@ const PREDEFINED_TEMPLATES = [
   {
     name: 'Research Agent',
     description: 'Research and analysis specialist',
-    tools: ['think', 'web_search', 'data_analysis'],
+    tools: ['think', 'http_request', 'data_analysis'],
     systemPrompt: 'You are a research specialist with expertise in gathering, analyzing, and synthesizing information from various sources.',
     capabilities: ['research', 'analysis', 'data_synthesis']
   },

@@ -96,13 +96,11 @@ const AVAILABLE_TOOLS = [
   // File Operations
   'file_read',
   'file_write',
-  'file_operations', // Legacy alias
   'editor',
   
   // Web & Data
-  'web_search',
-  'tavily',
   'http_request',
+  'tavily',
   'rss',
   'exa',
   'bright_data',
@@ -175,7 +173,7 @@ const STRANDS_TEMPLATES = [
     category: 'Creative',
     systemPrompt: 'You are a creative assistant specialized in content creation, storytelling, and innovative thinking. Help users with creative writing, brainstorming, and artistic projects.',
     ollama_config: { temperature: 0.8, max_tokens: 2000 },
-    tools: ['web_search', 'current_time'],
+    tools: ['http_request', 'current_time'],
     response_style: 'conversational',
     show_thinking: true,
     show_tool_details: true
@@ -188,7 +186,7 @@ const STRANDS_TEMPLATES = [
     category: 'Technical',
     systemPrompt: 'You are a technical expert specializing in software development, programming, and technical problem-solving. Provide precise, accurate technical guidance.',
     ollama_config: { temperature: 0.3, max_tokens: 1500 },
-    tools: ['code_execution', 'file_operations', 'calculator']
+    tools: ['code_execution', 'file_read', 'file_write', 'calculator']
   },
   {
     id: 'learning',
@@ -198,7 +196,7 @@ const STRANDS_TEMPLATES = [
     category: 'Education',
     systemPrompt: 'You are a learning coach and educational specialist. Help users understand complex topics, provide clear explanations, and guide their learning journey.',
     ollama_config: { temperature: 0.6, max_tokens: 1800 },
-    tools: ['web_search', 'calculator', 'current_time']
+    tools: ['http_request', 'calculator', 'current_time']
   },
   {
     id: 'collaboration',
@@ -208,7 +206,7 @@ const STRANDS_TEMPLATES = [
     category: 'Collaboration',
     systemPrompt: 'You are a collaboration agent specialized in multi-agent coordination, deep thinking, and agent-to-agent communication. Use your tools to coordinate with other agents and perform complex reasoning tasks.',
     ollama_config: { temperature: 0.7, max_tokens: 2000 },
-    tools: ['think', 'a2a_discover_agent', 'a2a_send_message', 'coordinate_agents', 'web_search'],
+    tools: ['think', 'a2a_discover_agent', 'a2a_send_message', 'coordinate_agents', 'http_request'],
     a2a_enabled: true
   },
   {

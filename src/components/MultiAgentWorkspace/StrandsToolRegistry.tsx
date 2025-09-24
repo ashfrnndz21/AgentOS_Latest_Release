@@ -309,11 +309,12 @@ export const StrandsToolRegistry: React.FC = () => {
   const getToolIcon = (name: string): React.ComponentType<any> => {
     const iconMap: Record<string, React.ComponentType<any>> = {
       'calculator': Calculator,
-      'web_search': Globe,
+      'http_request': Globe,
       'think': Brain,
       'current_time': Clock,
       'code_execution': Code,
-      'file_operations': FileText,
+      'file_read': FileText,
+      'file_write': FileText,
       'database_query': Database,
       'a2a_send_message': MessageSquare,
       'coordinate_agents': Workflow,
