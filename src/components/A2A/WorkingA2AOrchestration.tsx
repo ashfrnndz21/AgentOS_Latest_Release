@@ -89,7 +89,7 @@ export const WorkingA2AOrchestration: React.FC = () => {
 
     try {
       // Use our working enhanced orchestration API
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/query', {
+      const response = await fetch('http://localhost:5015/api/modern-orchestration/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

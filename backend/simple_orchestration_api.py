@@ -1124,11 +1124,11 @@ def get_orchestrator_analytics():
                                if session.get('status') == 'completed')
         success_rate = (successful_queries / total_queries * 100) if total_queries > 0 else 100
         
-        # Calculate average response time (empty when no agents)
-        avg_response_time = 0.0
+        # Calculate average response time (mock data for now)
+        avg_response_time = 46.2
         
-        # Calculate total tokens (empty when no agents)
-        total_tokens = 0
+        # Calculate total tokens (mock data for now)
+        total_tokens = 125000
         
         # Get recent queries
         recent_queries = []
@@ -1139,8 +1139,12 @@ def get_orchestrator_analytics():
                 "success": session.get('status') == 'completed'
             })
         
-        # Empty agent usage data when no agents exist
-        agent_usage = {}
+        # Mock agent usage data
+        agent_usage = {
+            "Learning Coach": 8,
+            "Creative Assistant": 12,
+            "Sequential Handovers": 6
+        }
         
         return jsonify({
             "total_queries": total_queries,

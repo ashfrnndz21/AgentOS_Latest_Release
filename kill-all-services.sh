@@ -49,10 +49,16 @@ kill_by_pattern() {
 
 # Kill by port (most reliable method)
 kill_port 5173 "Frontend (Vite)"
+kill_port 5021 "Working Orchestration API"
+kill_port 5020 "Dynamic Context Refinement API"
+kill_port 5019 "Text Cleaning Service"
+kill_port 5018 "A2A Observability API"
+kill_port 5014 "Enhanced Orchestration API"
+# kill_port 5012 "Frontend Agent Bridge" - REMOVED
+kill_port 5011 "Resource Monitor API"
+kill_port 5010 "Agent Registry"
 kill_port 5009 "Strands Orchestration API"
 kill_port 5008 "A2A Communication Service"
-kill_port 5010 "Agent Registry"
-kill_port 5011 "Resource Monitor API"
 kill_port 5006 "Strands SDK API"
 kill_port 5005 "Chat Orchestrator API"
 kill_port 5004 "Strands API"
@@ -69,6 +75,12 @@ echo "🔍 Killing processes by name pattern..."
 # Kill by process name patterns (backup method)
 kill_by_pattern "npm.*dev" "Frontend (npm)"
 kill_by_pattern "node.*vite" "Frontend (Vite)"
+kill_by_pattern "python.*working_orchestration_api" "Working Orchestration API"
+kill_by_pattern "python.*dynamic_context_api" "Dynamic Context Refinement API"
+kill_by_pattern "python.*text_cleaning_service" "Text Cleaning Service"
+kill_by_pattern "python.*a2a_observability_api" "A2A Observability API"
+kill_by_pattern "python.*enhanced_orchestration_api" "Enhanced Orchestration API"
+# kill_by_pattern "python.*frontend_agent_bridge" "Frontend Agent Bridge" - REMOVED
 kill_by_pattern "python.*strands_orchestration_api" "Strands Orchestration API"
 kill_by_pattern "python.*a2a_service" "A2A Communication Service"
 kill_by_pattern "python.*resource_monitor_api" "Resource Monitor API"
@@ -89,7 +101,7 @@ sleep 2
 
 # Verify ports are free
 echo "🔍 Verifying ports are free..."
-for port in 5173 5009 5008 5010 5011 5006 5005 5004 5003 5002; do
+for port in 5173 5021 5020 5019 5018 5014 5012 5011 5010 5009 5008 5006 5005 5004 5003 5002; do
     if lsof -ti:$port >/dev/null 2>&1; then
         echo "   ⚠️  Port $port still in use"
     else

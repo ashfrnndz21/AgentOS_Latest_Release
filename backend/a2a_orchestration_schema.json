@@ -1,0 +1,65 @@
+{
+    "1. Query Analysis": {
+        "Query Type": "LLM classifies the nature of the query (e.g., general, technical, creative).",
+        "Domain": "LLM identifies the domain(s) the query pertains to (e.g., Programming, Healthcare).",
+        "Complexity": "LLM assesses the difficulty level (e.g., low, moderate, high).",
+        "User Intent": "Clear natural language description of the user's goal.",
+        "LLM Reasoning": "LLM's reasoning for domain classification, complexity estimation, and intent detection."
+    },
+    "2. Sequence Definition": {
+        "Execution Flow": "Sequential or parallel execution logic based on task dependencies.",
+        "Workflow Steps": "Step-by-step breakdown of sub-tasks needed to fulfill the query.",
+        "Handoff Points": "Locations in the flow where context or data needs to pass between agents.",
+        "Parallel Opportunities": "Identification of tasks that can run concurrently.",
+        "LLM Reasoning": "Rationale for the chosen workflow structure."
+    },
+    "3. Orchestrator Reasoning": {
+        "User Intent (Reconfirmed)": "Reaffirmed and refined interpretation of what the user is asking.",
+        "Domain Analysis": "Analysis of involved domains and how they intersect or influence orchestration.",
+        "Complexity Assessment": "Refined complexity evaluation with justification.",
+        "Processing Strategy": "Optimal strategy selected for orchestrating agents (e.g., sequential, staged).",
+        "Resource Requirements": "Assessment of any specialized resources needed.",
+        "LLM Reasoning": "Overall orchestration logic and justification."
+    },
+    "4. Agent Registry Analysis": {
+        "Available Agents": "List of agents relevant to the task from the registry.",
+        "Agent Role & Task Match": "Matching of agent capabilities to specific steps.",
+        "Scoring": "Confidence scores or suitability ratings for each agent.",
+        "Selection Reasoning": "Why each agent was chosen (or rejected).",
+        "LLM Reasoning": "Explanation of agent evaluation process."
+    },
+    "5. Agent Selection & Sequencing": {
+        "Final Agent List": "Ordered list of selected agents.",
+        "Execution Order": "Defined order of agent execution.",
+        "Execution Strategy": "Restatement of sequential or parallel model.",
+        "Handoff Strategy": "Method of passing context/output between agents.",
+        "SDK/Infrastructure Binding": "Interface type (e.g., SDK, A2A APIs) used for integration.",
+        "LLM Reasoning": "Logic for sequencing and selecting the agents."
+    },
+    "6. A2A Sequential Handover Execution": {
+        "Steps": {
+            "Step N": {
+                "Agent Name": "Name of the agent executing the task.",
+                "Task Assignment": "Description of what the agent was asked to do.",
+                "Status": "Execution status (e.g., Success, Failed).",
+                "Runtime Metadata": "Metadata like execution time or resource usage.",
+                "Output Placeholder": "Reference or pointer to detailed output (not embedded)."
+            }
+        },
+        "Message Flow Logs": "Communication logs between orchestrator and each agent.",
+        "Execution Order Confirmation": "Check if actual execution followed the planned order.",
+        "Fallback/Retry": "Notes about retries or fallbacks if execution failed."
+    },
+    "7. A2A Message Flow": {
+        "Agent Messaging Logs": "Logs of messages sent and received between orchestrator and agents.",
+        "Handoff Data Summaries": "Summarized form of data passed between agents."
+    },
+    "8. Orchestrator Final Synthesis": {
+        "Strategy": "Final orchestration strategy used (sequential, parallel, hybrid).",
+        "Confidence": "Confidence level in the plan and its output.",
+        "Success Criteria": "Definition of what success looks like and whether it was met.",
+        "Synthesis Logic": "Explanation of why the plan worked or failed.",
+        "Final Response Summary": "Concise outcome statement without raw outputs.",
+        "Audit/Trace Links": "Optional: links or references to detailed logs or output traces."
+    }
+}

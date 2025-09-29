@@ -1,0 +1,4 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   448  100   448    0     0   254k      0 --:--:-- --:--:-- --:--:--  437k
+{"metrics":{"average_execution_time":10.000035,"average_handoffs_per_orchestration":0.0,"error_types":{},"failed_orchestrations":0,"most_used_agents":{"Creative Assistant":1,"Maths Agent":1,"Orchestrator":1,"test-agent":1},"recent_performance":{"average_execution_time":10.000035,"sample_size":3,"success_rate":1.0},"success_rate":1.0,"successful_orchestrations":3,"total_orchestrations":3},"success":true,"timestamp":"2025-09-24T20:01:58.970711"}

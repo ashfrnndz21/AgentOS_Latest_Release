@@ -34,6 +34,133 @@ except ImportError as e:
     print(f"⚠️ A2A integration not available: {e}")
     A2A_AVAILABLE = False
     print("[Strands SDK] ✅ Custom Strands SDK implementation loaded successfully!")
+
+def generate_role_specific_system_prompt(agent_name, agent_description, base_system_prompt):
+    """
+    Generate a role-specific system prompt based on agent name and description.
+    This ensures agents are context-aware of their role and purpose.
+    """
+    # If the system prompt is already role-specific (not generic), use it as-is
+    if base_system_prompt and not base_system_prompt.strip().lower() in [
+        'you are a helpful assistant.',
+        'you are a helpful assistant',
+        'you are an ai assistant.',
+        'you are an ai assistant',
+        'you are an assistant.',
+        'you are an assistant'
+    ]:
+        return base_system_prompt
+    
+    # Extract role from agent name
+    agent_name_lower = agent_name.lower().strip()
+    
+    # Define role-specific system prompts based on agent name patterns
+    role_prompts = {
+        'weather': f"""You are a Weather Agent, a specialized AI assistant focused on providing accurate weather information, forecasts, and meteorological data. Your primary capabilities include:
+
+- Providing current weather conditions for any location
+- Offering weather forecasts (short-term and long-term)
+- Explaining weather phenomena and patterns
+- Giving weather-related advice and recommendations
+- Answering questions about climate, temperature, precipitation, wind, and other weather elements
+
+Always be helpful, accurate, and informative when discussing weather-related topics. If you cannot provide real-time weather data, explain what information would be needed and suggest how to obtain it.
+
+Agent Name: {agent_name}
+Description: {agent_description}""",
+
+        'teacher': f"""You are a Teacher Agent, a specialized AI assistant focused on providing educational guidance, teaching support, and learning assistance. Your primary capabilities include:
+
+- Explaining complex concepts in simple, understandable terms
+- Providing step-by-step learning guidance
+- Answering educational questions across various subjects
+- Offering teaching strategies and methodologies
+- Supporting students with homework and assignments
+- Creating educational content and examples
+- Adapting explanations to different learning levels
+
+Always be patient, encouraging, and educational when helping users learn. Use clear explanations, provide examples when helpful, and encourage questions to deepen understanding.
+
+Agent Name: {agent_name}
+Description: {agent_description}""",
+
+        'creative': f"""You are a Creative Agent, a specialized AI assistant focused on creative writing, storytelling, and innovative content creation. Your primary capabilities include:
+
+- Generating creative writing and storytelling content
+- Brainstorming innovative ideas and concepts
+- Creating engaging narratives and characters
+- Developing creative solutions to problems
+- Assisting with artistic and creative projects
+- Providing inspiration and creative guidance
+
+Always be imaginative, original, and inspiring in your creative work. Help users explore their creativity and develop unique, engaging content.
+
+Agent Name: {agent_name}
+Description: {agent_description}""",
+
+        'technical': f"""You are a Technical Agent, a specialized AI assistant focused on technical problem-solving and software development guidance. Your primary capabilities include:
+
+- Providing precise technical guidance and solutions
+- Assisting with programming and software development
+- Debugging code and technical issues
+- Explaining technical concepts and architectures
+- Offering best practices and technical recommendations
+- Supporting technical decision-making
+
+Always be accurate, precise, and technically sound in your guidance. Provide clear, actionable technical solutions and explanations.
+
+Agent Name: {agent_name}
+Description: {agent_description}""",
+
+        'research': f"""You are a Research Agent, a specialized AI assistant focused on research, analysis, and information synthesis. Your primary capabilities include:
+
+- Gathering and analyzing information from various sources
+- Conducting thorough research on topics
+- Synthesizing complex information into clear insights
+- Providing evidence-based analysis and conclusions
+- Supporting academic and professional research
+- Organizing and presenting research findings
+
+Always be thorough, accurate, and evidence-based in your research. Provide well-sourced information and clear analysis.
+
+Agent Name: {agent_name}
+Description: {agent_description}""",
+
+        'finance': f"""You are a Finance Agent, a specialized AI assistant focused on financial analysis, investment guidance, and economic insights. Your primary capabilities include:
+
+- Analyzing financial markets and trends
+- Providing investment guidance and insights
+- Explaining financial concepts and strategies
+- Supporting financial decision-making
+- Offering economic analysis and predictions
+- Assisting with financial planning and budgeting
+
+Always be accurate, professional, and responsible in your financial guidance. Provide clear, well-reasoned financial insights.
+
+Agent Name: {agent_name}
+Description: {agent_description}"""
+    }
+    
+    # Check for role keywords in agent name
+    for role, prompt in role_prompts.items():
+        if role in agent_name_lower:
+            return prompt
+    
+    # If no specific role is detected, create a custom role-based prompt
+    return f"""You are a {agent_name}, a specialized AI assistant designed to help users with specific tasks and requirements.
+
+Your role and purpose:
+- Agent Name: {agent_name}
+- Description: {agent_description}
+
+As a {agent_name}, you should:
+- Understand your specialized role and capabilities
+- Provide expert assistance in your domain
+- Be helpful, accurate, and professional
+- Adapt your responses to your specific role and purpose
+- Always identify yourself as a {agent_name} when appropriate
+
+Remember: You are not just a generic assistant - you are a specialized {agent_name} with specific expertise and capabilities."""
     
     # Real Ollama implementation when Strands SDK is not available
     class RealOllamaModel:
@@ -328,8 +455,11 @@ def file_operations(operation: str, filename: str = "", content: str = "") -> st
 
 @tool
 def code_execution(code: str, language: str = "python") -> str:
-    """Execute code (mock implementation for security)"""
-    return f"Code execution is disabled in this demo environment for security reasons. Code in {language} was provided but not executed."
+    """Execute code using python_repl for Python code"""
+    if language.lower() == "python":
+        return python_repl(code)
+    else:
+        return f"Code execution for {language} is not supported. Only Python is currently supported."
 
 @tool
 def database_query(query: str) -> str:
@@ -653,6 +783,16 @@ def format_enhanced_response(
         clean_response = re.sub(r'<reasoning>.*?</reasoning>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
         clean_response = clean_response.strip()
     
+    # If show_thinking is False, completely remove all thinking content but preserve content after
+    if not show_thinking:
+        import re
+        # Remove thinking tags but keep content after them
+        clean_response = re.sub(r'<think>.*?</think>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = re.sub(r'<reasoning>.*?</reasoning>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = re.sub(r'<analysis>.*?</analysis>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = re.sub(r'<thought>.*?</thought>', '', clean_response, flags=re.DOTALL | re.IGNORECASE)
+        clean_response = clean_response.strip()
+    
     # Build the enhanced response based on style and options
     response_parts = []
     
@@ -927,35 +1067,51 @@ def create_strands_agent():
             print(f"[Strands SDK] Agent validation failed: {str(e)}")
             return jsonify({'error': f'Strands SDK configuration error: {str(e)}'}), 400
         
+        # Generate enhanced system prompt based on agent name and description
+        agent_name = data.get('name', 'Assistant')
+        agent_description = data.get('description', '')
+        base_system_prompt = data.get('system_prompt', 'You are a helpful assistant.')
+        
+        # Generate role-specific system prompt if it's generic
+        enhanced_system_prompt = generate_role_specific_system_prompt(
+            agent_name, agent_description, base_system_prompt
+        )
+        
+        print(f"[Strands SDK] Enhanced system prompt for {agent_name}: {enhanced_system_prompt[:100]}...")
+        
         # Store in database
         conn = sqlite3.connect(STRANDS_SDK_DB)
         cursor = conn.cursor()
         
         cursor.execute('''
             INSERT INTO strands_sdk_agents 
-            (id, name, description, model_provider, model_id, host, system_prompt, tools, tool_configurations, sdk_config, response_style, show_thinking, show_tool_details, include_examples, include_citations, include_warnings)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (id, name, description, model_provider, model_id, host, system_prompt, tools, sdk_config, response_style, show_thinking, show_tool_details, include_examples, include_citations, include_warnings, sdk_version, created_at, updated_at, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             agent_id,
-            data.get('name'),
-            data.get('description', ''),
+            agent_name,
+            agent_description,
             'ollama',
-            data.get('model_id', 'llama3.2:1b'),
+            data.get('model_id', 'qwen3:1.7b'),
             data.get('host', 'http://localhost:11434'),
-            data.get('system_prompt', 'You are a helpful assistant.'),
+            enhanced_system_prompt,
             json.dumps(data.get('tools', [])),
-            json.dumps(data.get('tool_configurations', {})),
             json.dumps({
                 'ollama_config': data.get('ollama_config', {}),
                 'enhanced_features': True,
-                'strands_version': '1.8.0'
+                'strands_version': '1.8.0',
+                'tool_configurations': data.get('tool_configurations', {})
             }),
             data.get('response_style', 'conversational'),
             data.get('show_thinking', True),
             data.get('show_tool_details', True),
             data.get('include_examples', False),
             data.get('include_citations', False),
-            data.get('include_warnings', False)
+            data.get('include_warnings', False),
+            '1.8.0',
+            'CURRENT_TIMESTAMP',
+            'CURRENT_TIMESTAMP',
+            'active'
         ))
         
         conn.commit()
@@ -965,6 +1121,11 @@ def create_strands_agent():
         
         return jsonify({
             'id': agent_id,
+            'name': agent_name,
+            'description': agent_description,
+            'system_prompt': enhanced_system_prompt,
+            'model': data.get('model_id', 'qwen3:1.7b'),
+            'tools': data.get('tools', []),
             'message': 'Strands SDK agent created successfully',
             'sdk_validated': True,
             'sdk_type': 'official-strands',
@@ -1271,6 +1432,10 @@ def execute_strands_agent(agent_id):
     try:
         data = request.json
         input_text = data.get('input', '')
+        show_thinking = data.get('show_thinking', True)  # Default to True for backward compatibility
+        
+        print(f"[DEBUG] show_thinking parameter: {show_thinking}")
+        print(f"[DEBUG] show_thinking type: {type(show_thinking)}")
         
         if not input_text:
             return jsonify({'error': 'Input text is required'}), 400
@@ -1421,7 +1586,8 @@ def execute_strands_agent(agent_id):
                         
                         # First, try to extract a complete mathematical expression
                         # Look for patterns like "20 x 40 x 5000 + 215.45" or "what is 20 * 40 * 5000 + 215.45"
-                        complex_pattern = r'(?:what\s+is\s+|calculate\s+|compute\s+)?(\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)+(?:\s*[+\-*/]\s*\d+(?:\.\d+)?)*)'
+                        # Updated pattern to handle multiple multiplications: 2x2x5x100
+                        complex_pattern = r'(?:what\s+is\s+|calculate\s+|compute\s+|solve\s+)?(\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)+(?:\s*[+\-*/]\s*\d+(?:\.\d+)?)*)'
                         complex_match = re.search(complex_pattern, input_text, re.IGNORECASE)
                         print(f"[Strands SDK] Complex pattern match result: {complex_match}")
                         
@@ -1458,8 +1624,8 @@ def execute_strands_agent(agent_id):
                         
                         # Fallback to simple patterns if complex expression not found
                         if not complex_match:
-                            # Look for multiplication patterns like "208679447 x 3672.23" or "15 * 23"
-                            mult_pattern = r'(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)'
+                            # Look for multiplication patterns like "208679447 x 3672.23" or "15 * 23" or "2x2x5x100"
+                            mult_pattern = r'(\d+(?:\.\d+)?(?:\s*[x×*]\s*\d+(?:\.\d+)?)+)'
                             mult_match = re.search(mult_pattern, input_text)
                             
                             # Look for division patterns like "6252525 / 4848992.5663"
@@ -1475,26 +1641,47 @@ def execute_strands_agent(agent_id):
                             sub_match = re.search(sub_pattern, input_text)
                         
                         if mult_match:
-                            num1 = float(mult_match.group(1))
-                            num2 = float(mult_match.group(2))
-                            result = num1 * num2
-                            operation = f"{num1} × {num2}"
-                            tool_results.append(f"Calculator result: {operation} = {result}")
-                            tools_used.append('calculator')
-                            print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {operation} = {result}")
+                            # Extract the complete multiplication expression
+                            math_expr = mult_match.group(1)
+                            # Convert x and × to * for proper evaluation
+                            math_expr = re.sub(r'[x×]', '*', math_expr)
                             
-                            # Add detailed tool execution to operations log
-                            operations_log.append({
-                                'step': 'Calculator tool executed',
-                                'details': f"Input: {operation} | Output: {result} | Status: Success",
-                                'timestamp': datetime.now().isoformat(),
-                                'tool_name': 'calculator',
-                                'tool_input': operation,
-                                'tool_output': str(result)
-                            })
+                            try:
+                                # Use the calculator tool with the complete expression
+                                result = calculator(math_expr)
+                                tool_results.append(result)
+                                tools_used.append('calculator')
+                                print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED: {math_expr} = {result}")
+                                
+                                # Add detailed tool execution to operations log
+                                operations_log.append({
+                                    'step': 'Calculator tool executed',
+                                    'details': f"Input: {math_expr} | Output: {result} | Status: Success",
+                                    'timestamp': datetime.now().isoformat(),
+                                    'tool_name': 'calculator',
+                                    'tool_input': math_expr,
+                                    'tool_output': result
+                                })
+                            except Exception as calc_error:
+                                print(f"[Strands SDK] Calculator error in fallback: {calc_error}")
+                                # Fall back to simple two-number multiplication
+                                try:
+                                    # Extract first two numbers for simple calculation
+                                    simple_mult_pattern = r'(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)'
+                                    simple_match = re.search(simple_mult_pattern, input_text)
+                                    if simple_match:
+                                        num1 = float(simple_match.group(1))
+                                        num2 = float(simple_match.group(2))
+                                        result = num1 * num2
+                                        operation = f"{num1} × {num2}"
+                                        tool_results.append(f"Calculator result: {operation} = {result}")
+                                        tools_used.append('calculator')
+                                        print(f"[Strands SDK] 🧮 CALCULATOR TOOL EXECUTED (simple): {operation} = {result}")
+                                except Exception as e:
+                                    print(f"[Strands SDK] Calculator fallback error: {e}")
                             
                             # Add calculator result to the prompt
-                            processed_input = f"{input_text}\n\n[Calculator Result: {operation} = {result}]"
+                            processed_input = f"{input_text}\n\n[Calculator Result: {math_expr} = {result}]"
                             
                         elif div_match:
                             num1 = float(div_match.group(1))
@@ -1741,6 +1928,7 @@ def execute_strands_agent(agent_id):
         print(f"[Strands SDK] Agent config for response formatting: show_thinking={agent_config.get('show_thinking', True)}, show_tool_details={agent_config.get('show_tool_details', True)}")
         print(f"[Strands SDK] Agent config keys: {list(agent_config.keys())}")
         print(f"[Strands SDK] Agent config values: show_thinking={agent_config.get('show_thinking')}, show_tool_details={agent_config.get('show_tool_details')}")
+        print(f"[DEBUG] Calling format_enhanced_response with show_thinking={show_thinking}")
         formatted_response = format_enhanced_response(
             user_query=input_text,
             thinking_process=extract_thinking_process(response_text),
@@ -1748,7 +1936,7 @@ def execute_strands_agent(agent_id):
             tools_used=tools_used,
             raw_response=response_text,
             response_style=agent_config.get('response_style', 'conversational'),
-            show_thinking=agent_config.get('show_thinking', True),
+            show_thinking=show_thinking,  # Use request parameter instead of agent config
             show_tool_details=agent_config.get('show_tool_details', True),
             include_examples=agent_config.get('include_examples', False),
             include_citations=agent_config.get('include_citations', False),
@@ -1924,7 +2112,7 @@ def execute_strands_agent(agent_id):
         return jsonify({'error': str(e), 'sdk_type': 'official-strands'}), 500
 
 @app.route('/api/strands-sdk/agents', methods=['GET'])
-def list_strands_agents():
+def list_strands_sdk_agents():
     """List all Strands SDK agents"""
     try:
         print(f"[Strands SDK] Listing agents...")
@@ -1972,10 +2160,19 @@ def list_strands_agents():
             if A2A_AVAILABLE:
                 try:
                     a2a_integration = get_a2a_integration()
-                    a2a_agents = a2a_integration.get_a2a_agents()
-                    print(f"[Strands SDK] A2A agents response: {a2a_agents}")
-                    if a2a_agents.get('status') == 'success':
-                        for a2a_agent in a2a_agents.get('agents', []):
+                    a2a_response = a2a_integration.get_a2a_agents()
+                    print(f"[Strands SDK] A2A agents response: {a2a_response}")
+                    
+                    # Handle both list and dict responses
+                    if isinstance(a2a_response, list):
+                        a2a_agents = a2a_response
+                    elif isinstance(a2a_response, dict):
+                        a2a_agents = a2a_response.get('agents', [])
+                    else:
+                        a2a_agents = []
+                    
+                    for a2a_agent in a2a_agents:
+                        if isinstance(a2a_agent, dict):
                             print(f"[Strands SDK] Checking A2A agent: {a2a_agent.get('id')} with strands_agent_id: {a2a_agent.get('strands_agent_id')} against {agent[0]}")
                             if a2a_agent.get('strands_agent_id') == agent[0]:
                                 a2a_status = {
@@ -1985,31 +2182,54 @@ def list_strands_agents():
                                 }
                                 print(f"[Strands SDK] Found A2A registration for agent {agent[0]}: {a2a_status}")
                                 break
+                        else:
+                            # Handle unexpected data structure
+                            continue
                 except Exception as e:
                     print(f"[Strands SDK] Error checking A2A status for agent {agent[0]}: {e}")
                     pass
             
-            # Map database columns correctly (21 columns total)
+            # Map database columns correctly - based on CREATE TABLE schema
+            # Handle misaligned data from existing database
+            model_id = agent[4] if len(agent) > 4 else 'qwen3:1.7b'
+            host = agent[5] if len(agent) > 5 else 'http://localhost:11434'
+            
+            # If model_id looks like a URL and host looks like text, they're swapped
+            if 'localhost' in str(model_id) and 'You are' in str(host):
+                model_id, host = host, model_id
+                # Extract actual model from model_provider if available
+                model_provider = agent[3] if len(agent) > 3 else 'qwen3:1.7b'
+                if 'qwen' in str(model_provider):
+                    model_id = model_provider
+                host = 'http://localhost:11434'
+            
             agents_list.append({
-                'id': agent[0],                    # id
-                'name': agent[1],                  # name
-                'description': agent[2],           # description
-                'model_provider': agent[12],       # model_provider
-                'model_id': agent[3],              # model_id
-                'host': agent[4],                  # host
-                'system_prompt': agent[5],         # system_prompt
-                'tools': _safe_json_loads(agent[6], []),  # tools
-                'sdk_config': _safe_json_loads(agent[13] if len(agent) > 13 else None, {}),  # sdk_config
-                'sdk_version': agent[8],           # sdk_version
-                'created_at': agent[9],            # created_at
-                'updated_at': agent[10],           # updated_at
-                'status': agent[11],               # status
-                'response_style': agent[14] if len(agent) > 14 else 'conversational',
-                'show_thinking': bool(agent[15]) if len(agent) > 15 else True,
-                'show_tool_details': bool(agent[16]) if len(agent) > 16 else True,
-                'include_examples': bool(agent[17]) if len(agent) > 17 else False,
-                'include_citations': bool(agent[18]) if len(agent) > 18 else False,
-                'include_warnings': bool(agent[19]) if len(agent) > 19 else False,
+                'id': agent[0],                    # id (position 0)
+                'name': agent[1],                  # name (position 1)
+                'description': agent[2],           # description (position 2)
+                'model_provider': agent[3],        # model_provider (position 3)
+                'model_id': model_id,              # model_id (corrected)
+                'host': host,                      # host (corrected)
+                'system_prompt': agent[6],         # system_prompt (position 6)
+                'tools': _safe_json_loads(agent[7], []),  # tools (position 7)
+                'sdk_config': _safe_json_loads(agent[8], {  # sdk_config (position 8)
+                    'ollama_config': {
+                        'temperature': 0.7,
+                        'max_tokens': 1000
+                    },
+                    'enhanced_features': True,
+                    'strands_version': '1.8.0'
+                }),
+                'response_style': agent[9],         # response_style (position 9)
+                'show_thinking': agent[10],        # show_thinking (position 10)
+                'show_tool_details': agent[11],    # show_tool_details (position 11)
+                'include_examples': agent[12],     # include_examples (position 12)
+                'include_citations': agent[13],    # include_citations (position 13)
+                'include_warnings': agent[14],     # include_warnings (position 14)
+                'sdk_version': agent[15],          # sdk_version (position 15)
+                'created_at': agent[16],           # created_at (position 16)
+                'updated_at': agent[17],           # updated_at (position 17)
+                'status': agent[18],               # status (position 18)
                 'sdk_type': 'official-strands',
                 'recent_executions': formatted_executions,
                 'a2a_status': a2a_status
@@ -2982,7 +3202,7 @@ def auto_register_all_agents():
             return jsonify({'error': 'A2A integration not available'}), 503
         
         a2a_integration = get_a2a_integration()
-        result = a2a_integration.auto_register_all_strands_agents()
+        result = a2a_integration.auto_register_all_strands_sdk_agents()
         
         return jsonify(result)
     except Exception as e:

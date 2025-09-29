@@ -1,0 +1,4 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   350  100   350    0     0   190k      0 --:--:-- --:--:-- --:--:--  341k
+{"count":1,"success":true,"timestamp":"2025-09-24T19:56:15.464673","traces":[{"agents_involved":["test-agent"],"end_time":"2025-09-24T19:55:30","error":null,"event_count":0,"handoff_count":0,"orchestration_strategy":"unknown","query":"test query","session_id":"test-123","start_time":"2025-09-24T19:55:00","success":true,"total_execution_time":30}]}

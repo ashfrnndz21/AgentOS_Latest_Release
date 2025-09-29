@@ -26,33 +26,52 @@ interface OrchestrationStep {
 }
 
 interface OrchestrationResult {
-  question: string;
-  user: string;
-  timestamp: string;
+  success: boolean;
+  response: string;
   session_id: string;
-  agents_contacted: number;
-  successful_responses: number;
-  coordination_strategy: string;
-  final_response: string;
-  total_agents_used: number;
-  orchestration_successful: boolean;
-  agent_responses: Array<{
-    agent_id: string;
-    agent_name: string;
-    response_time: number;
-    status: string;
-    response: string;
-  }>;
-  orchestration_log?: {
-    steps: OrchestrationStep[];
-    summary: {
-      agents_contacted: number;
-      coordination_events: number;
-      final_result: string;
-      routing_decisions: number;
+  timestamp: string;
+  workflow_summary: {
+    agents_used: string[];
+    execution_strategy: string;
+    total_execution_time: number;
+    stages_completed: number;
+    total_stages: number;
+  };
+  complete_data_flow: {
+    original_query: string;
+    session_id: string;
+    stages: {
+      stage_1_analysis?: any;
+      stage_2_discovery?: any;
+      stage_3_execution?: any;
+      stage_4_agent_analysis?: any;
+      stage_5_agent_matching?: any;
+      stage_6_orchestration_plan?: any;
+      stage_7_message_flow?: any;
+      stage_8_final_synthesis?: any;
     };
-    total_steps: number;
-    total_time_seconds: number;
+    data_exchanges: Array<{
+      agent_id: string;
+      data_length: number;
+      data_sent: string;
+      direction: string;
+      from: string;
+      handoff_number: number;
+      step: number;
+      timestamp: string;
+      to: string;
+    }>;
+    final_synthesis: any;
+    handoffs: Array<{
+      handoff_number: number;
+      from_agent: string;
+      to_agent: string;
+      task: string;
+      status: string;
+      execution_time: number;
+      data_exchanged: string;
+    }>;
+    orchestrator_processing: any[];
   };
 }
 
@@ -73,29 +92,37 @@ export const A2AOrchestrationMonitor: React.FC = () => {
     setCurrentStep('Initializing orchestration...');
 
     try {
-      const response = await fetch('http://localhost:8005/orchestrate', {
+      console.log('Starting orchestration request to:', 'http://localhost:5015/api/modern-orchestration/query');
+      console.log('Query:', question);
+      
+      const response = await fetch('http://localhost:5015/api/modern-orchestration/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: question,
-          user: 'Frontend User'
+          query: question
         })
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Orchestration successful:', data);
         setResult(data);
         setCurrentStep('Orchestration completed!');
       } else {
-        setError('Failed to orchestrate agents');
+        const errorText = await response.text();
+        console.error('Orchestration failed:', response.status, errorText);
+        setError(`Failed to orchestrate agents (${response.status}): ${errorText.substring(0, 100)}`);
         setCurrentStep('Orchestration failed');
       }
     } catch (err) {
-      setError('Error connecting to orchestration service');
+      console.error('Network/connection error:', err);
+      setError(`Error connecting to orchestration service: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setCurrentStep('Connection error');
-      console.error('Orchestration error:', err);
     } finally {
       setIsOrchestrating(false);
     }
@@ -227,15 +254,18 @@ export const A2AOrchestrationMonitor: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bot className="text-green-400" size={20} />
-                Orchestration Summary
+                8-Stage Orchestration Summary
               </CardTitle>
               <div className="flex items-center gap-4 text-sm text-gray-400">
                 <div className="flex items-center gap-1">
                   <Clock size={16} />
                   Session: {result.session_id}
                 </div>
-                <Badge variant={result.orchestration_successful ? "default" : "destructive"}>
-                  {result.orchestration_successful ? "Success" : "Failed"}
+                <Badge variant={result.success ? "default" : "destructive"}>
+                  {result.success ? "Success" : "Failed"}
+                </Badge>
+                <Badge variant="outline" className="border-purple-400 text-purple-400">
+                  8-Stage Workflow
                 </Badge>
               </div>
             </CardHeader>
@@ -243,131 +273,234 @@ export const A2AOrchestrationMonitor: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="bg-gray-700 p-3 rounded">
                   <div className="text-gray-400">Agents Used</div>
-                  <div className="text-white font-semibold">{result.total_agents_used}</div>
+                  <div className="text-white font-semibold">{result.workflow_summary.agents_used?.length || 0}</div>
                 </div>
                 <div className="bg-gray-700 p-3 rounded">
-                  <div className="text-gray-400">Contacted</div>
-                  <div className="text-white font-semibold">{result.agents_contacted}</div>
+                  <div className="text-gray-400">Stages</div>
+                  <div className="text-white font-semibold">{result.workflow_summary.stages_completed}/{result.workflow_summary.total_stages}</div>
                 </div>
                 <div className="bg-gray-700 p-3 rounded">
-                  <div className="text-gray-400">Successful</div>
-                  <div className="text-white font-semibold">{result.successful_responses}</div>
+                  <div className="text-gray-400">Execution Time</div>
+                  <div className="text-white font-semibold">{result.workflow_summary.total_execution_time.toFixed(2)}s</div>
                 </div>
                 <div className="bg-gray-700 p-3 rounded">
                   <div className="text-gray-400">Strategy</div>
-                  <div className="text-white font-semibold text-xs">{result.coordination_strategy}</div>
+                  <div className="text-white font-semibold text-xs">{result.workflow_summary.execution_strategy}</div>
+                </div>
+              </div>
+              
+              {/* 8-Stage Progress Visualization */}
+              <div className="mt-6">
+                <div className="text-sm text-gray-400 mb-3">8-Stage Workflow Progress</div>
+                <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((stage) => {
+                    const stageData = result.complete_data_flow.stages[`stage_${stage}_${stage === 1 ? 'analysis' : stage === 2 ? 'discovery' : stage === 3 ? 'execution' : stage === 4 ? 'agent_analysis' : stage === 5 ? 'agent_matching' : stage === 6 ? 'orchestration_plan' : stage === 7 ? 'message_flow' : 'final_synthesis'}`];
+                    const isCompleted = stageData && stageData.output;
+                    const stageNames = ['Analysis', 'Discovery', 'Execution', 'Agent Analysis', 'Agent Matching', 'Orchestration', 'Message Flow', 'Synthesis'];
+                    
+                    return (
+                      <div key={stage} className="text-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                          isCompleted ? 'bg-green-500 text-white' : 'bg-gray-600 text-gray-300'
+                        }`}>
+                          {stage}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">{stageNames[stage - 1]}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Live Processing Steps */}
-          {showDetails && result.orchestration_log && (
+          {/* 8-Stage Detailed Information */}
+          {showDetails && result.complete_data_flow.stages && (
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="text-purple-400" size={20} />
+                  8-Stage Workflow Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96">
+                  <div className="space-y-4">
+                    {/* Stage 1: Analysis */}
+                    {result.complete_data_flow.stages.stage_1_analysis && (
+                      <div className="p-4 rounded-lg border-l-4 border-blue-500 bg-blue-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">1</div>
+                          <div className="font-medium text-white">Stage 1: Analysis</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Complexity:</strong> {result.complete_data_flow.stages.stage_1_analysis.output?.complexity || 'N/A'}</div>
+                          <div><strong>Domain:</strong> {result.complete_data_flow.stages.stage_1_analysis.output?.domain || 'N/A'}</div>
+                          <div><strong>Strategy:</strong> {result.complete_data_flow.stages.stage_1_analysis.output?.execution_strategy || 'N/A'}</div>
+                          <div><strong>Confidence:</strong> {result.complete_data_flow.stages.stage_1_analysis.output?.confidence || 'N/A'}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 2: Discovery */}
+                    {result.complete_data_flow.stages.stage_2_discovery && (
+                      <div className="p-4 rounded-lg border-l-4 border-green-500 bg-green-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-white">2</div>
+                          <div className="font-medium text-white">Stage 2: Discovery</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Agents Found:</strong> {result.complete_data_flow.stages.stage_2_discovery.output?.length || 0}</div>
+                          {result.complete_data_flow.stages.stage_2_discovery.output?.map((agent: any, index: number) => (
+                            <div key={index} className="ml-4">
+                              • {agent.agent_name} ({agent.agent_id})
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 3: Execution */}
+                    {result.complete_data_flow.stages.stage_3_execution && (
+                      <div className="p-4 rounded-lg border-l-4 border-orange-500 bg-orange-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-xs font-bold text-white">3</div>
+                          <div className="font-medium text-white">Stage 3: Execution</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Strategy:</strong> {result.complete_data_flow.stages.stage_3_execution.output?.strategy || 'N/A'}</div>
+                          <div><strong>Agent Sequence:</strong> {result.complete_data_flow.stages.stage_3_execution.output?.agent_sequence?.join(' → ') || 'N/A'}</div>
+                          <div><strong>Protocol:</strong> {result.complete_data_flow.stages.stage_3_execution.output?.handover_protocol || 'N/A'}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 4: Agent Analysis */}
+                    {result.complete_data_flow.stages.stage_4_agent_analysis && (
+                      <div className="p-4 rounded-lg border-l-4 border-purple-500 bg-purple-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold text-white">4</div>
+                          <div className="font-medium text-white">Stage 4: Agent Analysis</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {Object.entries(result.complete_data_flow.stages.stage_4_agent_analysis.output || {}).map(([agentId, agentInfo]: [string, any]) => (
+                            <div key={agentId} className="ml-4 mb-2">
+                              <div><strong>{agentId}:</strong></div>
+                              <div className="ml-4">• Task: {agentInfo.task_assignment}</div>
+                              <div className="ml-4">• Expected: {agentInfo.expected_output}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 5: Agent Matching */}
+                    {result.complete_data_flow.stages.stage_5_agent_matching && (
+                      <div className="p-4 rounded-lg border-l-4 border-cyan-500 bg-cyan-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center text-xs font-bold text-white">5</div>
+                          <div className="font-medium text-white">Stage 5: Agent Matching</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Execution Order:</strong> {result.complete_data_flow.stages.stage_5_agent_matching.output?.execution_order?.join(' → ') || 'N/A'}</div>
+                          {result.complete_data_flow.stages.stage_5_agent_matching.output?.matched_agents?.map((agent: any, index: number) => (
+                            <div key={index} className="ml-4">
+                              • {agent.agent_name}: {agent.task} (Confidence: {agent.confidence})
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 6: Orchestration Plan */}
+                    {result.complete_data_flow.stages.stage_6_orchestration_plan && (
+                      <div className="p-4 rounded-lg border-l-4 border-pink-500 bg-pink-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-xs font-bold text-white">6</div>
+                          <div className="font-medium text-white">Stage 6: Orchestration Plan</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {result.complete_data_flow.stages.stage_6_orchestration_plan.output?.orchestration_plan && (
+                            <div>
+                              <div><strong>Plan Phases:</strong></div>
+                              {Object.entries(result.complete_data_flow.stages.stage_6_orchestration_plan.output.orchestration_plan).map(([phase, description]: [string, any]) => (
+                                <div key={phase} className="ml-4">• {phase}: {description}</div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 7: Message Flow */}
+                    {result.complete_data_flow.stages.stage_7_message_flow && (
+                      <div className="p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-white">7</div>
+                          <div className="font-medium text-white">Stage 7: Message Flow</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Communication:</strong> {result.complete_data_flow.stages.stage_7_message_flow.output?.success ? 'Enabled' : 'Disabled'}</div>
+                          <div><strong>Messages:</strong> {result.complete_data_flow.stages.stage_7_message_flow.output?.message_flow?.length || 0} exchanges</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stage 8: Final Synthesis */}
+                    {result.complete_data_flow.stages.stage_8_final_synthesis && (
+                      <div className="p-4 rounded-lg border-l-4 border-red-500 bg-red-500/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-xs font-bold text-white">8</div>
+                          <div className="font-medium text-white">Stage 8: Final Synthesis</div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          <div><strong>Status:</strong> {result.complete_data_flow.stages.stage_8_final_synthesis.output?.success ? 'Completed' : 'Pending'}</div>
+                          <div><strong>Notes:</strong> {result.complete_data_flow.stages.stage_8_final_synthesis.output?.final_synthesis?.processing_notes || 'N/A'}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* A2A Data Exchanges */}
+          {showDetails && result.complete_data_flow.data_exchanges && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="text-blue-400" size={20} />
-                  Live Processing Steps
+                  A2A Data Exchanges
                   <Badge variant="outline" className="ml-auto">
-                    {result.orchestration_log.total_steps} steps in {result.orchestration_log.total_time_seconds.toFixed(2)}s
+                    {result.complete_data_flow.data_exchanges.length} exchanges
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-96">
                   <div className="space-y-3">
-                    {result.orchestration_log.steps.map((step, index) => (
+                    {result.complete_data_flow.data_exchanges.map((exchange, index) => (
                       <div
                         key={index}
-                        className={`p-4 rounded-lg border-l-4 ${getStepColor(step.step_type)}`}
+                        className="p-4 rounded-lg border-l-4 border-blue-500 bg-blue-500/10"
                       >
                         <div className="flex items-center gap-3 mb-2">
-                          {getStepIcon(step.step_type)}
+                          <ArrowRight className="h-4 w-4 text-blue-400" />
                           <div className="font-medium text-white">
-                            {formatStepType(step.step_type)}
+                            Handoff #{exchange.handoff_number}: {exchange.from} → {exchange.to}
                           </div>
                           <div className="text-xs text-gray-400 ml-auto">
-                            +{step.elapsed_seconds.toFixed(2)}s
+                            Step {exchange.step}
                           </div>
                         </div>
                         
                         <div className="text-sm text-gray-300 ml-7">
-                          {step.step_type === 'ORCHESTRATION_START' && (
-                            <div>
-                              <div><strong>Task:</strong> {step.details.task}</div>
-                              <div><strong>User:</strong> {step.details.user}</div>
-                              <div><strong>Session:</strong> {step.details.session_id}</div>
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'AGENT_DISCOVERY' && (
-                            <div>
-                              <div><strong>Registry URL:</strong> {step.details.registry_url}</div>
-                              <div><strong>Discovering:</strong> {step.details.discovering_agents ? 'Yes' : 'No'}</div>
-                              {step.details.agents_found && (
-                                <div><strong>Agents Found:</strong> {step.details.agents_found}</div>
-                              )}
-                              {step.details.available_agents && (
-                                <div><strong>Available:</strong> {step.details.available_agents.join(', ')}</div>
-                              )}
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'ROUTING_DECISION' && (
-                            <div>
-                              <div><strong>Question:</strong> {step.details.question}</div>
-                              <div><strong>Selected Agents:</strong> {step.details.selected_agents?.join(', ')}</div>
-                              <div><strong>Reasoning:</strong> {step.details.routing_reasoning}</div>
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'AGENT_CONTACT' && (
-                            <div>
-                              <div><strong>Agent:</strong> {step.details.agent_name} ({step.details.agent_id})</div>
-                              <div><strong>URL:</strong> {step.details.agent_url}</div>
-                              <div><strong>Question:</strong> {step.details.question}</div>
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'AGENT_RESPONSE' && (
-                            <div>
-                              <div><strong>Agent:</strong> {step.details.agent_name}</div>
-                              <div><strong>Response Time:</strong> {step.details.response_time?.toFixed(2)}s</div>
-                              <div><strong>Status:</strong> 
-                                <Badge variant={step.details.status === 'success' ? 'default' : 'destructive'} className="ml-2">
-                                  {step.details.status}
-                                </Badge>
-                              </div>
-                              {step.details.response_preview && (
-                                <div className="mt-2 p-2 bg-gray-700 rounded text-xs">
-                                  <strong>Preview:</strong> {step.details.response_preview.substring(0, 200)}...
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'AGENT_ERROR' && (
-                            <div>
-                              <div><strong>Agent:</strong> {step.details.agent_id}</div>
-                              <div><strong>Error:</strong> {step.details.error}</div>
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'COORDINATION' && (
-                            <div>
-                              <div><strong>Agents Contacted:</strong> {step.details.agents_contacted}</div>
-                              <div><strong>Successful Responses:</strong> {step.details.successful_responses}</div>
-                              <div><strong>Strategy:</strong> {step.details.coordination_strategy}</div>
-                            </div>
-                          )}
-                          
-                          {step.step_type === 'ORCHESTRATION_COMPLETE' && (
-                            <div>
-                              <div><strong>Final Response Length:</strong> {step.details.final_response_length} characters</div>
-                              <div><strong>Total Agents Used:</strong> {step.details.total_agents_used}</div>
-                              <div><strong>Success:</strong> {step.details.orchestration_successful ? 'Yes' : 'No'}</div>
-                            </div>
-                          )}
+                          <div><strong>Direction:</strong> {exchange.direction}</div>
+                          <div><strong>Agent ID:</strong> {exchange.agent_id}</div>
+                          <div><strong>Data Length:</strong> {exchange.data_length} chars</div>
+                          <div><strong>Data Sent:</strong> {exchange.data_sent.substring(0, 100)}...</div>
+                          <div><strong>Timestamp:</strong> {new Date(exchange.timestamp).toLocaleTimeString()}</div>
                         </div>
                       </div>
                     ))}
@@ -387,36 +520,38 @@ export const A2AOrchestrationMonitor: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="bg-gray-700 p-4 rounded text-sm text-gray-200 whitespace-pre-wrap">
-                {result.final_response}
+                {result.response}
               </div>
             </CardContent>
           </Card>
 
-          {/* Agent Responses */}
-          {result.agent_responses && result.agent_responses.length > 0 && (
+          {/* A2A Handoffs */}
+          {result.complete_data_flow.handoffs && result.complete_data_flow.handoffs.length > 0 && (
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="text-cyan-400" size={20} />
-                  Individual Agent Responses
+                  A2A Agent Handoffs
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {result.agent_responses.map((response, index) => (
+                  {result.complete_data_flow.handoffs.map((handoff, index) => (
                     <div key={index} className="bg-gray-700 p-4 rounded">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium text-white">{response.agent_name}</div>
+                        <div className="font-medium text-white">
+                          Handoff #{handoff.handoff_number}: {handoff.from_agent} → {handoff.to_agent}
+                        </div>
                         <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <span>{response.response_time.toFixed(2)}s</span>
-                          <Badge variant={response.status === 'success' ? 'default' : 'destructive'}>
-                            {response.status}
+                          <span>{handoff.execution_time.toFixed(2)}s</span>
+                          <Badge variant={handoff.status === 'completed' ? 'default' : 'destructive'}>
+                            {handoff.status}
                           </Badge>
                         </div>
                       </div>
                       <div className="text-sm text-gray-300">
-                        {response.response.substring(0, 300)}
-                        {response.response.length > 300 && '...'}
+                        <div><strong>Task:</strong> {handoff.task}</div>
+                        <div><strong>Data:</strong> {handoff.data_exchanged}</div>
                       </div>
                     </div>
                   ))}

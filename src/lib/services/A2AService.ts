@@ -41,6 +41,7 @@ export interface A2AStatus {
   a2a_status?: string;
   connections?: number;
   last_message?: string;
+  orchestration_enabled?: boolean;
 }
 
 class A2AService {
@@ -228,6 +229,10 @@ class A2AService {
         };
       }
 
+      // Check if this agent is orchestration-enabled by checking if it has a dedicated backend
+      const orchestrationEnabled = !!(agent as any).orchestration_enabled || 
+                                  !!(agent as any).dedicated_ollama_backend;
+
       // Get connections for this agent
       const connections = await this.getAgentConnections(agentId);
 
@@ -241,7 +246,8 @@ class A2AService {
         a2a_agent_id: agent.id,
         a2a_status: agent.status,
         connections: connections.length,
-        last_message: recentMessages[0]?.timestamp
+        last_message: recentMessages[0]?.timestamp,
+        orchestration_enabled: orchestrationEnabled
       };
     } catch (error) {
       console.error('Failed to get A2A status for agent:', error);

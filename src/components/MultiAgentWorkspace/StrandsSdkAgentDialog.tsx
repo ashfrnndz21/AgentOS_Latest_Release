@@ -601,41 +601,26 @@ export function StrandsSdkAgentDialog({
       
       console.log('✅ Agent created successfully:', createdAgent);
       
-      // If A2A is enabled, register the agent for A2A communication and Frontend Agent Bridge
+      // If A2A is enabled, register the agent for orchestration with dedicated backend
       if (formData.a2a_enabled && createdAgent) {
         try {
-          console.log(`🔄 Registering agent ${createdAgent.name} for A2A communication...`);
-          
-          const capabilities = strandsSdkService.extractCapabilities({
-            name: createdAgent.name,
-            description: createdAgent.description,
-            tools: createdAgent.tools
-          });
+          console.log(`🔄 Registering agent ${createdAgent.name} for orchestration with dedicated backend...`);
 
-          console.log(`📋 Extracted capabilities for ${createdAgent.name}:`, capabilities);
+          const orchestrationResult = await strandsSdkService.registerAgentForOrchestration(createdAgent.id);
 
-          const registrationResult = await strandsSdkService.registerAgentForA2AWithBridge(
-            createdAgent.id,
-            {
-              name: createdAgent.name,
-              description: createdAgent.description,
-              capabilities: capabilities
-            }
-          );
-
-          if (registrationResult.success) {
-            console.log(`✅ Agent ${createdAgent.name} successfully registered for A2A communication and orchestration`);
-            console.log(`   - A2A Registered: ${registrationResult.a2aRegistered}`);
-            console.log(`   - Bridge Registered: ${registrationResult.bridgeRegistered}`);
+          if (orchestrationResult.success) {
+            console.log(`✅ Agent ${createdAgent.name} successfully registered for orchestration`);
+            console.log(`   - A2A Agent ID: ${orchestrationResult.a2aAgentId}`);
+            console.log(`   - Agent Name: ${orchestrationResult.agentName}`);
+            console.log(`   - Dedicated Backend: Port ${orchestrationResult.dedicatedBackend?.port}`);
+            console.log(`   - Orchestration Enabled: ${orchestrationResult.orchestrationEnabled}`);
           } else {
-            console.error('❌ Failed to register agent for A2A:', registrationResult.error);
-            console.log(`   - A2A Registered: ${registrationResult.a2aRegistered}`);
-            console.log(`   - Bridge Registered: ${registrationResult.bridgeRegistered}`);
-            // Don't fail the entire creation if A2A registration fails
+            console.error('❌ Failed to register agent for orchestration:', orchestrationResult.error);
+            // Don't fail the entire creation if orchestration registration fails
           }
-        } catch (a2aError) {
-          console.error('❌ Exception during A2A registration:', a2aError);
-          // Don't fail the entire creation if A2A registration fails
+        } catch (orchestrationError) {
+          console.error('❌ Exception during orchestration registration:', orchestrationError);
+          // Don't fail the entire creation if orchestration registration fails
         }
       } else {
         console.log(`ℹ️ A2A disabled for agent ${createdAgent?.name || 'unknown'}`);
@@ -798,7 +783,7 @@ agent.model.update_config(
                       <span className="font-medium">Strands SDK agent created successfully!</span>
                       {formData.a2a_enabled && (
                         <span className="text-sm text-green-600 mt-1">
-                          ✅ Agent registered for orchestration and A2A communication
+                          ✅ Agent registered for orchestration with dedicated backend
                         </span>
                       )}
                     </div>
@@ -1093,7 +1078,7 @@ agent.model.update_config(
                       <div className="space-y-1">
                         <Label className="text-white font-medium">Agent-to-Agent Collaboration</Label>
                         <p className="text-xs text-gray-400">
-                          Enable this agent to communicate with other agents in the system
+                          Enable this agent for orchestration with dedicated backend and multi-agent collaboration
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -1112,7 +1097,7 @@ agent.model.update_config(
                     {formData.a2a_enabled && (
                       <div className="mt-2 p-2 bg-blue-900/20 border border-blue-600 rounded-lg">
                         <p className="text-xs text-blue-300">
-                          ✓ This agent will be automatically registered for A2A communication
+                          ✓ This agent will be automatically registered for orchestration with dedicated backend
                         </p>
                       </div>
                     )}

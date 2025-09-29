@@ -66,6 +66,7 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     const scrollToBottom = () => {
@@ -149,6 +150,7 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
       handleSendMessage();
     }
   };
+
 
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || isGenerating) return;
@@ -562,6 +564,7 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
           isVisible={showToolTraceTooltip}
           onClose={() => setShowToolTraceTooltip(false)}
         />
+
       </div>
     </div>
   );

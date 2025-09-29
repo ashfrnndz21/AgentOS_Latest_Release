@@ -113,7 +113,7 @@ echo "🧹 Cleaning up any existing services..."
 
 # Additional cleanup for common ports
 echo "   Cleaning up common ports..."
-for port in 5002 5003 5004 5005 5006 5008 5009 5010 5011 5012 5014 5173; do
+for port in 5002 5003 5004 5005 5006 5008 5009 5010 5011 5014 5018 5019 5020 5021 5173; do
     if lsof -ti:$port >/dev/null 2>&1; then
         echo "   Killing process on port $port..."
         lsof -ti:$port | xargs kill -9 2>/dev/null || true
@@ -144,48 +144,8 @@ if [ $? -eq 0 ]; then
     test_service "http://localhost:5010/health" "Agent Registry"
 fi
 
-# Start A2A Agent Servers
-echo -e "${BLUE}2. Starting A2A Agent Servers...${NC}"
-
-echo "   Starting Calculator Agent (Port 8001)..."
-if ! check_port 8001; then
-    echo -e "${RED}   Port 8001 is still in use!${NC}"
-    exit 1
-fi
-
-cd backend/a2a_servers
-source ../venv/bin/activate
-python calculator_agent_server.py >calculator_agent.log 2>&1 &
-CALCULATOR_PID=$!
-cd ../..
-
-echo "   Starting Research Agent (Port 8002)..."
-if ! check_port 8002; then
-    echo -e "${RED}   Port 8002 is still in use!${NC}"
-    exit 1
-fi
-
-cd backend/a2a_servers
-source ../venv/bin/activate
-python research_agent_server.py >research_agent.log 2>&1 &
-RESEARCH_PID=$!
-cd ../..
-
-echo "   Starting Coordinator Agent (Port 8000)..."
-if ! check_port 8000; then
-    echo -e "${RED}   Port 8000 is still in use!${NC}"
-    exit 1
-fi
-
-cd backend/a2a_servers
-source ../venv/bin/activate
-python coordinator_agent_server.py >coordinator_agent.log 2>&1 &
-COORDINATOR_PID=$!
-cd ../..
-
-wait_for_service 8000 "Coordinator Agent"
-wait_for_service 8001 "Calculator Agent"
-wait_for_service 8002 "Research Agent"
+# A2A Agent Servers - REMOVED
+echo -e "${YELLOW}2. A2A Agent Servers - REMOVED${NC}"
 
 # Start Ollama core service (if not already running)
 echo -e "${BLUE}3. Starting Ollama Core Service...${NC}"
@@ -389,30 +349,87 @@ if [ $? -eq 0 ]; then
     test_service "http://localhost:5014/api/enhanced-orchestration/health" "Enhanced Orchestration API"
 fi
 
-# Start Frontend Agent Bridge (Frontend-Backend Integration)
-echo -e "${BLUE}10. Starting Frontend Agent Bridge...${NC}"
-if ! check_port 5012; then
-    echo -e "${YELLOW}   Port 5012 is in use, killing existing process...${NC}"
-    lsof -ti:5012 | xargs kill -9 2>/dev/null || true
+# Start A2A Observability API (Observability & Tracing)
+echo -e "${BLUE}10. Starting A2A Observability API...${NC}"
+if ! check_port 5018; then
+    echo -e "${YELLOW}   Port 5018 is in use, killing existing process...${NC}"
+    lsof -ti:5018 | xargs kill -9 2>/dev/null || true
     sleep 2
 fi
-
-echo "   Starting Frontend Agent Bridge on port 5012..."
+echo "   Starting A2A Observability API on port 5018..."
 cd backend
 source venv/bin/activate
-python frontend_agent_bridge.py >frontend_agent_bridge.log 2>&1 &
-FRONTEND_BRIDGE_PID=$!
+python a2a_observability_api.py >a2a_observability_api.log 2>&1 &
+A2A_OBSERVABILITY_PID=$!
 cd ..
-
-wait_for_service 5012 "Frontend Agent Bridge"
+wait_for_service 5018 "A2A Observability API"
 if [ $? -eq 0 ]; then
-    # Test the service
     sleep 3
-    test_service "http://localhost:5012/health" "Frontend Agent Bridge"
+    test_service "http://localhost:5018/api/a2a-observability/health" "A2A Observability API"
 fi
 
+# Start Text Cleaning Service (LLM Output Processing)
+echo -e "${BLUE}11. Starting Text Cleaning Service...${NC}"
+if ! check_port 5019; then
+    echo -e "${YELLOW}   Port 5019 is in use, killing existing process...${NC}"
+    lsof -ti:5019 | xargs kill -9 2>/dev/null || true
+    sleep 2
+fi
+echo "   Starting Text Cleaning Service on port 5019..."
+cd backend
+source venv/bin/activate
+python text_cleaning_service.py >text_cleaning_service.log 2>&1 &
+TEXT_CLEANING_PID=$!
+cd ..
+wait_for_service 5019 "Text Cleaning Service"
+if [ $? -eq 0 ]; then
+    sleep 3
+    test_service "http://localhost:5019/api/clean-text" "Text Cleaning Service"
+fi
+
+# Start Dynamic Context Refinement API (Intelligent Context Management)
+echo -e "${BLUE}12. Starting Dynamic Context Refinement API...${NC}"
+if ! check_port 5020; then
+    echo -e "${YELLOW}   Port 5020 is in use, killing existing process...${NC}"
+    lsof -ti:5020 | xargs kill -9 2>/dev/null || true
+    sleep 2
+fi
+echo "   Starting Dynamic Context Refinement API on port 5020..."
+cd backend
+source venv/bin/activate
+python dynamic_context_api.py >dynamic_context_api.log 2>&1 &
+DYNAMIC_CONTEXT_PID=$!
+cd ..
+wait_for_service 5020 "Dynamic Context Refinement API"
+if [ $? -eq 0 ]; then
+    sleep 3
+    test_service "http://localhost:5020/api/dynamic-context/health" "Dynamic Context Refinement API"
+fi
+
+# Start Working Orchestration API (Unified System Orchestrator)
+echo -e "${BLUE}13. Starting Working Orchestration API (Unified System)...${NC}"
+if ! check_port 5022; then
+    echo -e "${YELLOW}   Port 5022 is in use, killing existing process...${NC}"
+    lsof -ti:5022 | xargs kill -9 2>/dev/null || true
+    sleep 2
+fi
+echo "   Starting Working Orchestration API on port 5022..."
+cd backend
+source venv/bin/activate
+python working_orchestration_api.py >working_orchestration_api.log 2>&1 &
+WORKING_ORCHESTRATION_PID=$!
+cd ..
+wait_for_service 5022 "Working Orchestration API"
+if [ $? -eq 0 ]; then
+    sleep 3
+    test_service "http://localhost:5022/health" "Working Orchestration API"
+fi
+
+# Start Frontend Agent Bridge (Frontend-Backend Integration) - REMOVED
+echo -e "${YELLOW}14. Frontend Agent Bridge - REMOVED${NC}"
+
 # Start Frontend (Vite)
-echo -e "${BLUE}11. Starting Frontend (Vite)...${NC}"
+echo -e "${BLUE}15. Starting Frontend (Vite)...${NC}"
 if ! check_port 5173; then
     echo -e "${YELLOW}   Port 5173 is in use, killing existing process...${NC}"
     lsof -ti:5173 | xargs kill -9 2>/dev/null || true
@@ -445,8 +462,11 @@ services=(
     "5008:A2A Communication Service"
     "5010:Agent Registry"
     "5011:Resource Monitor API"
-    "5012:Frontend Agent Bridge"
     "5014:Enhanced Orchestration API"
+    "5018:A2A Observability API"
+    "5019:Text Cleaning Service"
+    "5020:Dynamic Context Refinement API"
+    "5022:Working Orchestration API"
     "5173:Frontend"
 )
 
@@ -470,7 +490,6 @@ if [ "$all_running" = true ]; then
     echo ""
     echo "📡 Service URLs:"
     echo "   • Frontend:                    http://localhost:5173"
-    echo "   • Frontend Agent Bridge:       http://localhost:5012  (Frontend-Backend Integration)"
     echo "   • Resource Monitor API:        http://localhost:5011  (System Monitoring)"
     echo "   • Agent Registry:              http://localhost:5010  (Agent Management)"
     echo "   • Enhanced Orchestration API:  http://localhost:5014  (Dynamic LLM Orchestration)"
@@ -481,6 +500,12 @@ if [ "$all_running" = true ]; then
     echo "   • RAG API:                     http://localhost:5003  (Document Chat)"
     echo "   • Ollama API:                  http://localhost:5002  (Terminal & Agents)"
     echo "   • Ollama Core:                 http://localhost:11434 (LLM Engine)"
+    echo ""
+    echo "🔧 Enhanced Services:"
+    echo "   • A2A Observability API:       http://localhost:5018  (Observability & Tracing)"
+    echo "   • Text Cleaning Service:        http://localhost:5019  (LLM Output Processing)"
+    echo "   • Dynamic Context Refinement:   http://localhost:5020  (Intelligent Context Management)"
+    echo "   • Working Orchestration API:    http://localhost:5021  (Unified System Orchestrator)"
     echo ""
     echo "🌐 Application is ready!"
     echo "   • Open your browser: http://localhost:5173"

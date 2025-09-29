@@ -41,7 +41,7 @@ import { StrandsAgentAnalytics } from '@/components/MultiAgentWorkspace/StrandsA
 import { A2AAgentCard } from '@/components/A2A/A2AAgentCard';
 import { A2AAgentRegistrationDialog } from '@/components/A2A/A2AAgentRegistrationDialog';
 import { A2AStatusIndicator } from '@/components/A2A/A2AStatusIndicator';
-import { OrchestratorCard } from '@/components/A2A/OrchestratorCard';
+import { MainSystemOrchestratorCard } from '@/components/A2A/MainSystemOrchestratorCard';
 import { a2aService, A2AStatus } from '@/lib/services/A2AService';
 
 export const OllamaAgentDashboard: React.FC = () => {
@@ -278,7 +278,7 @@ export const OllamaAgentDashboard: React.FC = () => {
 
   const loadSystemMetrics = async () => {
     try {
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/health');
+      const response = await fetch('http://localhost:5015/api/modern-orchestration/health');
       const data = await response.json();
       setSystemMetrics({
         memory_usage: data.memory_usage,
@@ -667,9 +667,9 @@ export const OllamaAgentDashboard: React.FC = () => {
           </Alert>
         )}
 
-        {/* System Orchestrator - Fixed Default Component */}
+        {/* Main System Orchestrator - Central Multi-Agent Coordination */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <OrchestratorCard />
+          <MainSystemOrchestratorCard />
         </div>
 
         <Tabs defaultValue="agents" className="space-y-6">
@@ -876,14 +876,14 @@ export const OllamaAgentDashboard: React.FC = () => {
                           <Sparkles className="text-purple-400" size={20} />
                           {agent.name}
                           
-                          {/* Configuration Tooltip */}
+                          {/* Enhanced Configuration Tooltip */}
                           <HoverCard>
                             <HoverCardTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-700">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-700" title="View Agent Details">
                                 <Info className="h-3 w-3 text-gray-400 hover:text-purple-400" />
                               </Button>
                             </HoverCardTrigger>
-                            <HoverCardContent className="w-80 bg-gray-800 border-gray-700 text-white" side="right">
+                            <HoverCardContent className="w-96 bg-gray-800 border-gray-700 text-white" side="right">
                               <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                   <Sparkles className="h-4 w-4 text-purple-400" />
@@ -893,11 +893,11 @@ export const OllamaAgentDashboard: React.FC = () => {
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
                                     <span className="text-gray-400">Model:</span>
-                                    <span className="text-white">{(agent as any).model_id}</span>
+                                    <span className="text-white">{agent.model || 'qwen3:1.7b'}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-gray-400">Host:</span>
-                                    <span className="text-white">{(agent as any).host}</span>
+                                    <span className="text-white">{(agent as any).host || 'http://localhost:11434'}</span>
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-gray-400">Temperature:</span>
@@ -945,18 +945,23 @@ export const OllamaAgentDashboard: React.FC = () => {
                                     </>
                                   )}
                                   
-                                  {/* System Prompt Preview */}
+                                  {/* Enhanced System Prompt Section */}
                                   {(agent as any).system_prompt && (
                                     <div className="border-t border-gray-600 pt-2 mt-2">
-                                      <div className="flex items-center gap-2 mb-1">
+                                      <div className="flex items-center gap-2 mb-2">
                                         <MessageSquare className="h-3 w-3 text-purple-400" />
                                         <span className="text-gray-400 font-medium">System Prompt</span>
+                                        <Badge variant="outline" className="text-xs border-purple-400/30 text-purple-300">
+                                          Role-Specific
+                                        </Badge>
                                       </div>
-                                      <p className="text-xs text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-600 max-h-20 overflow-y-auto">
-                                        {(agent as any).system_prompt.length > 150 
-                                          ? `${(agent as any).system_prompt.substring(0, 150)}...` 
-                                          : (agent as any).system_prompt
-                                        }
+                                      <div className="bg-gray-900/50 p-3 rounded border border-gray-600 max-h-32 overflow-y-auto">
+                                        <p className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap">
+                                          {(agent as any).system_prompt}
+                                        </p>
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        This prompt defines the agent's role, behavior, and capabilities
                                       </p>
                                     </div>
                                   )}
@@ -1067,7 +1072,7 @@ export const OllamaAgentDashboard: React.FC = () => {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-400">Model:</span>
                           <Badge variant="outline" className="text-green-400 border-green-400">
-                            {(agent as any).model_id}
+                            {agent.model || 'qwen3:1.7b'}
                           </Badge>
                         </div>
                         {/* A2A Status Section */}

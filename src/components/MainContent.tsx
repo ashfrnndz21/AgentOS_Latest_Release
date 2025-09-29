@@ -1,11 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Command, Workflow, ShoppingBag, TrendingUp, Users, Shield, Factory } from "lucide-react";
+import { Bot, Command, Workflow, ShoppingBag, TrendingUp, Users, Shield, Factory, Brain } from "lucide-react";
+// import { SystemOrchestratorModal } from "@/components/A2A/SystemOrchestratorModal";
 
 export const MainContent = () => {
+  // const [orchestratorModalOpen, setOrchestratorModalOpen] = useState(false);
+
   return (
     <div className="flex-1 p-6 md:p-10 space-y-8">
       <div>
@@ -81,7 +84,30 @@ export const MainContent = () => {
             <Link to="/customer-insights">View Insights</Link>
           </Button>
         </Card>
+
+        {/* DISABLED: System Orchestrator Card */}
+        {/* <Card className="bg-beam-dark-accent border-gray-700 p-6 hover:border-purple-500/50 transition-colors">
+          <div className="h-12 w-12 rounded-lg bg-purple-600 flex items-center justify-center mb-4">
+            <Brain className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">System Orchestrator</h2>
+          <p className="text-gray-400 mb-4">A2A Multi-Agent Query with clean output processing</p>
+          <Button 
+            onClick={() => setOrchestratorModalOpen(true)}
+            variant="default" 
+            className="w-full bg-purple-600 hover:bg-purple-700"
+          >
+            <Brain className="mr-2 h-4 w-4" />
+            Execute A2A Orchestration
+          </Button>
+        </Card> */}
       </div>
+
+      {/* DISABLED: System Orchestrator Modal */}
+      {/* <SystemOrchestratorModal 
+        open={orchestratorModalOpen} 
+        onOpenChange={setOrchestratorModalOpen} 
+      /> */}
     </div>
   );
 };

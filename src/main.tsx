@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
-import { ToastProvider } from './hooks/toast'
+import { ToastProvider } from './hooks/toast/context'
 import { IndustryProvider } from './contexts/IndustryContext'
 
 const queryClient = new QueryClient()

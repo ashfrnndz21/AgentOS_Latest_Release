@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Bot, Command, Workflow, ShoppingBag, TrendingUp, Settings, Users, 
-  Globe, Heart, CreditCard, Smartphone, Building2, ChevronDown, ChevronRight, Activity, Network, Server, Terminal, FileText, Shield, FlaskConical
+  Globe, Heart, CreditCard, Smartphone, Building2, ChevronDown, ChevronRight, Activity, Network, Server, Terminal, FileText, Shield, FlaskConical, Brain
 } from 'lucide-react';
 import { 
   Sidebar as SidebarComponent,
@@ -37,7 +37,8 @@ const iconMap = {
   Terminal,
   FileText,
   Shield,
-  FlaskConical
+  FlaskConical,
+  Brain
 };
 
 interface NavigationGroup {

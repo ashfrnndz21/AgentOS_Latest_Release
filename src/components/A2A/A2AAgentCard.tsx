@@ -4,6 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
   Bot, 
   MessageSquare, 
   Trash2, 
@@ -18,7 +25,9 @@ import {
   Wrench,
   Network,
   Users,
-  Activity
+  Activity,
+  ChevronDown,
+  CheckCircle
 } from 'lucide-react';
 import { StrandsSdkAgent } from '@/lib/services/StrandsSdkService';
 
@@ -36,6 +45,7 @@ interface A2AAgentCardProps {
     a2a_status?: string;
     connections?: number;
     last_message?: string;
+    orchestration_enabled?: boolean;
   };
 }
 
@@ -53,6 +63,7 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [connections, setConnections] = useState<string[]>([]);
   const [availableAgents, setAvailableAgents] = useState<any[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<string>('all');
 
   // Fetch available agents for A2A connections
   useEffect(() => {
@@ -100,23 +111,35 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
   const handleRegisterA2A = async () => {
     setIsRegistering(true);
     try {
-      // Use Strands SDK's A2A registration endpoint to avoid duplicates
-      const response = await fetch(`http://localhost:5006/api/strands-sdk/a2a/register`, {
+      console.log(`🎯 Registering agent ${agent.name} for orchestration with dedicated backend...`);
+      
+      // Use the orchestration-enabled A2A registration endpoint
+      const response = await fetch(`http://localhost:5008/api/a2a/register-from-strands`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          agent_id: agent.id
+          strands_agent_id: agent.id
         })
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Orchestration registration successful:', data);
+        console.log(`   - A2A Agent ID: ${data.a2a_agent_id}`);
+        console.log(`   - Agent Name: ${data.agent_name}`);
+        console.log(`   - Dedicated Backend: Port ${data.dedicated_backend?.port}`);
+        console.log(`   - Orchestration Enabled: ${data.orchestration_enabled}`);
+        
         // Refresh A2A status
         window.location.reload();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
     } catch (error) {
-      console.error('Failed to register agent for A2A:', error);
+      console.error('❌ Failed to register agent for orchestration:', error);
     } finally {
       setIsRegistering(false);
     }
@@ -125,58 +148,43 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
   const handleConnectToA2A = async () => {
     setIsConnecting(true);
     try {
-      // Get list of other A2A agents
-      const response = await fetch('http://localhost:5008/api/a2a/agents');
-      if (response.ok) {
-        const data = await response.json();
-        const otherAgents = data.agents.filter((a: any) => a.id !== agent.id);
+      // Prepare target agents for the selective connection endpoint
+      let targetAgents: string | string[] = 'all';
+      
+      // If specific agent selected, connect only to that agent
+      if (selectedAgent !== 'all') {
+        targetAgents = [selectedAgent];
+      }
+      
+      // Use the new selective connection endpoint
+      const connectResponse = await fetch('http://localhost:5008/api/a2a/connections/selective', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from_agent_id: agent.id,
+          target_agents: targetAgents
+        })
+      });
+
+      if (connectResponse.ok) {
+        const result = await connectResponse.json();
+        const successfulConnections = result.summary?.successful || 0;
         
-        if (otherAgents.length > 0) {
-          // Connect to ALL other agents that aren't already connected
-          const connectionPromises = otherAgents.map(async (otherAgent: any) => {
-            // Check if already connected
-            const isAlreadyConnected = connections.includes(otherAgent.id);
-            if (isAlreadyConnected) {
-              return { success: true, alreadyConnected: true };
-            }
-
-            // Create connection
-            const connectResponse = await fetch('http://localhost:5008/api/a2a/connections', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                from_agent_id: agent.id,
-                to_agent_id: otherAgent.id
-              })
-            });
-
-            return { 
-              success: connectResponse.ok, 
-              agentId: otherAgent.id,
-              alreadyConnected: false
-            };
-          });
-
-          // Wait for all connections to complete
-          const results = await Promise.all(connectionPromises);
-          const successfulConnections = results.filter(r => r.success && !r.alreadyConnected).length;
-          
-          if (successfulConnections > 0) {
-            // Refresh A2A status instead of reloading page
-            await fetchA2AStatus();
-            // Update available agents count
-            const updatedResponse = await fetch('http://localhost:5008/api/a2a/agents');
-            if (updatedResponse.ok) {
-              const updatedData = await updatedResponse.json();
-              const updatedOtherAgents = updatedData.agents.filter((a: any) => a.id !== agent.id);
-              setAvailableAgents(updatedOtherAgents);
-            }
-            // Notify parent component that connections were made
-            if (onA2AConnected) {
-              onA2AConnected();
-            }
+        if (successfulConnections > 0) {
+          // Refresh A2A status instead of reloading page
+          await fetchA2AStatus();
+          // Update available agents count
+          const updatedResponse = await fetch('http://localhost:5008/api/a2a/agents');
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json();
+            const updatedOtherAgents = updatedData.agents.filter((a: any) => a.id !== agent.id);
+            setAvailableAgents(updatedOtherAgents);
+          }
+          // Notify parent component that connections were made
+          if (onA2AConnected) {
+            onA2AConnected();
           }
         }
       }
@@ -227,37 +235,27 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Model:</span>
-                      <span className="text-white">{(agent as any).model_id}</span>
+                      <span className="text-white">{agent.model || 'qwen3:1.7b'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Host:</span>
-                      <span className="text-white">{(agent as any).host}</span>
+                      <span className="text-white">{(agent as any).host || 'http://localhost:11434'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Model Provider:</span>
+                      <span className="text-white">{(agent as any).model_provider || 'qwen3:1.7b'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Temperature:</span>
-                      <span className="text-white">
-                        {(() => {
-                          try {
-                            const config = JSON.parse((agent as any).sdk_config || '{}');
-                            return config?.ollama_config?.temperature || 0.7;
-                          } catch {
-                            return 0.7;
-                          }
-                        })()}
-                      </span>
+                      <span className="text-white">{agent.temperature || 0.7}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Max Tokens:</span>
-                      <span className="text-white">
-                        {(() => {
-                          try {
-                            const config = JSON.parse((agent as any).sdk_config || '{}');
-                            return config?.ollama_config?.max_tokens || 1000;
-                          } catch {
-                            return 1000;
-                          }
-                        })()}
-                      </span>
+                      <span className="text-white">{agent.maxTokens || 1000}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Status:</span>
+                      <span className="text-white">{agent.status || 'active'}</span>
                     </div>
                     
                     {/* A2A Status Section */}
@@ -273,6 +271,14 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                             {a2aStatus?.registered ? "Yes" : "No"}
                           </span>
                         </div>
+                        {a2aStatus?.registered && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Orchestration:</span>
+                            <span className={a2aStatus?.orchestration_enabled ? "text-green-400" : "text-yellow-400"}>
+                              {a2aStatus?.orchestration_enabled ? "Enabled" : "Basic A2A"}
+                            </span>
+                          </div>
+                        )}
                         {a2aStatus?.registered && (
                           <>
                             <div className="flex justify-between">
@@ -333,6 +339,17 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                       </div>
                     )}
                     
+                    {/* System Prompt Section */}
+                    <div className="border-t border-gray-600 pt-2 mt-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Settings className="h-3 w-3 text-purple-400" />
+                        <span className="text-xs font-medium text-purple-300">System Prompt:</span>
+                      </div>
+                      <div className="bg-gray-900 p-2 rounded text-xs text-gray-300 max-h-20 overflow-y-auto">
+                        {agent.systemPrompt || 'No system prompt available'}
+                      </div>
+                    </div>
+                    
                     {/* SDK Info */}
                     <div className="border-t border-gray-600 pt-2 mt-2">
                       <div className="flex items-center gap-2">
@@ -373,10 +390,13 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
               )}
             </div>
             
-            {!a2aStatus?.registered ? (
+            {!a2aStatus?.registered || !a2aStatus?.orchestration_enabled ? (
               <div className="space-y-2">
                 <p className="text-xs text-gray-400">
-                  Enable A2A communication to allow this agent to interact with other agents
+                  {!a2aStatus?.registered 
+                    ? "Enable orchestration with dedicated backend for multi-agent collaboration"
+                    : "Upgrade to orchestration-enabled with dedicated backend"
+                  }
                 </p>
                 <Button
                   size="sm"
@@ -392,7 +412,7 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                   ) : (
                     <>
                       <Network className="h-3 w-3 mr-2" />
-                      Register for A2A
+                      Register for Orchestration
                     </>
                   )}
                 </Button>
@@ -403,39 +423,75 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
                   <span className="text-gray-400">Connections:</span>
                   <span className="text-white">{connections.length}</span>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={handleConnectToA2A}
-                  disabled={isConnecting || availableAgents.length === 0 || connections.length >= availableAgents.length}
-                  variant="outline"
-                  className={`w-full ${
-                    availableAgents.length === 0 || connections.length >= availableAgents.length
-                      ? 'border-gray-500 text-gray-500 cursor-not-allowed' 
-                      : 'border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white'
-                  }`}
-                >
-                  {isConnecting ? (
-                    <>
-                      <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : availableAgents.length === 0 ? (
-                    <>
-                      <Users className="h-3 w-3 mr-2" />
-                      No Other Agents Available
-                    </>
-                  ) : connections.length >= availableAgents.length ? (
-                    <>
-                      <Users className="h-3 w-3 mr-2" />
-                      All Agents Connected ({connections.length}/{availableAgents.length})
-                    </>
-                  ) : (
-                    <>
-                      <Users className="h-3 w-3 mr-2" />
-                      Connect to All Agents ({availableAgents.length - connections.length} remaining)
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <Select
+                    value={selectedAgent}
+                    onValueChange={setSelectedAgent}
+                    disabled={isConnecting || availableAgents.length === 0}
+                  >
+                    <SelectTrigger className="w-full h-8 text-xs border-gray-600 bg-gray-800 text-white">
+                      <SelectValue placeholder="Select agent to connect" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectItem value="all" className="text-white hover:bg-gray-700">
+                        <div className="flex items-center">
+                          <Users className="h-3 w-3 mr-2" />
+                          All Agents ({availableAgents.length - connections.length} remaining)
+                        </div>
+                      </SelectItem>
+                      {availableAgents.map((otherAgent) => (
+                        <SelectItem 
+                          key={otherAgent.id} 
+                          value={otherAgent.id}
+                          disabled={connections.includes(otherAgent.id)}
+                          className="text-white hover:bg-gray-700"
+                        >
+                          <div className="flex items-center">
+                            <Bot className="h-3 w-3 mr-2" />
+                            {otherAgent.name}
+                            {connections.includes(otherAgent.id) && (
+                              <CheckCircle className="h-3 w-3 ml-2 text-green-400" />
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button
+                    size="sm"
+                    onClick={handleConnectToA2A}
+                    disabled={isConnecting || availableAgents.length === 0 || (selectedAgent !== 'all' && connections.includes(selectedAgent))}
+                    variant="outline"
+                    className={`w-full ${
+                      availableAgents.length === 0 || (selectedAgent !== 'all' && connections.includes(selectedAgent))
+                        ? 'border-gray-500 text-gray-500 cursor-not-allowed' 
+                        : 'border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white'
+                    }`}
+                  >
+                    {isConnecting ? (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : availableAgents.length === 0 ? (
+                      <>
+                        <Users className="h-3 w-3 mr-2" />
+                        No Other Agents Available
+                      </>
+                    ) : selectedAgent === 'all' ? (
+                      <>
+                        <Users className="h-3 w-3 mr-2" />
+                        Connect to All ({availableAgents.length - connections.length} remaining)
+                      </>
+                    ) : (
+                      <>
+                        <Network className="h-3 w-3 mr-2" />
+                        Connect to Selected Agent
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -510,7 +566,7 @@ export const A2AAgentCard: React.FC<A2AAgentCardProps> = ({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400">Model:</span>
             <Badge variant="outline" className="text-green-400 border-green-400">
-              {(agent as any).model_id}
+              {agent.model || 'qwen3:1.7b'}
             </Badge>
           </div>
 

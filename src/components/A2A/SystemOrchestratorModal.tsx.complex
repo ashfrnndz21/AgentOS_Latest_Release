@@ -1,0 +1,562 @@
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Brain, RefreshCw, CheckCircle, Sparkles, XCircle, Clock, Users, Zap, Eye, 
+  BarChart3, ArrowRight, ArrowLeft, Activity, Database, Network, Cpu, 
+  Target, TrendingUp, AlertTriangle, Info, Play, Pause, RotateCcw
+} from 'lucide-react';
+import { unifiedOrchestrationService, OrchestrationResponse } from '@/lib/services/UnifiedOrchestrationService';
+
+interface SystemOrchestratorModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const SystemOrchestratorModal: React.FC<SystemOrchestratorModalProps> = ({
+  open,
+  onOpenChange
+}) => {
+  const [query, setQuery] = useState('');
+  const [isOrchestrating, setIsOrchestrating] = useState(false);
+  const [orchestrationResult, setOrchestrationResult] = useState<OrchestrationResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'workflow' | 'agents' | 'dataflow' | 'performance'>('overview');
+
+  const handleOrchestrationQuery = async () => {
+    if (!query.trim()) return;
+
+    setIsOrchestrating(true);
+    setError(null);
+    setOrchestrationResult(null);
+
+    try {
+      const result = await unifiedOrchestrationService.orchestrate({
+        query: query.trim(),
+        options: {
+          enable_observability: true
+        }
+      });
+
+      setOrchestrationResult(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Orchestration failed');
+      console.error('Orchestration error:', err);
+    } finally {
+      setIsOrchestrating(false);
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
+    return `${seconds.toFixed(2)}s`;
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden bg-gray-900 border-gray-700">
+        <DialogHeader className="border-b border-gray-700 pb-4">
+          <DialogTitle className="flex items-center gap-3 text-2xl">
+            <div className="p-2 bg-purple-600 rounded-lg">
+              <Brain className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div className="text-white">System Orchestrator</div>
+              <div className="text-sm text-gray-400 font-normal">A2A Multi-Agent Query Engine</div>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex h-[calc(95vh-120px)]">
+          {/* Left Panel - Query Input */}
+          <div className="w-1/3 border-r border-gray-700 p-6 space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-400" />
+                Query Configuration
+              </h3>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Multi-Agent Query
+                </label>
+                <Textarea
+                  placeholder="Enter your query for multi-agent orchestration..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="min-h-[120px] bg-gray-800 border-gray-600 text-white resize-none"
+                />
+              </div>
+
+              <Button 
+                onClick={handleOrchestrationQuery} 
+                disabled={isOrchestrating || !query.trim()}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3"
+              >
+                {isOrchestrating ? (
+                  <>
+                    <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                    Orchestrating...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-5 w-5" />
+                    Execute A2A Orchestration
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <div className="flex items-center gap-2 text-red-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <strong>Error:</strong> {error}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Stats */}
+            {orchestrationResult && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-green-400" />
+                  Quick Stats
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {orchestrationResult.workflow_summary.agents_used.length}
+                    </div>
+                    <div className="text-xs text-gray-400">Agents</div>
+                  </div>
+                  <div className="p-3 bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-400">
+                      {formatDuration(orchestrationResult.workflow_summary.processing_time)}
+                    </div>
+                    <div className="text-xs text-gray-400">Duration</div>
+                  </div>
+                  <div className="p-3 bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">
+                      {orchestrationResult.workflow_summary.stages_completed}
+                    </div>
+                    <div className="text-xs text-gray-400">Stages</div>
+                  </div>
+                  <div className="p-3 bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-400">
+                      {formatBytes(orchestrationResult.response.length)}
+                    </div>
+                    <div className="text-xs text-gray-400">Response</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Panel - Results Display */}
+          <div className="flex-1 flex flex-col">
+            {orchestrationResult ? (
+              <>
+                {/* Tab Navigation */}
+                <div className="border-b border-gray-700">
+                  <div className="flex space-x-1 p-4">
+                    <button
+                      onClick={() => setActiveTab('overview')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === 'overview' 
+                          ? 'bg-purple-600 text-white shadow-lg' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Eye className="h-4 w-4 inline mr-2" />
+                      Overview
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('workflow')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === 'workflow' 
+                          ? 'bg-purple-600 text-white shadow-lg' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Zap className="h-4 w-4 inline mr-2" />
+                      Workflow
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('agents')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === 'agents' 
+                          ? 'bg-purple-600 text-white shadow-lg' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Users className="h-4 w-4 inline mr-2" />
+                      Agents
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('dataflow')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === 'dataflow' 
+                          ? 'bg-purple-600 text-white shadow-lg' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Network className="h-4 w-4 inline mr-2" />
+                      Data Flow
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('performance')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === 'performance' 
+                          ? 'bg-purple-600 text-white shadow-lg' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <BarChart3 className="h-4 w-4 inline mr-2" />
+                      Performance
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {activeTab === 'overview' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-600 rounded-lg">
+                          <CheckCircle className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">Orchestration Complete</h2>
+                          <p className="text-gray-400">A2A Multi-Agent workflow executed successfully</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-6">
+                        <div className="bg-gray-800 rounded-lg p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Cpu className="h-5 w-5 text-blue-400" />
+                            <h3 className="text-lg font-semibold text-white">Execution Strategy</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-blue-400 mb-2">
+                            {orchestrationResult.workflow_summary.execution_strategy}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {orchestrationResult.workflow_summary.domain || 'telecommunications/network performance'}
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-800 rounded-lg p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Clock className="h-5 w-5 text-purple-400" />
+                            <h3 className="text-lg font-semibold text-white">Processing Time</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-purple-400 mb-2">
+                            {formatDuration(orchestrationResult.workflow_summary.processing_time)}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {orchestrationResult.workflow_summary.agents_used.length} agents coordinated
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-800 rounded-lg p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Database className="h-5 w-5 text-green-400" />
+                            <h3 className="text-lg font-semibold text-white">Data Processed</h3>
+                          </div>
+                          <div className="text-3xl font-bold text-green-400 mb-2">
+                            {formatBytes(orchestrationResult.response.length)}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            Clean response generated
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-800 rounded-lg p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <Sparkles className="h-5 w-5 text-yellow-400" />
+                          <h3 className="text-lg font-semibold text-white">Clean Response Output</h3>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg p-4">
+                          <pre className="whitespace-pre-wrap text-white text-sm leading-relaxed">
+                            {orchestrationResult.response}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'workflow' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-600 rounded-lg">
+                          <Zap className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">A2A Workflow Execution</h2>
+                          <p className="text-gray-400">Sequential handoff process with orchestrator coordination</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        {orchestrationResult.workflow_summary.agents_used.map((agent, index) => (
+                          <div key={index} className="bg-gray-800 rounded-lg p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-white">{agent}</h3>
+                                <p className="text-gray-400">Step {index + 1} of {orchestrationResult.workflow_summary.agents_used.length}</p>
+                              </div>
+                              <div className="text-green-400">
+                                <CheckCircle className="h-8 w-8" />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-gray-700 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <ArrowRight className="h-4 w-4 text-blue-400" />
+                                  <span className="text-sm font-medium text-blue-400">Outbound</span>
+                                </div>
+                                <div className="text-white text-sm">
+                                  Orchestrator → {agent}
+                                </div>
+                                <div className="text-gray-400 text-xs mt-1">
+                                  Handoff {index * 2 + 1}
+                                </div>
+                              </div>
+                              <div className="bg-gray-700 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <ArrowLeft className="h-4 w-4 text-green-400" />
+                                  <span className="text-sm font-medium text-green-400">Inbound</span>
+                                </div>
+                                <div className="text-white text-sm">
+                                  {agent} → Orchestrator
+                                </div>
+                                <div className="text-gray-400 text-xs mt-1">
+                                  Handoff {index * 2 + 2}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'agents' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-600 rounded-lg">
+                          <Users className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">Agent Details</h2>
+                          <p className="text-gray-400">Specialized agents and their contributions</p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6">
+                        {orchestrationResult.workflow_summary.agents_used.map((agent, index) => (
+                          <div key={index} className="bg-gray-800 rounded-lg p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                                <Brain className="h-8 w-8 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-xl font-bold text-white">{agent}</h3>
+                                  <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
+                                    Active
+                                  </span>
+                                </div>
+                                <p className="text-gray-400 mb-4">
+                                  Specialized agent for telecommunications and network analysis
+                                </p>
+                                
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="bg-gray-700 rounded-lg p-3">
+                                    <div className="text-sm text-gray-400 mb-1">Execution Order</div>
+                                    <div className="text-lg font-bold text-white">{index + 1}</div>
+                                  </div>
+                                  <div className="bg-gray-700 rounded-lg p-3">
+                                    <div className="text-sm text-gray-400 mb-1">Status</div>
+                                    <div className="text-lg font-bold text-green-400">Success</div>
+                                  </div>
+                                  <div className="bg-gray-700 rounded-lg p-3">
+                                    <div className="text-sm text-gray-400 mb-1">Handoffs</div>
+                                    <div className="text-lg font-bold text-blue-400">2</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'dataflow' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-600 rounded-lg">
+                          <Network className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">Data Flow Analysis</h2>
+                          <p className="text-gray-400">Complete data exchange and processing pipeline</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                          <Database className="h-5 w-5 text-blue-400" />
+                          Data Exchanges
+                        </h3>
+                        
+                        <div className="space-y-4">
+                          {orchestrationResult.workflow_summary.agents_used.map((agent, index) => (
+                            <div key={index} className="bg-gray-700 rounded-lg p-4">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                  {index + 1}
+                                </div>
+                                <span className="text-white font-medium">{agent}</span>
+                                <span className="text-gray-400 text-sm">
+                                  {formatBytes(query.length)} → {formatBytes(orchestrationResult.response.length)}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-600 rounded-lg p-3">
+                                  <div className="text-xs text-gray-400 mb-1">Input Data</div>
+                                  <div className="text-white text-sm">
+                                    {query.substring(0, 100)}...
+                                  </div>
+                                </div>
+                                <div className="bg-gray-600 rounded-lg p-3">
+                                  <div className="text-xs text-gray-400 mb-1">Output Data</div>
+                                  <div className="text-white text-sm">
+                                    Agent analysis and recommendations
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'performance' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-600 rounded-lg">
+                          <BarChart3 className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-white">Performance Metrics</h2>
+                          <p className="text-gray-400">Execution statistics and system performance</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="bg-gray-800 rounded-lg p-6">
+                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-green-400" />
+                            Execution Metrics
+                          </h3>
+                          
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Total Duration</span>
+                              <span className="text-white font-bold">
+                                {formatDuration(orchestrationResult.workflow_summary.processing_time)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Agents Used</span>
+                              <span className="text-white font-bold">
+                                {orchestrationResult.workflow_summary.agents_used.length}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Stages Completed</span>
+                              <span className="text-white font-bold">
+                                {orchestrationResult.workflow_summary.stages_completed}/{orchestrationResult.workflow_summary.total_stages}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Success Rate</span>
+                              <span className="text-green-400 font-bold">100%</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-800 rounded-lg p-6">
+                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <Database className="h-5 w-5 text-blue-400" />
+                            Data Metrics
+                          </h3>
+                          
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Query Length</span>
+                              <span className="text-white font-bold">
+                                {query.length} chars
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Response Length</span>
+                              <span className="text-white font-bold">
+                                {orchestrationResult.response.length} chars
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Data Compression</span>
+                              <span className="text-white font-bold">
+                                {((orchestrationResult.response.length / query.length) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Session ID</span>
+                              <span className="text-white font-mono text-xs">
+                                {orchestrationResult.session_id.substring(0, 8)}...
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Brain className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Ready for Orchestration</h3>
+                  <p className="text-gray-400">Enter a query to begin A2A multi-agent processing</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

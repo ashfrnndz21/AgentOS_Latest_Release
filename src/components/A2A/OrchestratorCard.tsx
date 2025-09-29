@@ -133,8 +133,8 @@ export const OrchestratorCard: React.FC = () => {
     setOrchestrationResult(null);
 
     try {
-      // Use our working enhanced orchestration API
-      const response = await fetch('http://localhost:5014/api/enhanced-orchestration/query', {
+      // Use our modern orchestration API
+      const response = await fetch('http://localhost:5015/api/modern-orchestration/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ export const OrchestratorCard: React.FC = () => {
         setOrchestrationError(errorData.error || 'Orchestration failed');
       }
     } catch (err) {
-      setOrchestrationError('Error connecting to orchestration service');
+      setOrchestrationError('Error connecting to modern orchestration service');
       console.error('Orchestration error:', err);
     } finally {
       setIsOrchestrating(false);
@@ -910,7 +910,7 @@ export const OrchestratorCard: React.FC = () => {
                         <div>
                           <h4 className="text-sm font-medium text-gray-300 mb-2">Orchestration Flow</h4>
                           <div className="p-3 bg-gray-700 rounded">
-                            <div className="text-white">4-Step Process: Query Analysis → Agent Analysis → Agent Selection → A2A Execution</div>
+                            <div className="text-white">5-Stage Process: Query Analysis → Agent Matching → Contextual Routing → Agent Execution → Final Synthesis</div>
                             <div className="text-xs text-gray-400 mt-1">Intelligent query processing with contextual reasoning</div>
                           </div>
                         </div>
@@ -971,14 +971,14 @@ export const OrchestratorCard: React.FC = () => {
                     <div className="border-t border-gray-700 pt-4">
                       <h3 className="text-lg font-semibold text-green-400 mb-4 flex items-center gap-2">
                         <CheckCircle className="h-5 w-5" />
-                        Complete 6-Stage A2A Orchestration Results
+                        Complete Modern A2A Orchestration Results
                       </h3>
                       
                       {/* A2A System Explanation */}
                       <div className="mb-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
                         <div className="text-sm text-blue-200">
-                          <strong>🤖 A2A Orchestration System:</strong> Works directly with Strands SDK agents for intelligent multi-agent coordination. 
-                          No A2A service registration required - orchestration uses built-in A2A capabilities.
+                          <strong>🤖 Modern A2A Orchestration System:</strong> Works directly with orchestration-enabled agents for intelligent multi-agent coordination. 
+                          Uses dedicated backends and 5-stage analysis for optimal agent selection and execution.
                         </div>
                       </div>
                       
@@ -986,42 +986,42 @@ export const OrchestratorCard: React.FC = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div className="text-center p-3 bg-gray-800 rounded-lg">
                           <div className="text-2xl font-bold text-green-600">
-                            {orchestrationResult.raw_agent_response?.agents_coordinated || 0}
+                            {orchestrationResult.agent_info ? 1 : 0}
                           </div>
-                          <div className="text-sm text-gray-400">Agents Coordinated</div>
+                          <div className="text-sm text-gray-400">Agents Executed</div>
                         </div>
                         <div className="text-center p-3 bg-gray-800 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">
-                            {orchestrationResult.raw_agent_response?.agents_coordinated || 0}
+                            {orchestrationResult.analysis ? 5 : 0}
                           </div>
-                          <div className="text-sm text-gray-400">Successful Steps</div>
+                          <div className="text-sm text-gray-400">Stages Completed</div>
                         </div>
                         <div className="text-center p-3 bg-gray-800 rounded-lg">
                           <div className="text-2xl font-bold text-purple-600">
-                            {orchestrationResult.orchestration_summary?.processing_time?.toFixed(2) || 0}s
+                            {orchestrationResult.execution_info?.execution_time?.toFixed(2) || 0}s
                           </div>
                           <div className="text-sm text-gray-400">Execution Time</div>
                         </div>
                         <div className="text-center p-3 bg-gray-800 rounded-lg">
                           <div className="text-2xl font-bold text-orange-600">
-                            {orchestrationResult.execution_details?.agent_response_length || 0}
+                            {orchestrationResult.response?.length || 0}
                           </div>
                           <div className="text-sm text-gray-400">Response Length</div>
                         </div>
                       </div>
 
                       {/* Step 1: Query Analysis */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
-                          <h4 className="text-lg font-semibold text-blue-400">Query Analysis</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Search className="h-4 w-4" />
-                              Query Understanding
-                            </h5>
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                            <h4 className="text-lg font-semibold text-blue-400">Query Analysis & Agent Selection</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Search className="h-4 w-4" />
+                                Query Understanding
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               <div className="mb-2"><strong>Query Type:</strong> {orchestrationResult.stage_1_query_analysis?.query_type || "general"}</div>
                               <div className="mb-2"><strong>Domain:</strong> {orchestrationResult.stage_1_query_analysis?.domain || "Multi-Agent Programming"}</div>
@@ -1031,66 +1031,66 @@ export const OrchestratorCard: React.FC = () => {
                               <div className="mb-2"><strong>Dependencies:</strong> {orchestrationResult.stage_1_query_analysis?.dependencies || "None identified"}</div>
                               <div className="mb-2"><strong>Scope:</strong> {orchestrationResult.stage_1_query_analysis?.scope || "general"}</div>
                               {orchestrationResult.stage_1_query_analysis?.reasoning && (
-                                <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
-                                  <div className="text-xs text-blue-300 font-medium mb-1">LLM Reasoning:</div>
+                                  <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
+                                    <div className="text-xs text-blue-300 font-medium mb-1">LLM Reasoning:</div>
                                   <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_1_query_analysis.reasoning}</div>
-                                </div>
-                              )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Step 2: Sequence Definition */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
-                          <h4 className="text-lg font-semibold text-purple-400">Sequence Definition</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Workflow className="h-4 w-4" />
-                              Workflow Planning
-                            </h5>
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                            <h4 className="text-lg font-semibold text-purple-400">Sequence Definition</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Workflow className="h-4 w-4" />
+                                Workflow Planning
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               <div className="mb-2"><strong>Execution Flow:</strong> {orchestrationResult.stage_2_sequence_definition?.execution_flow || "Sequential execution"}</div>
                               <div className="mb-2"><strong>Handoff Points:</strong> {orchestrationResult.stage_2_sequence_definition?.handoff_points || "Between sequential steps"}</div>
                               <div className="mb-2"><strong>Parallel Opportunities:</strong> {orchestrationResult.stage_2_sequence_definition?.parallel_opportunities || "Sequential only"}</div>
                               <div className="mb-3"><strong>Workflow Steps:</strong></div>
                               {orchestrationResult.stage_2_sequence_definition?.workflow_steps?.map((step: any, index: number) => (
-                                <div key={index} className="ml-4 mb-2 p-2 bg-gray-600 rounded">
+                                      <div key={index} className="ml-4 mb-2 p-2 bg-gray-600 rounded">
                                   <div className="text-sm text-white"><strong>Step {step.step}:</strong> {step.task}</div>
                                   <div className="text-xs text-gray-300">Expertise: {step.required_expertise}</div>
-                                </div>
+                                          </div>
                               )) || (
                                 <div className="ml-4 mb-2 p-2 bg-gray-600 rounded">
                                   <div className="text-sm text-white">Loading workflow steps...</div>
-                                </div>
-                              )}
+                                  </div>
+                                )}
                               {orchestrationResult.stage_2_sequence_definition?.reasoning && (
-                                <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
-                                  <div className="text-xs text-purple-300 font-medium mb-1">LLM Reasoning:</div>
+                                  <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
+                                    <div className="text-xs text-purple-300 font-medium mb-1">LLM Reasoning:</div>
                                   <div className="text-xs text-purple-200 whitespace-pre-wrap">{orchestrationResult.stage_2_sequence_definition.reasoning}</div>
-                                </div>
-                              )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Step 3: Orchestrator Reasoning */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
-                          <h4 className="text-lg font-semibold text-blue-400">Orchestrator Reasoning</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                         <div>
-                           <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                             <Brain className="h-4 w-4" />
-                             Contextual Reasoning
-                           </h5>
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                            <h4 className="text-lg font-semibold text-blue-400">Orchestrator Reasoning</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Brain className="h-4 w-4" />
+                                Contextual Reasoning
+                              </h5>
                            <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                              <div className="mb-2"><strong>User Intent:</strong> {orchestrationResult.stage_1_query_analysis?.user_intent || orchestrationResult.orchestration_summary?.user_intent || "Multi-agent collaboration request"}</div>
                              <div className="mb-2"><strong>Domain Analysis:</strong> {orchestrationResult.stage_1_query_analysis?.domain || orchestrationResult.orchestration_summary?.domain || "Multi-Agent Programming"}</div>
@@ -1100,27 +1100,27 @@ export const OrchestratorCard: React.FC = () => {
                              <div className="mb-2"><strong>Complexity Assessment:</strong> {orchestrationResult.stage_3_execution_strategy?.complexity_assessment || "moderate"}</div>
                              
                              {/* Show LLM reasoning from Stage 1 */}
-                             {orchestrationResult.stage_1_query_analysis?.reasoning && (
-                               <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
-                                 <div className="text-xs text-blue-300 font-medium mb-1">LLM Query Analysis Reasoning:</div>
-                                 <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_1_query_analysis.reasoning}</div>
-                               </div>
-                             )}
-                             
+                                {orchestrationResult.analysis?.stage_1_query_analysis?.output?.task_decomposition && (
+                                  <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
+                                    <div className="text-xs text-blue-300 font-medium mb-1">LLM Query Analysis Reasoning:</div>
+                                    <div className="text-xs text-blue-200 whitespace-pre-wrap">{JSON.stringify(orchestrationResult.analysis?.stage_1_query_analysis?.output?.task_decomposition)}</div>
+                                  </div>
+                                )}
+                                
                              {/* Show LLM reasoning from Stage 3 */}
-                             {orchestrationResult.stage_3_execution_strategy?.reasoning && (
-                               <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
-                                 <div className="text-xs text-blue-300 font-medium mb-1">LLM Execution Strategy Reasoning:</div>
-                                 <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_3_execution_strategy.reasoning}</div>
-                               </div>
-                             )}
-                           </div>
-                         </div>
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Target className="h-4 w-4" />
-                              Agent Selection Logic
-                            </h5>
+                                {orchestrationResult.stage_3_execution_strategy?.reasoning && (
+                                  <div className="mt-3 p-2 bg-blue-900/20 rounded border border-blue-500/30">
+                                    <div className="text-xs text-blue-300 font-medium mb-1">LLM Execution Strategy Reasoning:</div>
+                                    <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_3_execution_strategy.reasoning}</div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Target className="h-4 w-4" />
+                                Agent Selection Logic
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               <div className="mb-2"><strong>Available Agents:</strong> {
                                 orchestrationResult?.stage_4_agent_analysis?.agent_evaluations?.length > 0
@@ -1138,51 +1138,51 @@ export const OrchestratorCard: React.FC = () => {
                               
                               {/* Show actual agent evaluations from LLM if available */}
                               {orchestrationResult.stage_4_agent_analysis?.agent_evaluations && (
-                                <div className="mt-3 space-y-2">
-                                  <div className="text-xs text-blue-300 font-medium">LLM Agent Analysis:</div>
+                                    <div className="mt-3 space-y-2">
+                                      <div className="text-xs text-blue-300 font-medium">LLM Agent Analysis:</div>
                                   {orchestrationResult.stage_4_agent_analysis.agent_evaluations.map((agent: any, index: number) => (
-                                    <div key={index} className="p-2 bg-blue-900/20 rounded border border-blue-500/30">
+                                        <div key={index} className="p-2 bg-blue-900/20 rounded border border-blue-500/30">
                                       <div className="text-xs text-blue-300 font-medium">{agent.agent_name} (Score: {agent.suitability_score})</div>
                                       <div className="text-xs text-blue-200 mt-1">{agent.reasoning}</div>
-                                      <div className="text-xs text-blue-200 mt-1">
+                                          <div className="text-xs text-blue-200 mt-1">
                                         <strong>Strengths:</strong> {Array.isArray(agent.strengths) ? agent.strengths.join(', ') : agent.strengths || 'N/A'}
                                       </div>
                                       <div className="text-xs text-blue-200">
                                         <strong>Role:</strong> {agent.recommended_role}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Layers className="h-4 w-4" />
-                              Context Preparation
-                            </h5>
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Layers className="h-4 w-4" />
+                                Context Preparation
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               <div className="mb-2"><strong>Initial Context:</strong> "{query}"</div>
                               <div className="mb-2"><strong>Handoff Instructions:</strong> Sequential processing with context refinement</div>
-                              <div><strong>Expected Output:</strong> Comprehensive multi-agent response</div>
+                                <div><strong>Expected Output:</strong> Comprehensive multi-agent response</div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Step 4: Agent Registry Analysis */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">4</div>
-                          <h4 className="text-lg font-semibold text-purple-400">Agent Registry Analysis</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Users className="h-4 w-4" />
-                              Available Agents
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">4</div>
+                            <h4 className="text-lg font-semibold text-purple-400">Agent Registry Analysis</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Users className="h-4 w-4" />
+                                Available Agents
+                              </h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {orchestrationResult?.stage_4_agent_analysis?.agent_evaluations?.length > 0 ? (
                                 orchestrationResult.stage_4_agent_analysis.agent_evaluations.map((agent: any, index: number) => (
                                   <div key={index} className="bg-gray-700 p-3 rounded">
@@ -1229,22 +1229,22 @@ export const OrchestratorCard: React.FC = () => {
                                   </div>
                                 ))
                               ) : orchestrationResult?.raw_agent_response?.agents_coordinated ? (
-                                <div className="bg-gray-700 p-3 rounded col-span-2">
-                                  <div className="font-medium text-white text-green-400">✅ {orchestrationResult.raw_agent_response.agents_coordinated} Strands SDK Agents Available</div>
-                                  <div className="text-sm text-gray-400 mt-1">Working directly with Strands SDK agents</div>
-                                </div>
+                                  <div className="bg-gray-700 p-3 rounded col-span-2">
+                                    <div className="font-medium text-white text-green-400">✅ {orchestrationResult.raw_agent_response.agents_coordinated} Strands SDK Agents Available</div>
+                                    <div className="text-sm text-gray-400 mt-1">Working directly with Strands SDK agents</div>
+                                  </div>
                               ) : (
                                 <div className="bg-gray-700 p-3 rounded col-span-2">
                                   <div className="font-medium text-white">Loading agent data...</div>
                                 </div>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Activity className="h-4 w-4" />
-                              Capability Matching & Scoring
-                            </h5>
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Activity className="h-4 w-4" />
+                                Capability Matching & Scoring
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               {orchestrationResult?.stage_4_agent_analysis?.agent_evaluations ? (
                                 orchestrationResult.stage_4_agent_analysis.agent_evaluations.map((agent: any, index: number) => (
@@ -1276,70 +1276,70 @@ export const OrchestratorCard: React.FC = () => {
                               )}
                               
                               {/* Show overall LLM reasoning for agent analysis */}
-                              {orchestrationResult.stage_4_agent_analysis?.reasoning && (
-                                <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
-                                  <div className="text-xs text-purple-300 font-medium mb-1">LLM Agent Analysis Reasoning:</div>
-                                  <div className="text-xs text-purple-200 whitespace-pre-wrap">{orchestrationResult.stage_4_agent_analysis.reasoning}</div>
-                                </div>
-                              )}
-                              
+                                {orchestrationResult.stage_4_agent_analysis?.reasoning && (
+                                  <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
+                                    <div className="text-xs text-purple-300 font-medium mb-1">LLM Agent Analysis Reasoning:</div>
+                                    <div className="text-xs text-purple-200 whitespace-pre-wrap">{orchestrationResult.stage_4_agent_analysis.reasoning}</div>
+                                  </div>
+                                )}
+                                
                               {/* Show agent registry analysis summary */}
-                              {orchestrationResult.agent_registry_analysis?.analysis_summary && (
-                                <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
-                                  <div className="text-xs text-purple-300 font-medium mb-1">Agent Registry Analysis Summary:</div>
-                                  <div className="text-xs text-purple-200 whitespace-pre-wrap">{orchestrationResult.agent_registry_analysis.analysis_summary}</div>
-                                </div>
-                              )}
+                                {orchestrationResult.agent_registry_analysis?.analysis_summary && (
+                                  <div className="mt-3 p-2 bg-purple-900/20 rounded border border-purple-500/30">
+                                    <div className="text-xs text-purple-300 font-medium mb-1">Agent Registry Analysis Summary:</div>
+                                    <div className="text-xs text-purple-200 whitespace-pre-wrap">{orchestrationResult.agent_registry_analysis.analysis_summary}</div>
+                                  </div>
+                                )}
                               <div><strong>Selection Rationale:</strong> {orchestrationResult?.orchestration_summary?.execution_reasoning || 'Agent selection based on capability matching and domain relevance'}</div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Step 5: Agent Selection & Sequencing */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">5</div>
-                          <h4 className="text-lg font-semibold text-green-400">Agent Selection & Sequencing</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <Target className="h-4 w-4" />
-                              Final Agent List & Execution Order
-                            </h5>
-                            <div className="space-y-3">
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">5</div>
+                            <h4 className="text-lg font-semibold text-green-400">Agent Selection & Sequencing</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <Target className="h-4 w-4" />
+                                Final Agent List & Execution Order
+                              </h5>
+                              <div className="space-y-3">
                               {orchestrationResult?.stage_5_agent_matching?.selected_agents ? (
                                 orchestrationResult.stage_5_agent_matching.selected_agents
                                   .map((agent: any, index: number) => (
-                                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-700 rounded">
-                                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">{agent.execution_order}</div>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-white">{agent.agent_name}</div>
-                                        <div className="text-sm text-gray-400">
-                                          Task: {agent.task_assignment}
-                                        </div>
+                                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-700 rounded">
+                                    <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">{agent.execution_order}</div>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-white">{agent.agent_name}</div>
+                                      <div className="text-sm text-gray-400">
+                                        Task: {agent.task_assignment}
                                       </div>
-                                      <Badge variant="default" className="bg-green-600">Selected</Badge>
                                     </div>
+                                    <Badge variant="default" className="bg-green-600">Selected</Badge>
+                                  </div>
                                   ))
                               ) : orchestrationResult?.raw_agent_response?.agents_coordinated ? (
-                                <div className="p-3 bg-gray-700 rounded">
-                                  <div className="font-medium text-white text-green-400">✅ {orchestrationResult.raw_agent_response.agents_coordinated} Strands SDK Agents Selected for Orchestration</div>
-                                  <div className="text-sm text-gray-400 mt-1">Working directly with Strands SDK agents - no A2A registration required</div>
-                                </div>
+                                  <div className="p-3 bg-gray-700 rounded">
+                                    <div className="font-medium text-white text-green-400">✅ {orchestrationResult.raw_agent_response.agents_coordinated} Strands SDK Agents Selected for Orchestration</div>
+                                    <div className="text-sm text-gray-400 mt-1">Working directly with Strands SDK agents - no A2A registration required</div>
+                                  </div>
                               ) : (
                                 <div className="p-3 bg-gray-700 rounded">
                                   <div className="font-medium text-white">Loading agent selection...</div>
                                 </div>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <h5 className="font-medium text-white mb-2 flex items-center gap-2">
-                              <ArrowRight className="h-4 w-4" />
-                              Handoff Strategy
-                            </h5>
+                            <div>
+                              <h5 className="font-medium text-white mb-2 flex items-center gap-2">
+                                <ArrowRight className="h-4 w-4" />
+                                Handoff Strategy
+                              </h5>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               {orchestrationResult.orchestration_summary?.agent_evaluations ? (
                                 orchestrationResult.orchestration_summary.agent_evaluations.map((agent: any, index: number) => (
@@ -1355,34 +1355,34 @@ export const OrchestratorCard: React.FC = () => {
                                   <div><strong>Phase 4:</strong> [Agent 2] → Orchestrator (final synthesis)</div>
                                 </>
                               )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Step 6: A2A Sequential Handover Execution */}
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">6</div>
-                          <h4 className="text-lg font-semibold text-orange-400">A2A Sequential Handover Execution</h4>
-                        </div>
-                        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">6</div>
+                            <h4 className="text-lg font-semibold text-orange-400">A2A Sequential Handover Execution</h4>
+                          </div>
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-4">
                           {/* Show actual agent execution traces */}
-                          {orchestrationResult.stage_5_agent_matching?.selected_agents?.map((agent: any, index: number) => (
-                            <div key={index} className="space-y-3">
-                              {/* Agent Execution Step */}
-                              <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Cpu className="h-4 w-4 text-orange-400" />
-                                  <span className="font-medium text-orange-400">Step {agent.execution_order}: {agent.agent_name}</span>
-                                </div>
+                            {orchestrationResult.stage_5_agent_matching?.selected_agents?.map((agent: any, index: number) => (
+                              <div key={index} className="space-y-3">
+                                {/* Agent Execution Step */}
+                                <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Cpu className="h-4 w-4 text-orange-400" />
+                                    <span className="font-medium text-orange-400">Step {agent.execution_order}: {agent.agent_name}</span>
+                                  </div>
                                 <div className="text-sm text-gray-300">
                                   <div className="mb-1"><strong>Task Assignment:</strong> {agent.task_assignment}</div>
                                   <div className="mb-1"><strong>Execution Order:</strong> {agent.execution_order}</div>
                                   <div className="mb-1"><strong>Status:</strong> Executed Successfully</div>
+                                  </div>
                                 </div>
-                              </div>
-                              
+                                
                               {/* Show actual agent output from strands_response */}
                               {orchestrationResult.raw_agent_response?.strands_response && (
                                 <div className="bg-gray-700 border border-gray-600 rounded-lg p-3">
@@ -1396,37 +1396,37 @@ export const OrchestratorCard: React.FC = () => {
                                         .split(`**${agent.agent_name}`)[1]?.split('**')[0] || 
                                         'Agent output not found in response'
                                       }
+                                        </div>
                                     </div>
                                   </div>
-                                </div>
                               )}
-                            </div>
+                                </div>
                           )) || (
-                            <div className="text-center text-gray-400 p-4">
+                              <div className="text-center text-gray-400 p-4">
                               Loading agent execution traces...
-                            </div>
-                          )}
+                              </div>
+                            )}
                           
                           {/* Show orchestrator synthesis reasoning */}
-                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Brain className="h-4 w-4 text-blue-400" />
-                              <span className="font-medium text-blue-400">Orchestrator Synthesis Reasoning</span>
-                            </div>
+                            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Brain className="h-4 w-4 text-blue-400" />
+                                <span className="font-medium text-blue-400">Orchestrator Synthesis Reasoning</span>
+                              </div>
                             <div className="text-sm text-gray-300">
                               <div className="mb-2"><strong>Synthesis Logic:</strong> {orchestrationResult.orchestration_summary?.synthesis_logic || "sequential with sequential"}</div>
                               <div className="mb-2"><strong>Final Strategy:</strong> {orchestrationResult.stage_6_orchestration_plan?.final_strategy || "Sequential A2A Handover"}</div>
                               <div className="mb-2"><strong>Confidence:</strong> {(orchestrationResult.stage_6_orchestration_plan?.confidence * 100)?.toFixed(0) || "90"}%</div>
                               <div className="mb-2"><strong>Success Criteria:</strong> {orchestrationResult.stage_6_orchestration_plan?.success_criteria || "Task completion"}</div>
-                              
-                              {orchestrationResult.stage_6_orchestration_plan?.reasoning && (
-                                <div className="mt-3 p-2 bg-blue-800/30 rounded border border-blue-400/20">
-                                  <div className="text-xs text-blue-300 font-medium mb-1">LLM Orchestration Reasoning:</div>
-                                  <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_6_orchestration_plan.reasoning}</div>
-                                </div>
-                              )}
+                                
+                                {orchestrationResult.stage_6_orchestration_plan?.reasoning && (
+                                  <div className="mt-3 p-2 bg-blue-800/30 rounded border border-blue-400/20">
+                                    <div className="text-xs text-blue-300 font-medium mb-1">LLM Orchestration Reasoning:</div>
+                                    <div className="text-xs text-blue-200 whitespace-pre-wrap">{orchestrationResult.stage_6_orchestration_plan.reasoning}</div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
                           
                           {/* Legacy handover display for backward compatibility */}
                           {orchestrationResult.raw_agent_response?.coordination_results?.handover_steps?.map((step: any, index: number) => (
@@ -1490,11 +1490,11 @@ export const OrchestratorCard: React.FC = () => {
                           ))}
                           
                           {/* Final Synthesis */}
-                          <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                              <Brain className="h-5 w-5 text-purple-400" />
-                              <h5 className="font-medium text-purple-400">Orchestrator Final Synthesis</h5>
-                            </div>
+                            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Brain className="h-5 w-5 text-purple-400" />
+                                <h5 className="font-medium text-purple-400">Orchestrator Final Synthesis</h5>
+                              </div>
                             <div className="text-sm text-gray-300 bg-gray-700 p-3 rounded">
                               <div className="mb-2"><strong>Combined Results:</strong> {
                                 orchestrationResult.orchestration_summary?.agent_evaluations 
@@ -1503,8 +1503,8 @@ export const OrchestratorCard: React.FC = () => {
                               }</div>
                               <div className="mb-2"><strong>Synthesis Logic:</strong> {orchestrationResult.orchestration_summary?.execution_strategy || 'Multi-agent A2A orchestration'} with {orchestrationResult.orchestration_summary?.execution_strategy || 'sequential handover'}</div>
                               <div><strong>Final Output:</strong> {orchestrationResult.orchestration_summary?.coordination_requirements || 'Comprehensive solution with specialized components'}</div>
+                              </div>
                             </div>
-                          </div>
                         </div>
                       </div>
 
@@ -1577,6 +1577,6 @@ export const OrchestratorCard: React.FC = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </>
-      );
-    };
+      </>
+    );
+  };

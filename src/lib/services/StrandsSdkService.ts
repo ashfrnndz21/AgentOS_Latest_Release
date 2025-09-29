@@ -15,6 +15,39 @@ export interface StrandsSdkAgent {
   status: 'active' | 'inactive' | 'error';
   createdAt: string;
   updatedAt: string;
+  response_style?: 'concise' | 'conversational' | 'detailed' | 'technical';
+  show_thinking?: boolean;
+  show_tool_details?: boolean;
+  include_examples?: boolean;
+  include_citations?: boolean;
+  include_warnings?: boolean;
+  custom_format?: string;
+  custom_prefix?: string;
+  custom_suffix?: string;
+  // Additional fields from backend
+  model_id?: string;
+  host?: string;
+  model_provider?: string;
+  a2a_status?: {
+    registered: boolean;
+    a2a_agent_id?: string;
+    a2a_status?: string;
+    connections?: number;
+    last_message?: string;
+    orchestration_enabled?: boolean;
+  };
+}
+
+export interface ResponseFormatConfig {
+  response_style: 'concise' | 'conversational' | 'detailed' | 'technical';
+  show_thinking: boolean;
+  show_tool_details: boolean;
+  include_examples: boolean;
+  include_citations: boolean;
+  include_warnings: boolean;
+  custom_format?: string;
+  custom_prefix?: string;
+  custom_suffix?: string;
 }
 
 class StrandsSdkService {
@@ -110,14 +143,25 @@ class StrandsSdkService {
         id: agent.id || agent.name?.toLowerCase().replace(/\s+/g, '_'),
         name: agent.name || 'Unnamed Agent',
         description: agent.description || '',
-        model: agent.model_id || agent.model || 'llama3.2:latest',
+        model: agent.model_id || agent.model || 'qwen3:1.7b',
         systemPrompt: agent.system_prompt || agent.systemPrompt || '',
         tools: agent.tools || [],
         temperature: agent.sdk_config?.ollama_config?.temperature || 0.7,
         maxTokens: agent.sdk_config?.ollama_config?.max_tokens || 1000,
         status: agent.status || 'active',
         createdAt: agent.created_at || agent.createdAt || new Date().toISOString(),
-        updatedAt: agent.updated_at || agent.updatedAt || new Date().toISOString()
+        updatedAt: agent.updated_at || agent.updatedAt || new Date().toISOString(),
+        response_style: agent.response_style || 'conversational',
+        show_thinking: agent.show_thinking ?? true,
+        show_tool_details: agent.show_tool_details ?? true,
+        include_examples: agent.include_examples ?? false,
+        include_citations: agent.include_citations ?? false,
+        include_warnings: agent.include_warnings ?? false,
+        // Additional fields from backend
+        model_id: agent.model_id,
+        host: agent.host,
+        model_provider: agent.model_provider,
+        a2a_status: agent.a2a_status,
       }));
     } catch (error) {
       console.error('Failed to get Strands SDK agents:', error);
@@ -253,6 +297,52 @@ class StrandsSdkService {
     } catch (error) {
       console.error(`🗑️ Failed to delete agent ${id}:`, error);
       return false;
+    }
+  }
+
+  /**
+   * Update agent response format configuration
+   */
+  async updateResponseFormat(id: string, config: ResponseFormatConfig): Promise<{ success: boolean; message?: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/strands-sdk/agents/${id}/response-format`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { success: true, message: data.message };
+    } catch (error) {
+      console.error('Error updating response format:', error);
+      return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  /**
+   * Get agent response format configuration
+   */
+  async getResponseFormat(id: string): Promise<ResponseFormatConfig | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/strands-sdk/agents/${id}/response-format`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.config;
+    } catch (error) {
+      console.error('Error getting response format:', error);
+      return null;
     }
   }
 
@@ -409,7 +499,7 @@ class StrandsSdkService {
   }
 
   /**
-   * Register A2A agent with Frontend Agent Bridge for orchestration
+   * Register A2A agent with Frontend Agent Bridge for orchestration - REMOVED
    */
   async registerAgentWithFrontendBridge(agentId: string, agentData: {
     name: string;
@@ -420,34 +510,61 @@ class StrandsSdkService {
     message?: string;
     error?: string;
   }> {
+    // Frontend Agent Bridge has been removed
+    return {
+      success: false,
+      error: 'Frontend Agent Bridge has been removed from the system'
+    };
+  }
+
+  /**
+   * Register agent for orchestration-enabled A2A communication with dedicated backend
+   */
+  async registerAgentForOrchestration(agentId: string): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+    a2aAgentId?: string;
+    agentName?: string;
+    dedicatedBackend?: any;
+    orchestrationEnabled?: boolean;
+  }> {
     try {
-      const response = await fetch('http://localhost:5012/register', {
+      console.log(`🎯 Registering agent ${agentId} for orchestration with dedicated backend...`);
+      
+      const response = await fetch('http://localhost:5008/api/a2a/register-from-strands', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          id: agentId,
-          name: agentData.name,
-          description: agentData.description,
-          capabilities: agentData.capabilities
+        body: JSON.stringify({ 
+          strands_agent_id: agentId 
         })
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log(`✅ Orchestration registration successful:`, data);
+        
         return {
           success: true,
-          message: data.message || 'Agent registered with Frontend Agent Bridge'
+          message: data.message || 'Agent registered for orchestration with dedicated backend',
+          a2aAgentId: data.a2a_agent_id,
+          agentName: data.agent_name,
+          dedicatedBackend: data.dedicated_backend,
+          orchestrationEnabled: data.orchestration_enabled
         };
       } else {
         const errorData = await response.json();
+        console.error(`❌ Orchestration registration failed:`, errorData);
+        
         return {
           success: false,
           error: errorData.error || `HTTP ${response.status}: ${response.statusText}`
         };
       }
     } catch (error) {
+      console.error(`❌ Exception during orchestration registration:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -456,7 +573,7 @@ class StrandsSdkService {
   }
 
   /**
-   * Enhanced A2A registration that also registers with Frontend Agent Bridge
+   * Enhanced A2A registration that also registers with Frontend Agent Bridge - REMOVED
    */
   async registerAgentForA2AWithBridge(agentId: string, agentData: {
     name: string;
@@ -469,45 +586,16 @@ class StrandsSdkService {
     a2aRegistered?: boolean;
     bridgeRegistered?: boolean;
   }> {
-    try {
-      // First register for A2A communication
-      const a2aResult = await this.registerAgentForA2A(agentId);
-      
-      if (!a2aResult.success) {
-        return {
-          success: false,
-          error: `A2A registration failed: ${a2aResult.error}`,
-          a2aRegistered: false,
-          bridgeRegistered: false
-        };
-      }
-
-      // Then register with Frontend Agent Bridge
-      const bridgeResult = await this.registerAgentWithFrontendBridge(agentId, agentData);
-      
-      if (!bridgeResult.success) {
-        return {
-          success: false,
-          error: `Bridge registration failed: ${bridgeResult.error}`,
-          a2aRegistered: true,
-          bridgeRegistered: false
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Agent registered for A2A communication and Frontend Agent Bridge',
-        a2aRegistered: true,
-        bridgeRegistered: true
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        a2aRegistered: false,
-        bridgeRegistered: false
-      };
-    }
+    // Frontend Agent Bridge has been removed - only register with A2A
+    const a2aResult = await this.registerAgentForA2A(agentId);
+    
+    return {
+      success: a2aResult.success,
+      message: a2aResult.success ? 'Agent registered for A2A communication (Frontend Agent Bridge removed)' : a2aResult.error,
+      error: a2aResult.error,
+      a2aRegistered: a2aResult.success,
+      bridgeRegistered: false // Bridge removed
+    };
   }
 
   /**
@@ -542,35 +630,18 @@ class StrandsSdkService {
   }
 
   /**
-   * Remove agent from Frontend Agent Bridge
+   * Remove agent from Frontend Agent Bridge - REMOVED
    */
   async removeAgentFromFrontendBridge(agentId: string): Promise<{
     success: boolean;
     message?: string;
     error?: string;
   }> {
-    try {
-      const response = await fetch(`http://localhost:5012/agent/${agentId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        return {
-          success: true,
-          message: 'Agent removed from Frontend Agent Bridge'
-        };
-      } else {
-        return {
-          success: false,
-          error: `HTTP ${response.status}: ${response.statusText}`
-        };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    // Frontend Agent Bridge has been removed
+    return {
+      success: true,
+      message: 'Frontend Agent Bridge has been removed from the system'
+    };
   }
 
   /**
@@ -645,16 +716,8 @@ class StrandsSdkService {
         console.warn('Error removing from Agent Registry:', error);
       }
 
-      // Remove from Frontend Agent Bridge
-      try {
-        const bridgeResult = await this.removeAgentFromFrontendBridge(agentId);
-        cleanupResults.bridgeRemoved = bridgeResult.success;
-        if (!bridgeResult.success) {
-          console.warn('Failed to remove from Frontend Agent Bridge:', bridgeResult.error);
-        }
-      } catch (error) {
-        console.warn('Error removing from Frontend Agent Bridge:', error);
-      }
+      // Remove from Frontend Agent Bridge - REMOVED
+      cleanupResults.bridgeRemoved = true; // Bridge has been removed
 
       return {
         success: true,

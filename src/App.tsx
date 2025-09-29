@@ -23,6 +23,7 @@ import SystemFlow from "./pages/SystemFlow";
 import OllamaTerminal from "./pages/OllamaTerminal";
 import DocumentWorkspace from "./pages/DocumentWorkspace";
 import OllamaAgentDashboard from "./pages/OllamaAgentDashboard";
+import A2AOrchestrationPage from "./pages/A2AOrchestrationPage";
 
 import ProcurementAnalytics from "./pages/ProcurementAnalytics";
 import SafetyMonitoring from "./pages/SafetyMonitoring";
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Layout><Index /></Layout>} />
           <Route path="/agents" element={<Layout><Agents /></Layout>} />
           <Route path="/multi-agent-workspace" element={<Layout><MultiAgentWorkspace /></Layout>} />
+          <Route path="/a2a-orchestration" element={<Layout><A2AOrchestrationPage /></Layout>} />
           <Route path="/agent-command" element={<Layout><CommandCentre /></Layout>} />
           <Route path="/agent-exchange" element={<Layout><AgentMarketplace /></Layout>} />
           <Route path="/risk-analytics" element={<Layout><RiskAnalytics /></Layout>} />

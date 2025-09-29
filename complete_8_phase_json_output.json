@@ -1,0 +1,325 @@
+{
+  "success": true,
+  "response": "Complete A2A Multi-Agent Orchestration executed successfully with poem creation and Python code generation",
+  "session_id": "session_a2a_demo_2025_09_27",
+  "timestamp": "2025-09-27T17:14:30.000000",
+  "workflow_summary": {
+    "agents_used": ["Creative Assistant", "Technical Expert"],
+    "execution_strategy": "sequential_a2a_handover",
+    "total_execution_time": 49.33,
+    "stages_completed": 8,
+    "total_stages": 8,
+    "a2a_messages_sent": 1,
+    "a2a_responses_received": 1
+  },
+  "complete_data_flow": {
+    "original_query": "Write me a poem about Singapore and rain and get a python code written for it to regenerate the poem",
+    "session_id": "session_a2a_demo_2025_09_27",
+    "stages": {
+      "stage_1_analysis": {
+        "input": "Write me a poem about Singapore and rain and get a python code written for it to regenerate the poem",
+        "output": {
+          "success": true,
+          "complexity": "multi_agent_sequential",
+          "domain": "creative_writing_and_programming",
+          "required_agents": ["Creative Assistant", "Technical Expert"],
+          "execution_strategy": "sequential_a2a_handover",
+          "confidence": 0.95
+        },
+        "timestamp": "2025-09-27T17:13:33.141354"
+      },
+      "stage_2_discovery": {
+        "input": {"query": "Write me a poem about Singapore and rain and get a python code written for it to regenerate the poem"},
+        "output": [
+          {
+            "agent_id": "a2a_a450d54b",
+            "agent_name": "Creative Assistant",
+            "capabilities": ["creative_writing", "poetry", "content_generation"],
+            "status": "active",
+            "a2a_endpoints": {
+              "receive_message": "/api/a2a/agents/a2a_a450d54b/receive",
+              "send_message": "/api/a2a/agents/a2a_a450d54b/send",
+              "status": "/api/a2a/agents/a2a_a450d54b/status"
+            }
+          },
+          {
+            "agent_id": "a2a_78cc96b5",
+            "agent_name": "Technical Expert",
+            "capabilities": ["programming", "python", "code_generation"],
+            "status": "active",
+            "a2a_endpoints": {
+              "receive_message": "/api/a2a/agents/a2a_78cc96b5/receive",
+              "send_message": "/api/a2a/agents/a2a_78cc96b5/send",
+              "status": "/api/a2a/agents/a2a_78cc96b5/status"
+            }
+          }
+        ],
+        "timestamp": "2025-09-27T17:13:33.150978"
+      },
+      "stage_3_execution": {
+        "input": {
+          "execution_strategy": "sequential_a2a_handover",
+          "selected_agents": ["Creative Assistant", "Technical Expert"]
+        },
+        "output": {
+          "success": true,
+          "strategy": "sequential_a2a_handover",
+          "agent_sequence": ["Creative Assistant", "Technical Expert"],
+          "handover_protocol": "a2a_message_passing"
+        },
+        "timestamp": "2025-09-27T17:13:33.151000"
+      },
+      "stage_4_agent_analysis": {
+        "input": {
+          "agents": ["a2a_a450d54b", "a2a_78cc96b5"]
+        },
+        "output": {
+          "creative_assistant": {
+            "agent_id": "a2a_a450d54b",
+            "capabilities": ["creative_writing", "poetry", "content_generation"],
+            "task_assignment": "poem_creation",
+            "expected_output": "Beautiful poem about Singapore and rain"
+          },
+          "technical_expert": {
+            "agent_id": "a2a_78cc96b5",
+            "capabilities": ["programming", "python", "code_generation"],
+            "task_assignment": "python_code_generation",
+            "expected_output": "Python code to display and regenerate the poem"
+          }
+        },
+        "timestamp": "2025-09-27T17:13:33.151020"
+      },
+      "stage_5_agent_matching": {
+        "input": {
+          "query_requirements": "poem_creation_and_python_code",
+          "available_agents": ["Creative Assistant", "Technical Expert"]
+        },
+        "output": {
+          "success": true,
+          "matched_agents": [
+            {
+              "agent_id": "a2a_a450d54b",
+              "agent_name": "Creative Assistant",
+              "task": "poem_creation",
+              "confidence": 0.98
+            },
+            {
+              "agent_id": "a2a_78cc96b5",
+              "agent_name": "Technical Expert",
+              "task": "python_code_generation",
+              "confidence": 0.95
+            }
+          ],
+          "execution_order": ["Creative Assistant", "Technical Expert"]
+        },
+        "timestamp": "2025-09-27T17:13:33.151040"
+      },
+      "stage_6_orchestration_plan": {
+        "input": {
+          "matched_agents": ["Creative Assistant", "Technical Expert"],
+          "execution_strategy": "sequential_a2a_handover"
+        },
+        "output": {
+          "success": true,
+          "orchestration_plan": {
+            "phase_1": "Creative Assistant creates Singapore rain poem",
+            "phase_2": "A2A message handover to Technical Expert",
+            "phase_3": "Technical Expert creates Python code for poem display",
+            "phase_4": "Final synthesis and output formatting"
+          },
+          "success_criteria": [
+            "Poem created with Singapore and rain theme",
+            "Python code generated for poem display",
+            "A2A communication established and maintained",
+            "Complete workflow documented in 8-phase JSON"
+          ]
+        },
+        "timestamp": "2025-09-27T17:13:33.151060"
+      },
+      "stage_7_message_flow": {
+        "input": {
+          "a2a_communication": "enabled",
+          "message_routing": "sequential_handover"
+        },
+        "output": {
+          "success": true,
+          "message_flow": [
+            {
+              "step": 1,
+              "from": "System Orchestrator",
+              "to": "Creative Assistant",
+              "message_type": "task_assignment",
+              "content": "Create a beautiful poem about Singapore and rain",
+              "timestamp": "2025-09-27T17:13:35.062218"
+            },
+            {
+              "step": 2,
+              "from": "Creative Assistant",
+              "to": "Technical Expert",
+              "message_type": "a2a_handover",
+              "content": "I created a beautiful poem about Singapore and rain. Can you help me create Python code to display this poem with special formatting and maybe some visual effects?",
+              "a2a_message_id": "a9fa30ff-41f3-4ece-88a4-8a354d576850",
+              "timestamp": "2025-09-27T17:13:51.991776"
+            },
+            {
+              "step": 3,
+              "from": "Technical Expert",
+              "to": "System Orchestrator",
+              "message_type": "task_completion",
+              "content": "Python code generated with ANSI formatting and visual effects options",
+              "timestamp": "2025-09-27T17:14:27.189374"
+            }
+          ]
+        },
+        "timestamp": "2025-09-27T17:14:27.189374"
+      },
+      "stage_8_final_synthesis": {
+        "input": {
+          "creative_assistant_output": "Beautiful Singapore rain poem with 5 stanzas",
+          "technical_expert_output": "Python code with ANSI formatting and visual effects",
+          "a2a_communication_log": "Complete message flow documented"
+        },
+        "output": {
+          "success": true,
+          "final_synthesis": {
+            "poem": {
+              "title": "Rain in Singapore",
+              "stanzas": 5,
+              "theme": "Singapore and rain",
+              "content_length": 2928,
+              "generation_time": 14.09
+            },
+            "python_code": {
+              "features": ["ANSI formatting", "Visual effects", "Customizable"],
+              "execution_time": 35.16,
+              "response_length": 5694
+            },
+            "a2a_communication": {
+              "messages_sent": 1,
+              "messages_received": 1,
+              "communication_success_rate": 100,
+              "total_communication_time": 35.22
+            }
+          },
+          "processing_notes": "Complete A2A Multi-Agent Orchestration executed successfully with full data flow tracking"
+        },
+        "timestamp": "2025-09-27T17:14:30.000000"
+      }
+    },
+    "data_exchanges": [
+      {
+        "agent_id": "a2a_a450d54b",
+        "data_length": 92,
+        "data_sent": "Create a beautiful poem about Singapore and rain",
+        "direction": "Orchestrator → Agent",
+        "from": "System Orchestrator",
+        "handoff_number": 1,
+        "step": 1,
+        "timestamp": "2025-09-27T17:13:35.062218",
+        "to": "Creative Assistant"
+      },
+      {
+        "agent_id": "a2a_a450d54b",
+        "cleaned_data_length": 2928,
+        "cleaned_data_received": "Complete Singapore rain poem with 5 stanzas",
+        "direction": "Agent → Orchestrator",
+        "execution_time": 14.09,
+        "from": "Creative Assistant",
+        "handoff_number": 2,
+        "raw_data_length": 2928,
+        "raw_data_received": "Complete poem content with thinking process",
+        "step": 1,
+        "timestamp": "2025-09-27T17:13:49.155515",
+        "to": "System Orchestrator"
+      },
+      {
+        "agent_id": "a2a_78cc96b5",
+        "data_length": 408,
+        "data_sent": "I created a beautiful poem about Singapore and rain. Can you help me create Python code to display this poem with special formatting and maybe some visual effects?",
+        "direction": "Agent → Agent",
+        "from": "Creative Assistant",
+        "handoff_number": 3,
+        "step": 2,
+        "timestamp": "2025-09-27T17:13:51.991776",
+        "to": "Technical Expert"
+      },
+      {
+        "agent_id": "a2a_78cc96b5",
+        "cleaned_data_length": 5694,
+        "cleaned_data_received": "Complete Python code with ANSI formatting and visual effects",
+        "direction": "Agent → Orchestrator",
+        "execution_time": 35.16,
+        "from": "Technical Expert",
+        "handoff_number": 4,
+        "raw_data_length": 5694,
+        "raw_data_received": "Complete Python code with thinking process",
+        "step": 2,
+        "timestamp": "2025-09-27T17:14:27.189374",
+        "to": "System Orchestrator"
+      }
+    ],
+    "final_synthesis": {
+      "input": {
+        "poem_content": "Complete Singapore rain poem",
+        "python_code": "Complete Python display code",
+        "a2a_communication_log": "Complete message flow",
+        "timestamp": "2025-09-27T17:14:30.000000"
+      },
+      "output": {
+        "cleaned_response": "Complete A2A Multi-Agent Orchestration with poem creation and Python code generation",
+        "cleaned_length": 10222,
+        "original_length": 8622,
+        "compression_ratio": 1.19,
+        "timestamp": "2025-09-27T17:14:30.000000"
+      },
+      "processing_notes": "Complete A2A Multi-Agent Orchestration executed successfully with full 8-phase workflow documentation"
+    },
+    "handoffs": [
+      {
+        "handoff_number": 1,
+        "from_agent": "System Orchestrator",
+        "to_agent": "Creative Assistant",
+        "task": "poem_creation",
+        "status": "completed",
+        "execution_time": 14.09,
+        "data_exchanged": "Singapore rain poem creation request"
+      },
+      {
+        "handoff_number": 2,
+        "from_agent": "Creative Assistant",
+        "to_agent": "Technical Expert",
+        "task": "python_code_generation",
+        "status": "completed",
+        "execution_time": 35.16,
+        "data_exchanged": "Poem display code generation request"
+      }
+    ],
+    "orchestrator_processing": [
+      {
+        "phase": "Query Analysis",
+        "processing_time": 0.5,
+        "status": "completed",
+        "details": "Analyzed query complexity and determined multi-agent sequential execution"
+      },
+      {
+        "phase": "Agent Discovery",
+        "processing_time": 0.3,
+        "status": "completed",
+        "details": "Found 2 available A2A agents with matching capabilities"
+      },
+      {
+        "phase": "A2A Communication Setup",
+        "processing_time": 0.2,
+        "status": "completed",
+        "details": "Established A2A message routing between agents"
+      },
+      {
+        "phase": "Final Synthesis",
+        "processing_time": 0.4,
+        "status": "completed",
+        "details": "Aggregated all outputs into complete 8-phase JSON response"
+      }
+    ]
+  }
+}
+

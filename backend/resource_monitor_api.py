@@ -27,6 +27,11 @@ STRANDS_SDK_URL = "http://localhost:5006/api/strands-sdk"
 A2A_API_URL = "http://localhost:5008/api/a2a"
 AGENT_REGISTRY_URL = "http://localhost:5010"
 ENHANCED_ORCHESTRATION_URL = "http://localhost:5014"
+A2A_OBSERVABILITY_URL = "http://localhost:5018/api/a2a-observability"
+TEXT_CLEANING_URL = "http://localhost:5019/api/clean-text"
+DYNAMIC_CONTEXT_URL = "http://localhost:5020/api/dynamic-context"
+WORKING_ORCHESTRATION_URL = "http://localhost:5021/health"
+# FRONTEND_AGENT_BRIDGE_URL = "http://localhost:5012/health" - REMOVED
 
 class ResourceMonitor:
     """Monitor system resources and service status"""
@@ -294,6 +299,97 @@ class ResourceMonitor:
                 'port': 5014,
                 'message': 'Enhanced Orchestration is not running'
             }
+        
+        # Check A2A Observability API
+        try:
+            response = requests.get(f"{A2A_OBSERVABILITY_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['a2a_observability'] = {
+                    'status': 'running',
+                    'port': 5018,
+                    'message': f"A2A Observability running (Traces: {data.get('total_traces', 0)}, Handoffs: {data.get('total_handoffs', 0)})"
+                }
+            else:
+                services['a2a_observability'] = {
+                    'status': 'error',
+                    'port': 5018,
+                    'message': f'A2A Observability error: {response.status_code}'
+                }
+        except:
+            services['a2a_observability'] = {
+                'status': 'stopped',
+                'port': 5018,
+                'message': 'A2A Observability is not running'
+            }
+        
+        # Check Text Cleaning Service
+        try:
+            response = requests.post(f"{TEXT_CLEANING_URL}", json={"text": "test", "output_type": "test"}, timeout=3)
+            services['text_cleaning'] = {
+                'status': 'running' if response.status_code == 200 else 'error',
+                'port': 5019,
+                'message': 'Text Cleaning Service is running' if response.status_code == 200 else 'Text Cleaning Service error'
+            }
+        except:
+            services['text_cleaning'] = {
+                'status': 'stopped',
+                'port': 5019,
+                'message': 'Text Cleaning Service is not running'
+            }
+        
+        # Check Dynamic Context Refinement API
+        try:
+            response = requests.get(f"{DYNAMIC_CONTEXT_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['dynamic_context'] = {
+                    'status': 'running',
+                    'port': 5020,
+                    'message': f"Dynamic Context Refinement running (Agents: {data.get('registered_agents', 0)}, Refinements: {data.get('total_refinements', 0)})"
+                }
+            else:
+                services['dynamic_context'] = {
+                    'status': 'error',
+                    'port': 5020,
+                    'message': f'Dynamic Context Refinement error: {response.status_code}'
+                }
+        except:
+            services['dynamic_context'] = {
+                'status': 'stopped',
+                'port': 5020,
+                'message': 'Dynamic Context Refinement is not running'
+            }
+        
+        # Check Working Orchestration API (Unified System)
+        try:
+            response = requests.get(f"{WORKING_ORCHESTRATION_URL}", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['working_orchestration'] = {
+                    'status': 'running',
+                    'port': 5021,
+                    'message': f"Working Orchestration API running (Unified System Orchestrator)"
+                }
+            else:
+                services['working_orchestration'] = {
+                    'status': 'error',
+                    'port': 5021,
+                    'message': f'Working Orchestration API error: {response.status_code}'
+                }
+        except:
+            services['working_orchestration'] = {
+                'status': 'stopped',
+                'port': 5021,
+                'message': 'Working Orchestration API is not running'
+            }
+        
+        # Check Frontend Agent Bridge - REMOVED
+        # services['frontend_agent_bridge'] = {
+        #     'status': 'removed',
+        #     'port': 5012,
+        #     'message': 'Frontend Agent Bridge has been removed from the system'
+        # }
         
         return services
 
