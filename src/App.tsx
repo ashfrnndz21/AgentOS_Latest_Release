@@ -24,6 +24,7 @@ import OllamaTerminal from "./pages/OllamaTerminal";
 import DocumentWorkspace from "./pages/DocumentWorkspace";
 import OllamaAgentDashboard from "./pages/OllamaAgentDashboard";
 import A2AOrchestrationPage from "./pages/A2AOrchestrationPage";
+import { UtilityAgenticServicesPage } from "./components/UtilityAgenticServices/UtilityAgenticServicesPage";
 
 import ProcurementAnalytics from "./pages/ProcurementAnalytics";
 import SafetyMonitoring from "./pages/SafetyMonitoring";
@@ -57,6 +58,7 @@ function App() {
           <Route path="/ollama-terminal" element={<Layout><OllamaTerminal /></Layout>} />
           <Route path="/document-workspace" element={<Layout><DocumentWorkspace /></Layout>} />
           <Route path="/ollama-agents" element={<Layout><ErrorBoundary><OllamaAgentDashboard /></ErrorBoundary></Layout>} />
+          <Route path="/utility-agentic-services" element={<Layout><ErrorBoundary><UtilityAgenticServicesPage /></ErrorBoundary></Layout>} />
           <Route path="/procurement-analytics" element={<Layout><ProcurementAnalytics /></Layout>} />
           <Route path="/safety-monitoring" element={<Layout><SafetyMonitoring /></Layout>} />
           <Route path="/rd-discovery" element={<Layout><RDDiscovery /></Layout>} />

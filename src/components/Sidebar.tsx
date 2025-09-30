@@ -28,7 +28,7 @@ interface NavigationGroup {
 export function Sidebar() {
   const location = useLocation();
   const { currentIndustry } = useIndustry();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['core']));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['core', 'configuration']));
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -120,7 +120,8 @@ export function Sidebar() {
       label: 'Configuration',
       icon: 'Settings',
       items: [
-        { path: '/settings', label: 'Settings', icon: 'Settings' }
+        { path: '/settings', label: 'Settings', icon: 'Settings' },
+        { path: '/utility-agentic-services', label: 'Utility Agentic Services', icon: 'Settings' }
       ]
     }
   ];

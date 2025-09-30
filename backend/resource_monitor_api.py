@@ -33,6 +33,15 @@ DYNAMIC_CONTEXT_URL = "http://localhost:5020/api/dynamic-context"
 WORKING_ORCHESTRATION_URL = "http://localhost:5021/health"
 # FRONTEND_AGENT_BRIDGE_URL = "http://localhost:5012/health" - REMOVED
 
+# Main System Orchestrator (from start-all-services.sh)
+MAIN_SYSTEM_ORCHESTRATOR_URL = "http://localhost:5031"
+
+# Utility Services (from start-all-services.sh)
+UTILITY_API_GATEWAY_URL = "http://localhost:5044/api/utility"
+DATABASE_AGENT_URL = "http://localhost:5041"
+SYNTHETIC_DATA_URL = "http://localhost:5042"
+UTILITY_ORCHESTRATION_URL = "http://localhost:5043"
+
 class ResourceMonitor:
     """Monitor system resources and service status"""
     
@@ -382,6 +391,52 @@ class ResourceMonitor:
                 'status': 'stopped',
                 'port': 5021,
                 'message': 'Working Orchestration API is not running'
+            }
+        
+        # Check Main System Orchestrator (from start-all-services.sh)
+        try:
+            response = requests.get(f"{MAIN_SYSTEM_ORCHESTRATOR_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['main_system_orchestrator'] = {
+                    'status': 'running',
+                    'port': 5031,
+                    'message': f"Main System Orchestrator running (Multi-agent orchestration)"
+                }
+            else:
+                services['main_system_orchestrator'] = {
+                    'status': 'error',
+                    'port': 5031,
+                    'message': f'Main System Orchestrator error: {response.status_code}'
+                }
+        except:
+            services['main_system_orchestrator'] = {
+                'status': 'stopped',
+                'port': 5031,
+                'message': 'Main System Orchestrator is not running'
+            }
+        
+        # Check Utility Services Gateway
+        try:
+            response = requests.get(f"{UTILITY_API_GATEWAY_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['utility_services'] = {
+                    'status': 'running',
+                    'port': 5044,
+                    'message': f"Utility Services Gateway running (Database, Synthetic Data, Orchestration)"
+                }
+            else:
+                services['utility_services'] = {
+                    'status': 'error',
+                    'port': 5044,
+                    'message': f'Utility Services Gateway error: {response.status_code}'
+                }
+        except:
+            services['utility_services'] = {
+                'status': 'stopped',
+                'port': 5044,
+                'message': 'Utility Services Gateway is not running'
             }
         
         # Check Frontend Agent Bridge - REMOVED

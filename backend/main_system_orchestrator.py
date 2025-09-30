@@ -926,13 +926,18 @@ OUTPUT FORMAT REQUIREMENTS:
 CRITICAL TASK SCOPING RULES:
 - Weather Agent: ONLY retrieve and provide weather data - NEVER generate poems, stories, or creative content
 - Creative Assistant: ONLY generate creative content (poems, stories) using data from other agents - NEVER retrieve weather data or generate weather descriptions
+- Technical Expert: ONLY generate technical code/scripts using data from other agents - NEVER generate creative content or retrieve weather data
 - Each agent should focus EXCLUSIVELY on their specialized capability
 - Do NOT include instructions for tasks that belong to other agents
 - The agent should work ONLY on their assigned specific task, not the entire query
 - Weather Agent output should ONLY contain weather facts, no creative elements
-- Creative Assistant should ONLY create poems/stories, no weather data retrieval
+- Creative Assistant should ONLY create poems/stories, no weather data retrieval or code generation
+- Technical Expert should ONLY create code/scripts, no creative content or weather data retrieval
 - Generate content specific to the CURRENT query - do NOT reference or use examples from previous queries
 - Weather Agent should generate fresh weather data for the current location/topic, not copy examples
+- STRICT BOUNDARY: If you are Creative Assistant, do NOT generate Python code
+- STRICT BOUNDARY: If you are Technical Expert, do NOT generate poems or creative content
+- STRICT BOUNDARY: If you are Weather Agent, do NOT generate poems or code
 
 DEPENDENCY RULES:
 - If this agent depends on previous agent outputs, use ONLY the provided previous output data
@@ -978,10 +983,15 @@ Instructions should be clear, actionable, and specific to this agent's capabilit
             multi_agent_info = task_analysis.get('multi_agent_analysis', {})
             task_decomposition = multi_agent_info.get('task_decomposition', [])
             
+            # Debug: Print task decomposition to see what we have
+            logger.info(f"Task decomposition for agent {agent_id}: {task_decomposition}")
+            
             # Find the specific task for this agent
             for task in task_decomposition:
                 if task.get('agent_id') == agent_id:
-                    return task.get('task', 'Execute assigned task')
+                    specific_task = task.get('task', 'Execute assigned task')
+                    logger.info(f"Found specific task for {agent_id}: {specific_task}")
+                    return specific_task
             
             # If no specific task found, create a specific one based on agent capabilities
             # Get agent capabilities from the available agents (now serializable dictionaries)
@@ -1006,6 +1016,8 @@ Instructions should be clear, actionable, and specific to this agent's capabilit
                 return "ONLY retrieve and provide weather data in format 'Location: temperature, conditions' - NEVER generate poems, stories, or any creative content"
             elif 'creative' in agent_capabilities:
                 return "ONLY generate creative content (poems, stories) using EXACT data from previous agents - NEVER retrieve weather data, generate weather descriptions, or modify the provided data"
+            elif 'technical' in agent_capabilities:
+                return "ONLY generate technical code/scripts using EXACT data from previous agents - NEVER generate creative content or modify the provided data"
             elif 'general' in agent_capabilities:
                 return "Process general information as assigned"
             else:

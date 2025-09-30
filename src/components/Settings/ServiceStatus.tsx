@@ -76,7 +76,13 @@ export const ServiceStatus: React.FC = () => {
       'strands_sdk': 'Strands Sdk',
       'a2a_service': 'A2a Service',
       'agent_registry': 'Agent Registry',
-      'enhanced_orchestration': 'Enhanced Orchestration'
+      'enhanced_orchestration': 'Enhanced Orchestration',
+      'a2a_observability': 'A2a Observability',
+      'text_cleaning': 'Text Cleaning',
+      'dynamic_context': 'Dynamic Context',
+      'working_orchestration': 'Working Orchestration',
+      'main_system_orchestrator': 'Main System Orchestrator',
+      'utility_services': 'Utility Services'
     };
     return displayNames[serviceKey] || serviceKey.replace('_', ' ').toUpperCase();
   };
@@ -88,10 +94,16 @@ export const ServiceStatus: React.FC = () => {
       'rag_api': 'RAG API is running',
       'strands_api': 'Strands API is running',
       'chat_orchestrator': 'Chat Orchestrator is running',
-      'strands_sdk': 'Strands SDK running (mock-strands)',
-      'a2a_service': 'A2A Service running (2 agents)',
+      'strands_sdk': 'Strands SDK running (official-strands)',
+      'a2a_service': 'A2A Service running (5 agents)',
       'agent_registry': 'Agent Registry is running',
-      'enhanced_orchestration': 'Enhanced Orchestration running (Dynamic LLM Orchestration)'
+      'enhanced_orchestration': 'Enhanced Orchestration running (Dynamic LLM Orchestration)',
+      'a2a_observability': 'A2A Observability running (Traces)',
+      'text_cleaning': 'Text Cleaning Service is not running',
+      'dynamic_context': 'Dynamic Context Refinement is not running',
+      'working_orchestration': 'Working Orchestration API is not running',
+      'main_system_orchestrator': 'Main System Orchestrator running (Multi-agent orchestration)',
+      'utility_services': 'Utility Services Gateway running (Database, Synthetic Data, Orchestration)'
     };
     return descriptions[serviceKey] || 'Backend service';
   };
@@ -106,7 +118,39 @@ export const ServiceStatus: React.FC = () => {
     return 'all_down';
   };
 
+  const groupServicesByCategory = () => {
+    const categories = {
+      'Core LLM Services': {
+        services: ['ollama_core', 'ollama_api'],
+        description: 'Core language model engine and API services'
+      },
+      'Agent Platform Services': {
+        services: ['strands_sdk', 'strands_api', 'agent_registry'],
+        description: 'Agent management and SDK services'
+      },
+      'Orchestration Services': {
+        services: ['main_system_orchestrator', 'enhanced_orchestration', 'working_orchestration', 'chat_orchestrator'],
+        description: 'Multi-agent orchestration and coordination'
+      },
+      'Communication Services': {
+        services: ['a2a_service', 'a2a_observability'],
+        description: 'Agent-to-agent communication and monitoring'
+      },
+      'Utility Services': {
+        services: ['utility_services'],
+        description: 'Database, synthetic data, and utility functions'
+      },
+      'Processing Services': {
+        services: ['rag_api', 'text_cleaning', 'dynamic_context'],
+        description: 'Text processing, RAG, and context refinement'
+      }
+    };
+
+    return categories;
+  };
+
   const overallStatus = getOverallStatus();
+  const serviceCategories = groupServicesByCategory();
 
   return (
     <Card className="bg-beam-dark/70 border border-gray-700/30">
@@ -154,56 +198,105 @@ export const ServiceStatus: React.FC = () => {
           </div>
         </div>
 
-        {/* Individual Services */}
-        <div className="space-y-3">
-          {Object.entries(serviceStatus).map(([serviceKey, status]) => (
-            <div key={serviceKey} className="p-4 rounded-lg border bg-gray-800/30">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(status.status)}
+        {/* Individual Services - Grouped by Category */}
+        <div className="space-y-6">
+          {Object.entries(serviceCategories).map(([categoryName, categoryInfo]) => {
+            const categoryServices = categoryInfo.services.filter(serviceKey => serviceStatus[serviceKey]);
+            const runningInCategory = categoryServices.filter(serviceKey => serviceStatus[serviceKey]?.status === 'running').length;
+            const totalInCategory = categoryServices.length;
+            
+            if (categoryServices.length === 0) return null;
+            
+            return (
+              <div key={categoryName} className="space-y-3">
+                {/* Category Header */}
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-gray-800/40">
                   <div>
-                    <div className="text-sm font-medium text-white">
-                      {getServiceDisplayName(serviceKey)}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {getServiceDescription(serviceKey)}
-                    </div>
+                    <h3 className="text-sm font-medium text-white">{categoryName}</h3>
+                    <p className="text-xs text-gray-400">{categoryInfo.description}</p>
                   </div>
+                  <Badge 
+                    variant="outline" 
+                    className={
+                      runningInCategory === totalInCategory 
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : runningInCategory > 0
+                        ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                        : 'bg-red-500/20 text-red-400 border-red-500/30'
+                    }
+                  >
+                    {runningInCategory}/{totalInCategory} Running
+                  </Badge>
                 </div>
-                <Badge 
-                  variant="outline" 
-                  className={getStatusColor(status.status)}
-                >
-                  {status.status.toUpperCase()}
-                </Badge>
+                
+                {/* Services in Category */}
+                <div className="space-y-2 ml-4">
+                  {categoryServices.map((serviceKey) => {
+                    const status = serviceStatus[serviceKey];
+                    return (
+                      <div key={serviceKey} className="p-3 rounded-lg border bg-gray-800/20">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(status.status)}
+                            <div>
+                              <div className="text-sm font-medium text-white">
+                                {getServiceDisplayName(serviceKey)}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {getServiceDescription(serviceKey)}
+                              </div>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={getStatusColor(status.status)}
+                          >
+                            {status.status.toUpperCase()}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400">Port:</span>
+                            <span className="text-white font-mono">{status.port}</span>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            <span className="text-gray-500">Status:</span> {status.message}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">Port:</span>
-                  <span className="text-white font-mono">{status.port}</span>
-                </div>
-                <div className="text-xs text-gray-400">
-                  <span className="text-gray-500">Status:</span> {status.message}
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Service Information */}
+        {/* Service Information - Grouped by Category */}
         <div className="p-4 rounded-lg border bg-gray-800/20">
-          <h4 className="text-sm font-medium text-white mb-2">Service Information</h4>
-          <div className="space-y-1 text-xs text-gray-400">
-            <div>• <strong>Ollama Core:</strong> LLM Engine (Port 11434)</div>
-            <div>• <strong>Ollama API:</strong> Terminal & Agents (Port 5002)</div>
-            <div>• <strong>RAG API:</strong> Document Chat (Port 5003)</div>
-            <div>• <strong>Strands API:</strong> Intelligence & Reasoning (Port 5004)</div>
-            <div>• <strong>Chat Orchestrator:</strong> Multi-Agent Chat (Port 5005)</div>
-            <div>• <strong>Strands SDK:</strong> Individual Agent Analytics (Port 5006)</div>
-            <div>• <strong>A2A Service:</strong> Agent-to-Agent Communication (Port 5008)</div>
-            <div>• <strong>Strands Orchestration:</strong> Workflow Management (Port 5009)</div>
-            <div>• <strong>Agent Registry:</strong> Agent Management (Port 5010)</div>
+          <h4 className="text-sm font-medium text-white mb-3">Service Information by Category</h4>
+          <div className="space-y-4">
+            {Object.entries(serviceCategories).map(([categoryName, categoryInfo]) => {
+              const categoryServices = categoryInfo.services.filter(serviceKey => serviceStatus[serviceKey]);
+              if (categoryServices.length === 0) return null;
+              
+              return (
+                <div key={categoryName} className="space-y-1">
+                  <h5 className="text-xs font-medium text-blue-400">{categoryName}</h5>
+                  <div className="space-y-1 text-xs text-gray-400 ml-2">
+                    {categoryServices.map(serviceKey => {
+                      const status = serviceStatus[serviceKey];
+                      return (
+                        <div key={serviceKey}>
+                          • <strong>{getServiceDisplayName(serviceKey)}:</strong> {categoryInfo.description} (Port {status.port})
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

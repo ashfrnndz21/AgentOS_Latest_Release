@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Thinking Display</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .thinking { background: #2d1b69; color: #e0e0e0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .response { background: #1a1a1a; color: #ffffff; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Test Thinking Display</h1>
+    <button onclick="testAgent()">Test Agent</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAgent() {
+            try {
+                const response = await fetch('http://localhost:5006/api/strands-sdk/agents/a5cf13f0-920c-4b73-aaf1-2e67893b7bc0/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        input: 'what is 8 x 7'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Full response:', data);
+                
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h3>Agent Response</h3>
+                    <div class="response">
+                        <strong>Raw Response:</strong><br>
+                        <pre>${data.raw_response || 'No raw_response'}</pre>
+                    </div>
+                    <div class="response">
+                        <strong>Formatted Response:</strong><br>
+                        <pre>${data.response || 'No response'}</pre>
+                    </div>
+                    <div class="response">
+                        <strong>Show Thinking:</strong> ${data.show_thinking}<br>
+                        <strong>Show Tool Details:</strong> ${data.show_tool_details}
+                    </div>
+                `;
+                
+                // Test thinking block extraction
+                if (data.raw_response && data.raw_response.includes('<think>')) {
+                    const thinkingMatch = data.raw_response.match(/<think>(.*?)<\/think>/s);
+                    if (thinkingMatch) {
+                        const thinkingDiv = document.createElement('div');
+                        thinkingDiv.className = 'thinking';
+                        thinkingDiv.innerHTML = `<strong>Extracted Thinking:</strong><br><pre>${thinkingMatch[1]}</pre>`;
+                        resultDiv.appendChild(thinkingDiv);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

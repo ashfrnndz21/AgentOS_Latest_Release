@@ -111,6 +111,18 @@ export const ResourceMonitoring: React.FC = () => {
     );
   }
 
+  // Group services into categories for clearer display
+  const getServiceCategories = () => {
+    return {
+      'Core LLM Services': ['ollama_core', 'ollama_api'],
+      'Agent Platform Services': ['strands_sdk', 'strands_api', 'agent_registry'],
+      'Orchestration Services': ['main_system_orchestrator', 'enhanced_orchestration', 'working_orchestration', 'chat_orchestrator'],
+      'Communication Services': ['a2a_service', 'a2a_observability'],
+      'Processing Services': ['rag_api', 'text_cleaning', 'dynamic_context'],
+      'Utility Services': ['utility_services']
+    } as { [category: string]: string[] };
+  };
+
   return (
     <Card className="bg-beam-dark/70 border border-gray-700/30">
       <CardHeader>
@@ -192,33 +204,46 @@ export const ResourceMonitoring: React.FC = () => {
           </div>
         </div>
 
-        {/* Service Status */}
-        <div className="space-y-3">
+        {/* Service Status - Grouped by Category */}
+        <div className="space-y-4">
           <h4 className="text-sm font-medium text-white">Service Status</h4>
-          <div className="space-y-2">
-            {Object.entries(serviceStatus).map(([service, status]) => (
-              <div key={service} className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{getStatusIcon(status.status)}</span>
-                  <span className="text-sm text-white capitalize">
-                    {service.replace('_', ' ')}
-                  </span>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getStatusColor(status.status)} text-white border-0`}
-                  >
-                    {status.status}
+          {Object.entries(getServiceCategories()).map(([category, services]) => {
+            const present = services.filter(s => !!serviceStatus[s]);
+            if (present.length === 0) return null;
+            const running = present.filter(s => serviceStatus[s].status === 'running').length;
+            const total = present.length;
+            const badgeColor = running === total ? 'bg-green-500' : running > 0 ? 'bg-yellow-500' : 'bg-red-500';
+            return (
+              <div key={category} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-medium text-blue-400">{category}</div>
+                  <Badge variant="outline" className={`text-[10px] ${badgeColor} text-white border-0`}>
+                    {running}/{total} running
                   </Badge>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs text-gray-400">Port {status.port}</div>
-                  <div className="text-xs text-gray-500 max-w-48 truncate">
-                    {status.message}
-                  </div>
+                <div className="space-y-1">
+                  {present.map((service) => {
+                    const status = serviceStatus[service];
+                    return (
+                      <div key={service} className="flex items-center justify-between p-2 bg-gray-800/50 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{getStatusIcon(status.status)}</span>
+                          <span className="text-sm text-white capitalize">{service.replace('_', ' ')}</span>
+                          <Badge variant="outline" className={`text-xs ${getStatusColor(status.status)} text-white border-0`}>
+                            {status.status}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-400">Port {status.port}</div>
+                          <div className="text-xs text-gray-500 max-w-48 truncate">{status.message}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>

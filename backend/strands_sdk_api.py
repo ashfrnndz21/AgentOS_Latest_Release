@@ -462,9 +462,169 @@ def code_execution(code: str, language: str = "python") -> str:
         return f"Code execution for {language} is not supported. Only Python is currently supported."
 
 @tool
-def database_query(query: str) -> str:
-    """Execute database queries (mock implementation)"""
-    return f"Database queries are not available in this demo version. Query '{query}' was requested but not executed."
+def database_query(query: str, database_name: str = None) -> str:
+    """Execute SQL queries on utility databases"""
+    try:
+        import requests
+        import json
+        
+        if not database_name:
+            return "Error: Database name is required. Available databases: Use list_databases() to see available databases."
+        
+        # Query the utility API gateway
+        response = requests.post(
+            f"http://localhost:5044/api/utility/database/{database_name}/query",
+            json={"query": query},
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                return f"Query executed successfully:\n{json.dumps(result.get('data', []), indent=2)}"
+            else:
+                return f"Query failed: {result.get('error', 'Unknown error')}"
+        else:
+            return f"Database service error: HTTP {response.status_code}"
+            
+    except Exception as e:
+        return f"Database query error: {str(e)}"
+
+@tool
+def list_databases() -> str:
+    """List all available utility databases"""
+    try:
+        import requests
+        import json
+        
+        response = requests.get("http://localhost:5044/api/utility/database/list", timeout=10)
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                databases = result.get("databases", [])
+                if databases:
+                    db_list = []
+                    for db in databases:
+                        # Get table count for each database
+                        try:
+                            tables_response = requests.get(f"http://localhost:5044/api/utility/database/{db['name']}/tables", timeout=10)
+                            if tables_response.status_code == 200:
+                                tables_result = tables_response.json()
+                                table_count = tables_result.get("table_count", 0)
+                            else:
+                                table_count = "unknown"
+                        except:
+                            table_count = "unknown"
+                        
+                        db_list.append(f"- {db['name']} ({table_count} tables)")
+                    
+                    return f"Available databases:\n" + "\n".join(db_list)
+                else:
+                    return "No databases found. Create a database using the Utility Agentic Services."
+            else:
+                return f"Failed to list databases: {result.get('error', 'Unknown error')}"
+        else:
+            return f"Database service error: HTTP {response.status_code}"
+            
+    except Exception as e:
+        return f"Error listing databases: {str(e)}"
+
+@tool
+def get_database_schema(database_name: str) -> str:
+    """Get the schema (tables and columns) of a database"""
+    try:
+        import requests
+        import json
+        
+        response = requests.get(f"http://localhost:5044/api/utility/database/{database_name}/tables", timeout=10)
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                tables = result.get("tables", [])
+                if tables:
+                    schema_info = []
+                    for table in tables:
+                        columns = table.get("schema", [])
+                        col_info = "\n    ".join([f"{col['name']} ({col['type']})" for col in columns])
+                        schema_info.append(f"Table: {table['name']}\n    {col_info}")
+                    
+                    return f"Database schema for '{database_name}':\n\n" + "\n\n".join(schema_info)
+                else:
+                    return f"Database '{database_name}' has no tables."
+            else:
+                return f"Failed to get schema: {result.get('error', 'Unknown error')}"
+        else:
+            return f"Database service error: HTTP {response.status_code}"
+            
+    except Exception as e:
+        return f"Error getting database schema: {str(e)}"
+
+@tool
+def analyze_database_data(database_name: str, table_name: str = None) -> str:
+    """Analyze data in a database table with statistical insights"""
+    try:
+        import requests
+        import json
+        
+        if not table_name:
+            return "Error: Table name is required for data analysis."
+        
+        # Get table schema first
+        schema_response = requests.get(f"http://localhost:5044/api/utility/database/{database_name}/tables", timeout=10)
+        if schema_response.status_code != 200:
+            return f"Failed to get table schema: HTTP {schema_response.status_code}"
+        
+        schema_result = schema_response.json()
+        if not schema_result.get("success"):
+            return f"Failed to get schema: {schema_result.get('error')}"
+        
+        tables = schema_result.get("tables", [])
+        table_info = next((t for t in tables if t['name'] == table_name), None)
+        
+        if not table_info:
+            return f"Table '{table_name}' not found in database '{database_name}'"
+        
+        columns = table_info.get("schema", [])
+        
+        # Generate analysis queries based on column types
+        analysis_queries = []
+        
+        # Count total records
+        analysis_queries.append(f"SELECT COUNT(*) as total_records FROM {table_name}")
+        
+        # For numeric columns, get statistics
+        numeric_columns = [col['name'] for col in columns if 'INTEGER' in col['type'] or 'DECIMAL' in col['type'] or 'REAL' in col['type']]
+        for col in numeric_columns:
+            analysis_queries.append(f"SELECT MIN({col}) as min_{col}, MAX({col}) as max_{col}, AVG({col}) as avg_{col} FROM {table_name}")
+        
+        # For text columns, get sample values
+        text_columns = [col['name'] for col in columns if 'TEXT' in col['type']]
+        for col in text_columns[:3]:  # Limit to first 3 text columns
+            analysis_queries.append(f"SELECT DISTINCT {col} FROM {table_name} LIMIT 5")
+        
+        # Execute analysis queries
+        analysis_results = []
+        for query in analysis_queries:
+            query_response = requests.post(
+                f"http://localhost:5044/api/utility/database/{database_name}/query",
+                json={"query": query},
+                timeout=30
+            )
+            
+            if query_response.status_code == 200:
+                query_result = query_response.json()
+                if query_result.get("status") == "success":
+                    analysis_results.append(f"Query: {query}\nResult: {json.dumps(query_result.get('results', []), indent=2)}")
+        
+        if analysis_results:
+            return f"Data Analysis for '{table_name}' in '{database_name}':\n\n" + "\n\n".join(analysis_results)
+        else:
+            return f"No analysis data available for table '{table_name}'"
+            
+    except Exception as e:
+        return f"Error analyzing database data: {str(e)}"
 
 # Tool registry - prioritize official tools, fallback to custom implementations
 AVAILABLE_TOOLS = {}
@@ -475,7 +635,13 @@ try:
     OFFICIAL_TOOLS = get_official_tools()
     if OFFICIAL_TOOLS:
         AVAILABLE_TOOLS.update(OFFICIAL_TOOLS)
-        print(f"[Strands SDK] ✅ Using {len(OFFICIAL_TOOLS)} official tools")
+        # Add our custom database tools to override/extend official tools
+        AVAILABLE_TOOLS.update({
+            'list_databases': list_databases,
+            'get_database_schema': get_database_schema,
+            'analyze_database_data': analyze_database_data,
+        })
+        print(f"[Strands SDK] ✅ Using {len(OFFICIAL_TOOLS)} official tools + 3 custom database tools")
     else:
         print("[Strands SDK] ⚠️  Official tools not available, using fallback implementations")
 except ImportError:
@@ -489,6 +655,9 @@ except ImportError:
     'file_operations': file_operations,
     'code_execution': code_execution,
     'database_query': database_query,
+    'list_databases': list_databases,
+    'get_database_schema': get_database_schema,
+    'analyze_database_data': analyze_database_data,
     })
 
 # Extended Tool Implementations (NEW TOOLS)
@@ -1787,11 +1956,73 @@ def execute_strands_agent(agent_id):
                     except Exception as e:
                         print(f"[Strands SDK] Current time tool error: {e}")
             
+            # Check for database tool usage
+            database_tools = ['list_databases', 'get_database_schema', 'analyze_database_data']
+            loaded_database_tools = [tool for tool in tools_loaded if tool in database_tools]
+            
+            if loaded_database_tools:
+                db_keywords = ['database', 'db', 'table', 'schema', 'data', 'analyze', '4g', 'network']
+                if any(word in input_text.lower() for word in db_keywords):
+                    try:
+                        # First, list available databases
+                        if 'list_databases' in loaded_database_tools:
+                            db_list = list_databases()
+                            tool_results.append(f"Database list: {db_list}")
+                            tools_used.append('list_databases')
+                            print(f"[Strands SDK] Database list tool executed: {db_list}")
+                            
+                            # Add database list to the prompt
+                            processed_input = f"{input_text}\n\n[Available Databases: {db_list}]"
+                            
+                            # If user mentions specific database, get its schema
+                            if '4g' in input_text.lower() or 'network' in input_text.lower():
+                                schema = get_database_schema('4G_Network_db')
+                                tool_results.append(f"Database schema: {schema}")
+                                tools_used.append('get_database_schema')
+                                print(f"[Strands SDK] Database schema tool executed: {schema}")
+                                processed_input += f"\n\n[Database Schema: {schema}]"
+                                
+                                # Analyze the data - check if user is asking about throughput
+                                if 'throughput' in input_text.lower():
+                                    analysis = analyze_database_data('4G_Network_db', 'performance_metrics')
+                                    tool_results.append(f"Database analysis: {analysis}")
+                                    tools_used.append('analyze_database_data')
+                                    print(f"[Strands SDK] Database analysis tool executed: {analysis}")
+                                    processed_input += f"\n\n[Database Analysis: {analysis}]"
+                                else:
+                                    # Default to network_nodes for general analysis
+                                    analysis = analyze_database_data('4G_Network_db', 'network_nodes')
+                                    tool_results.append(f"Database analysis: {analysis}")
+                                    tools_used.append('analyze_database_data')
+                                    print(f"[Strands SDK] Database analysis tool executed: {analysis}")
+                                    processed_input += f"\n\n[Database Analysis: {analysis}]"
+                                
+                    except Exception as e:
+                        print(f"[Strands SDK] Database tool error: {e}")
+            
+            # Enhance system prompt with database tool instructions if database tools are loaded
+            enhanced_system_prompt = agent_config['system_prompt']
+            database_tools = ['list_databases', 'get_database_schema', 'analyze_database_data']
+            loaded_database_tools = [tool for tool in tools_loaded if tool in database_tools]
+        
+            if loaded_database_tools:
+                database_instructions = f"""
+
+IMPORTANT: You have access to database analysis tools. When users ask about databases, you MUST use these tools:
+
+1. Use list_databases() to see available databases
+2. Use get_database_schema(database_name) to understand database structure  
+3. Use analyze_database_data(database_name, table_name) to analyze data
+
+For database-related queries, ALWAYS call these tools first before providing analysis. Do not just think about databases - actually call the tools to get real data."""
+                
+                enhanced_system_prompt = agent_config['system_prompt'] + database_instructions
+            
             # Prepare the prompt with system prompt and tool results
             if tool_results:
-                full_prompt = f"{agent_config['system_prompt']}\n\nUser: {processed_input}\n\nAssistant:"
+                full_prompt = f"{enhanced_system_prompt}\n\nUser: {processed_input}\n\nAssistant:"
             else:
-                full_prompt = f"{agent_config['system_prompt']}\n\nUser: {input_text}\n\nAssistant:"
+                full_prompt = f"{enhanced_system_prompt}\n\nUser: {input_text}\n\nAssistant:"
             
             # Call Ollama API directly
             import requests
@@ -2547,7 +2778,8 @@ def get_tool_config():
             'http_request', 'python_repl', 'generate_image', 'slack', 'memory',
             'memory_store', 'memory_retrieve', 'code_execution', 'file_operations',
             'weather_api', 'think', 'a2a_discover_agent', 'a2a_list_discovered_agents',
-            'a2a_send_message', 'coordinate_agents', 'agent_handoff'
+            'a2a_send_message', 'coordinate_agents', 'agent_handoff',
+            'list_databases', 'get_database_schema', 'analyze_database_data'
         }
         
         for tool_name in AVAILABLE_TOOLS.keys():
@@ -2599,32 +2831,18 @@ def update_tool_config():
 def discover_strands_tools():
     """Discover all available Strands tools with metadata"""
     try:
-        # Get tools from the official registry
-        tool_catalog = strands_tools_registry.get_catalog()
+        # Create a simple tool catalog with our available tools
+        tool_catalog = {
+            'tools': {},
+            'categories': {},
+            'total_count': len(AVAILABLE_TOOLS)
+        }
         
         # Add our available tools to the catalog
         for tool_name, tool_func in AVAILABLE_TOOLS.items():
-            if tool_name not in tool_catalog['tools']:
-                # Get metadata from the registry or create default
-                metadata = strands_tools_registry.get_tool_metadata(tool_name)
-                if metadata:
                     tool_catalog['tools'][tool_name] = {
-                        'name': metadata.name,
-                        'description': metadata.description,
-                        'category': metadata.category,
-                        'parameters': metadata.parameters,
-                        'examples': metadata.examples,
-                        'version': metadata.version,
-                        'author': metadata.author,
-                        'requires': metadata.requires,
-                        'tags': metadata.tags,
-                        'available': True
-                    }
-                else:
-                    # Create basic metadata for tools not in registry
-                    tool_catalog['tools'][tool_name] = {
-                        'name': tool_name,
-                        'description': f'{tool_name.replace("_", " ").title()} tool',
+                'name': tool_name.replace('_', ' ').title(),
+                'description': getattr(tool_func, '__doc__', f'Tool for {tool_name} functionality'),
                         'category': 'utility',
                         'parameters': {},
                         'examples': [],
@@ -2634,7 +2852,6 @@ def discover_strands_tools():
                         'tags': [],
                         'available': True
                     }
-                    tool_catalog['total_count'] += 1
         
         return jsonify({
             'success': True,
@@ -2643,7 +2860,7 @@ def discover_strands_tools():
         })
         
     except Exception as e:
-        logger.error(f"Error discovering tools: {str(e)}")
+        print(f"Error discovering tools: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/strands-sdk/tools/configuration/<tool_name>', methods=['GET'])

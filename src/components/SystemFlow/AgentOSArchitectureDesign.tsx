@@ -29,7 +29,9 @@ import {
   BarChart3,
   Brain,
   TrendingUp,
-  X
+  X,
+  Target,
+  FileText
 } from 'lucide-react';
 
 export const AgentOSArchitectureDesign: React.FC = () => {
@@ -51,123 +53,173 @@ export const AgentOSArchitectureDesign: React.FC = () => {
     },
     {
       id: 'dashboard',
-      name: 'AgentOS Dashboard',
+      name: 'Main System Orchestrator Card',
       icon: Monitor,
       color: 'bg-blue-500',
-      details: ['Industry Selection Hub', 'AgentOS Navigation', 'Real-time Status Overview'],
+      details: ['Query Input Interface', 'Agent Selection Display', 'Response Formatting', 'Configuration Panel'],
       parent: 'user-interaction'
     },
     {
       id: 'theming',
-      name: 'AgentOS Theming Engine',
+      name: 'A2A Orchestration Monitor',
       icon: Settings,
       color: 'bg-blue-400',
-      details: ['Custom AgentOS Branding', 'Industry-specific Themes', 'UI Customization'],
+      details: ['Real-time Agent Coordination', 'Handover Tracking', 'Execution Metrics', 'Verification Display'],
       parent: 'user-interaction'
     },
 
-    // Agent Command Centre Sub-components
+    // Main System Orchestrator Layer
     {
-      id: 'agent-creation',
-      name: 'AgentOS Agent Creation',
-      icon: Plus,
-      color: 'bg-green-600',
-      details: ['Simple Agent Mode', 'Advanced Agent Mode', 'AgentOS Step Wizard'],
-      parent: 'agent-command-centre'
+      id: 'query-analysis',
+      name: 'Query Analysis Engine',
+      icon: Brain,
+      color: 'bg-purple-600',
+      details: ['Query Type Detection', 'Task Decomposition', 'Complexity Analysis', 'Workflow Pattern Selection'],
+      parent: 'main-orchestrator'
     },
     {
-      id: 'quick-actions',
-      name: 'AgentOS Quick Actions',
-      icon: Zap,
-      color: 'bg-green-500',
-      details: ['Create Agent', 'AWS Strands Workflow', 'Multi-Agent Workspace'],
-      parent: 'agent-command-centre'
+      id: 'agent-selection',
+      name: 'Agent Selection System',
+      icon: Target,
+      color: 'bg-purple-500',
+      details: ['Agent Discovery', 'Relevance Scoring', 'Capability Matching', 'Dynamic Selection'],
+      parent: 'main-orchestrator'
     },
     {
-      id: 'project-management',
-      name: 'AgentOS Project Management',
-      icon: Database,
-      color: 'bg-green-400',
-      details: ['Project Data Hub', 'Agent Traceability', 'Cost Analysis Dashboard'],
-      parent: 'agent-command-centre'
-    },
-
-    // MCP Gateway Sub-components
-    {
-      id: 'server-management',
-      name: 'AgentOS MCP Server Management',
-      icon: Server,
-      color: 'bg-orange-600',
-      details: ['MCP Server Registry', 'Connection Health Monitor', 'Auto Discovery Engine'],
-      parent: 'mcp-gateway'
-    },
-    {
-      id: 'tool-registry',
-      name: 'AgentOS Tool Registry',
+      id: 'response-synthesis',
+      name: 'Response Synthesis Engine',
       icon: Code,
-      color: 'bg-orange-500',
-      details: ['Tool Catalog System', 'Verification Engine', 'Category Management'],
-      parent: 'mcp-gateway'
-    },
-    {
-      id: 'gateway-analytics',
-      name: 'AgentOS Gateway Analytics',
-      icon: BarChart3,
-      color: 'bg-orange-400',
-      details: ['Usage Metrics Dashboard', 'Performance Analytics', 'Success Rate Tracking'],
-      parent: 'mcp-gateway'
+      color: 'bg-purple-400',
+      details: ['Content Aggregation', 'Format Optimization', 'JSON Detection', 'Quality Enhancement'],
+      parent: 'main-orchestrator'
     },
 
-    // Multi-Agent Workspace Sub-components
+    // A2A Service Layer
     {
-      id: 'workspace-selector',
-      name: 'AgentOS Workspace Selector',
-      icon: Globe,
-      color: 'bg-cyan-600',
-      details: ['Wealth Management OS', 'Telco CVM OS', 'Network Twin OS'],
-      parent: 'multi-agent-workspace'
+      id: 'agent-registration',
+      name: 'Agent Registration System',
+      icon: Users,
+      color: 'bg-orange-600',
+      details: ['Agent Discovery', 'Capability Mapping', 'Status Tracking', 'Health Monitoring'],
+      parent: 'a2a-service'
     },
     {
-      id: 'agent-palette',
-      name: 'AgentOS Agent Palette',
+      id: 'handover-management',
+      name: 'Handover Management',
+      icon: ArrowRight,
+      color: 'bg-orange-500',
+      details: ['Task Transitions', 'Context Preservation', 'Verification Markers', 'Error Recovery'],
+      parent: 'a2a-service'
+    },
+    {
+      id: 'message-routing',
+      name: 'Message Routing Engine',
+      icon: Network,
+      color: 'bg-orange-400',
+      details: ['Message Queue', 'Routing Logic', 'Delivery Confirmation', 'Metrics Collection'],
+      parent: 'a2a-service'
+    },
+
+    // Backend Services Layer
+    {
+      id: 'ollama-api',
+      name: 'Ollama API Service',
+      icon: Server,
+      color: 'bg-cyan-600',
+      details: ['Model Management', 'Response Generation', 'Health Monitoring', 'Agent Configuration'],
+      parent: 'backend-services'
+    },
+    {
+      id: 'strands-sdk',
+      name: 'Strands SDK Integration',
       icon: Bot,
       color: 'bg-cyan-500',
-      details: ['Pre-configured Agents', 'Drag & Drop Interface', 'Agent Templates'],
-      parent: 'multi-agent-workspace'
+      details: ['Tool Registration', 'Workflow Execution', 'Agent Framework', 'Integration Layer'],
+      parent: 'backend-services'
     },
     {
-      id: 'properties-panel',
-      name: 'AgentOS Properties Panel',
-      icon: Settings,
+      id: 'database-layer',
+      name: 'Database & Storage',
+      icon: Database,
       color: 'bg-cyan-400',
-      details: ['Agent Configuration', 'Connection Management', 'Parameter Settings'],
-      parent: 'multi-agent-workspace'
+      details: ['SQLite Storage', 'Session Management', 'Agent Registry', 'Performance Metrics'],
+      parent: 'backend-services'
     },
 
-    // Agent Runtime Engine Sub-components
+    // Additional Platform Components
     {
-      id: 'execution-engine',
-      name: 'AgentOS Execution Engine',
-      icon: Zap,
-      color: 'bg-purple-600',
-      details: ['Task Processing Engine', 'Concurrent Execution', 'Load Balancing'],
-      parent: 'agent-runtime'
+      id: 'ollama-terminal',
+      name: 'Ollama Terminal',
+      icon: Server,
+      color: 'bg-blue-600',
+      details: ['Direct Model Access', 'Command Line Interface', 'Model Testing', 'Debug Tools'],
+      parent: 'platform-components'
     },
     {
-      id: 'memory-manager',
-      name: 'AgentOS Memory Manager',
-      icon: Database,
-      color: 'bg-purple-500',
-      details: ['Context Storage System', 'Memory Store Management', 'State Preservation'],
-      parent: 'agent-runtime'
+      id: 'document-chat',
+      name: 'Document Chat',
+      icon: FileText,
+      color: 'bg-blue-500',
+      details: ['Document Processing', 'RAG Integration', 'Context-Aware Chat', 'File Management'],
+      parent: 'platform-components'
     },
     {
-      id: 'framework-adapters',
-      name: 'AgentOS Framework Adapters',
+      id: 'mcp-gateway',
+      name: 'MCP Gateway',
       icon: Network,
+      color: 'bg-blue-400',
+      details: ['Model Context Protocol', 'Tool Integration', 'Server Management', 'Connection Hub'],
+      parent: 'platform-components'
+    },
+    {
+      id: 'ai-marketplace',
+      name: 'AI Marketplace',
+      icon: ShoppingBag,
+      color: 'bg-purple-600',
+      details: ['Agent Marketplace', 'Tool Discovery', 'Template Library', 'Community Sharing'],
+      parent: 'platform-components'
+    },
+    {
+      id: 'multi-agent-workspace',
+      name: 'Multi Agent Workspace',
+      icon: Users,
+      color: 'bg-purple-500',
+      details: ['Collaborative Environment', 'Agent Coordination', 'Workspace Management', 'Real-time Collaboration'],
+      parent: 'platform-components'
+    },
+    {
+      id: 'agent-command-centre',
+      name: 'Agent Command Centre',
+      icon: Command,
       color: 'bg-purple-400',
-      details: ['AWS Bedrock AgentCore', 'AWS Strands Integration', 'Custom Framework Support'],
-      parent: 'agent-runtime'
+      details: ['Agent Creation', 'Quick Actions', 'Project Management', 'Cost Analysis'],
+      parent: 'platform-components'
+    },
+
+    // Agent Ecosystem Layer
+    {
+      id: 'weather-agent',
+      name: 'Weather Agent',
+      icon: Globe,
+      color: 'bg-green-600',
+      details: ['Weather Data Retrieval', 'Meteorological Analysis', 'Climate Information', 'Forecast Services'],
+      parent: 'agent-ecosystem'
+    },
+    {
+      id: 'creative-assistant',
+      name: 'Creative Assistant',
+      icon: Brain,
+      color: 'bg-green-500',
+      details: ['Creative Writing', 'Poetry Generation', 'Storytelling', 'Content Creation'],
+      parent: 'agent-ecosystem'
+    },
+    {
+      id: 'calculator-agent',
+      name: 'Calculator Agent',
+      icon: BarChart3,
+      color: 'bg-green-400',
+      details: ['Mathematical Computations', 'Data Analysis', 'Statistical Operations', 'Numerical Processing'],
+      parent: 'agent-ecosystem'
     },
 
     // Agent Control Panel Sub-components
@@ -278,22 +330,124 @@ export const AgentOSArchitectureDesign: React.FC = () => {
   // Layer definitions for popups
   const layerDefinitions = {
     'user-interaction': {
-      title: 'AgentOS User Interface Layer',
-      description: 'Frontend interfaces and user experience components for the AgentOS platform',
+      title: 'AgentOS Frontend Interface Layer',
+      description: 'React-based user interface components for multi-agent orchestration',
       icon: Users,
       color: 'blue',
       architecture: [
-        'AgentOS React Frontend Application',
-        'AgentOS Authentication & Authorization System',
-        'Industry-specific AgentOS Theming Engine',
-        'AgentOS Responsive Dashboard Framework',
-        'Real-time AgentOS Status Monitoring Interface'
+        'Main System Orchestrator Card - Primary orchestration interface',
+        'A2A Orchestration Monitor - Real-time agent coordination visualization',
+        'Configuration Panel - Dynamic system parameter management',
+        'Agent Output Display - Formatted, verified agent responses',
+        'Health Monitoring Dashboard - Service status and performance metrics'
       ],
       services: [
-        'AgentOS React Frontend Framework',
-        'AgentOS Authentication Service',
-        'AgentOS Local Storage Management',
-        'AgentOS Industry Context Service'
+        'React Frontend Framework (Port 5173)',
+        'Real-time Orchestration Interface',
+        'Dynamic Configuration Management',
+        'Agent Verification Display System'
+      ]
+    },
+    'main-orchestrator': {
+      title: 'Main System Orchestrator (Port 5031)',
+      description: 'Central orchestration engine for multi-agent coordination and task management',
+      icon: Brain,
+      color: 'purple',
+      architecture: [
+        'Query Analysis Engine - Intelligent query processing and task decomposition',
+        'Agent Selection System - Dynamic agent discovery and relevance scoring',
+        'Response Synthesis Engine - Content aggregation and format optimization',
+        'Session Management - Orchestration session tracking and history',
+        'Verification System - Authenticity markers for all agent outputs'
+      ],
+      services: [
+        'Main System Orchestrator API (Port 5031)',
+        'Query Analysis Service',
+        'Agent Selection Algorithm',
+        'Response Synthesis Engine',
+        'Session Management System'
+      ]
+    },
+    'a2a-service': {
+      title: 'A2A Service (Port 5008)',
+      description: 'Agent-to-Agent communication hub for seamless task handovers and coordination',
+      icon: Network,
+      color: 'orange',
+      architecture: [
+        'Agent Registration System - Agent discovery and capability mapping',
+        'Handover Management - Seamless task transitions between agents',
+        'Message Routing Engine - Message queue and delivery confirmation',
+        'Connection Tracking - Agent connection status and metrics',
+        'Verification Markers - Proof of authentic agent outputs'
+      ],
+      services: [
+        'A2A Service API (Port 5008)',
+        'Agent Registration Service',
+        'Message Routing Engine',
+        'Handover Management System',
+        'Connection Health Monitor'
+      ]
+    },
+    'backend-services': {
+      title: 'Backend Services Layer',
+      description: 'Core backend services supporting the multi-agent orchestration platform',
+      icon: Server,
+      color: 'cyan',
+      architecture: [
+        'Ollama API Service (Port 5002) - LLM integration and model management',
+        'Strands SDK Integration (Port 5006) - Tool registration and workflow execution',
+        'Database & Storage - SQLite storage for sessions, agents, and metrics',
+        'Health Monitoring - Service status and performance tracking',
+        'Configuration Management - Runtime parameter updates'
+      ],
+      services: [
+        'Ollama API Service (Port 5002)',
+        'Strands SDK API (Port 5006)',
+        'SQLite Database Layer',
+        'Health Monitoring System',
+        'Configuration Management API'
+      ]
+    },
+    'agent-ecosystem': {
+      title: 'Agent Ecosystem',
+      description: 'Specialized AI agents with domain-specific capabilities and verification',
+      icon: Bot,
+      color: 'green',
+      architecture: [
+        'Weather Agent - Meteorological data retrieval and analysis',
+        'Creative Assistant - Creative writing, poetry, and storytelling',
+        'Calculator Agent - Mathematical computations and data analysis',
+        'Verification System - Authenticity markers for all agent outputs',
+        'Capability Mapping - Domain expertise and skill matching'
+      ],
+      services: [
+        'Weather Agent (qwen3:1.7b)',
+        'Creative Assistant (qwen3:1.7b)',
+        'Calculator Agent (qwen3:1.7b)',
+        'Agent Verification System',
+        'Capability Registry Service'
+      ]
+    },
+    'platform-components': {
+      title: 'Platform Components',
+      description: 'Additional platform features and tools for comprehensive agent management',
+      icon: Settings,
+      color: 'blue',
+      architecture: [
+        'Ollama Terminal - Direct model access and command line interface',
+        'Document Chat - RAG integration and document processing',
+        'MCP Gateway - Model Context Protocol integration and tool management',
+        'AI Marketplace - Agent marketplace and community sharing',
+        'Multi Agent Workspace - Collaborative environment for agent coordination',
+        'Agent Command Centre - Agent creation and project management'
+      ],
+      services: [
+        'Ollama Terminal Interface',
+        'Document Processing Service',
+        'MCP Gateway API',
+        'AI Marketplace Platform',
+        'Multi Agent Workspace Engine',
+        'Agent Command Centre API'
       ]
     },
     'agent-command-centre': {
@@ -620,10 +774,10 @@ export const AgentOSArchitectureDesign: React.FC = () => {
           <div>
             <CardTitle className="text-white flex items-center gap-2">
               <Network className="w-5 h-5" />
-              AgentOS Architecture Blueprint
+              AgentOS Studio Strands - Multi-Agent Orchestration Architecture
             </CardTitle>
             <p className="text-gray-400 text-sm mt-1">
-              Complete AgentOS platform architecture with Enhanced LLM Orchestration v2.0 and logical flow visualization
+              Complete multi-agent orchestration platform with A2A communication, Main System Orchestrator, and intelligent agent coordination
             </p>
           </div>
         </CardHeader>
@@ -686,14 +840,14 @@ export const AgentOSArchitectureDesign: React.FC = () => {
             {/* Main Architecture Sections */}
             <div className="mt-24 space-y-8">
               
-              {/* User Layer */}
+              {/* Frontend Interface Layer */}
               <div 
                 className="border-2 border-blue-500/50 rounded-lg bg-blue-500/10 p-6 cursor-pointer hover:bg-blue-500/20 transition-all duration-300"
                 onClick={() => setSelectedLayer('user-interaction')}
               >
                 <h3 className="text-blue-400 font-medium mb-4 flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  AgentOS User Interface Layer
+                  AgentOS Frontend Interface Layer (Port 5173)
                   <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
@@ -703,145 +857,117 @@ export const AgentOSArchitectureDesign: React.FC = () => {
                 </div>
               </div>
 
-              {/* Command Centre Layer */}
-              <div 
-                className="border-2 border-green-500/50 rounded-lg bg-green-500/10 p-6 cursor-pointer hover:bg-green-500/20 transition-all duration-300"
-                onClick={() => setSelectedLayer('agent-command-centre')}
-              >
-                <h3 className="text-green-400 font-medium mb-4 flex items-center gap-2">
-                  <Command className="w-4 h-4" />
-                  AgentOS Command Centre
-                  <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {detailedComponents.filter(c => c.parent === 'agent-command-centre').map(component => (
-                    <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Integration Layer */}
-              <div className="grid grid-cols-2 gap-6">
-                {/* MCP Gateway */}
-                <div 
-                  className="border-2 border-orange-500/50 rounded-lg bg-orange-500/10 p-6 cursor-pointer hover:bg-orange-500/20 transition-all duration-300"
-                  onClick={() => setSelectedLayer('mcp-gateway')}
-                >
-                  <h3 className="text-orange-400 font-medium mb-4 flex items-center gap-2">
-                    <Server className="w-4 h-4" />
-                    AgentOS MCP Gateway
-                    <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
-                  </h3>
-                  <div className="space-y-3">
-                    {detailedComponents.filter(c => c.parent === 'mcp-gateway').map(component => (
-                      <ComponentCard key={component.id} component={component} isAnimating={isAnimating} compact />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Multi-Agent Workspace */}
-                <div 
-                  className="border-2 border-cyan-500/50 rounded-lg bg-cyan-500/10 p-6 cursor-pointer hover:bg-cyan-500/20 transition-all duration-300"
-                  onClick={() => setSelectedLayer('multi-agent-workspace')}
-                >
-                  <h3 className="text-cyan-400 font-medium mb-4 flex items-center gap-2">
-                    <Bot className="w-4 h-4" />
-                    AgentOS Multi-Agent Workspace
-                    <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
-                  </h3>
-                  <div className="space-y-3">
-                    {detailedComponents.filter(c => c.parent === 'multi-agent-workspace').map(component => (
-                      <ComponentCard key={component.id} component={component} isAnimating={isAnimating} compact />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Runtime Layer */}
+              {/* Main System Orchestrator Layer */}
               <div 
                 className="border-2 border-purple-500/50 rounded-lg bg-purple-500/10 p-6 cursor-pointer hover:bg-purple-500/20 transition-all duration-300"
-                onClick={() => setSelectedLayer('agent-runtime')}
+                onClick={() => setSelectedLayer('main-orchestrator')}
               >
                 <h3 className="text-purple-400 font-medium mb-4 flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  AgentOS Runtime Engine
-                  <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {detailedComponents.filter(c => c.parent === 'agent-runtime').map(component => (
-                    <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Enhanced LLM Orchestration Layer */}
-              <div 
-                className="border-2 border-purple-600/50 rounded-lg bg-purple-600/10 p-6 cursor-pointer hover:bg-purple-600/20 transition-all duration-300"
-                onClick={() => setSelectedLayer('enhanced-orchestration')}
-              >
-                <h3 className="text-purple-300 font-medium mb-4 flex items-center gap-2">
                   <Brain className="w-4 h-4" />
-                  Enhanced LLM Orchestration v2.0
+                  Main System Orchestrator (Port 5031)
                   <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  {detailedComponents.filter(c => c.parent === 'enhanced-orchestration').map(component => (
+                  {detailedComponents.filter(c => c.parent === 'main-orchestrator').map(component => (
                     <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
                   ))}
                 </div>
               </div>
 
-              {/* Management & Infrastructure Layer */}
+              {/* A2A Service & Backend Services Layer */}
               <div className="grid grid-cols-2 gap-6">
-                {/* Agent Control Panel */}
+                {/* A2A Service */}
                 <div 
-                  className="border-2 border-red-500/50 rounded-lg bg-red-500/10 p-6 cursor-pointer hover:bg-red-500/20 transition-all duration-300"
-                  onClick={() => setSelectedLayer('agent-control-panel')}
+                  className="border-2 border-orange-500/50 rounded-lg bg-orange-500/10 p-6 cursor-pointer hover:bg-orange-500/20 transition-all duration-300"
+                  onClick={() => setSelectedLayer('a2a-service')}
                 >
-                  <h3 className="text-red-400 font-medium mb-4 flex items-center gap-2">
-                    <Activity className="w-4 h-4" />
-                    AgentOS Control Panel
+                  <h3 className="text-orange-400 font-medium mb-4 flex items-center gap-2">
+                    <Network className="w-4 h-4" />
+                    A2A Service (Port 5008)
                     <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
                   </h3>
                   <div className="space-y-3">
-                    {detailedComponents.filter(c => c.parent === 'agent-control-panel').map(component => (
+                    {detailedComponents.filter(c => c.parent === 'a2a-service').map(component => (
                       <ComponentCard key={component.id} component={component} isAnimating={isAnimating} compact />
                     ))}
                   </div>
                 </div>
 
-                {/* AWS Services */}
+                {/* Backend Services */}
                 <div 
-                  className="border-2 border-amber-500/50 rounded-lg bg-amber-500/10 p-6 cursor-pointer hover:bg-amber-500/20 transition-all duration-300"
-                  onClick={() => setSelectedLayer('aws-services')}
+                  className="border-2 border-cyan-500/50 rounded-lg bg-cyan-500/10 p-6 cursor-pointer hover:bg-cyan-500/20 transition-all duration-300"
+                  onClick={() => setSelectedLayer('backend-services')}
                 >
-                  <h3 className="text-amber-400 font-medium mb-4 flex items-center gap-2">
-                    <Cloud className="w-4 h-4" />
-                    AgentOS Core Services
+                  <h3 className="text-cyan-400 font-medium mb-4 flex items-center gap-2">
+                    <Server className="w-4 h-4" />
+                    Backend Services Layer
                     <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
                   </h3>
                   <div className="space-y-3">
-                    {detailedComponents.filter(c => c.parent === 'aws-services').map(component => (
+                    {detailedComponents.filter(c => c.parent === 'backend-services').map(component => (
                       <ComponentCard key={component.id} component={component} isAnimating={isAnimating} compact />
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Industry Solutions Layer */}
+              {/* Agent Ecosystem Layer */}
               <div 
-                className="border-2 border-indigo-500/50 rounded-lg bg-indigo-500/10 p-6 cursor-pointer hover:bg-indigo-500/20 transition-all duration-300"
-                onClick={() => setSelectedLayer('industry-solutions')}
+                className="border-2 border-green-500/50 rounded-lg bg-green-500/10 p-6 cursor-pointer hover:bg-green-500/20 transition-all duration-300"
+                onClick={() => setSelectedLayer('agent-ecosystem')}
               >
-                <h3 className="text-indigo-400 font-medium mb-4 flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  AgentOS Industry Solutions
+                <h3 className="text-green-400 font-medium mb-4 flex items-center gap-2">
+                  <Bot className="w-4 h-4" />
+                  Agent Ecosystem (Ollama Core Port 11434)
                   <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  {detailedComponents.filter(c => c.parent === 'industry-solutions').map(component => (
+                  {detailedComponents.filter(c => c.parent === 'agent-ecosystem').map(component => (
                     <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
                   ))}
+                </div>
+              </div>
+
+              {/* Platform Components Layer */}
+              <div 
+                className="border-2 border-blue-600/50 rounded-lg bg-blue-600/10 p-6 cursor-pointer hover:bg-blue-600/20 transition-all duration-300"
+                onClick={() => setSelectedLayer('platform-components')}
+              >
+                <h3 className="text-blue-300 font-medium mb-4 flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Platform Components
+                  <span className="text-xs text-gray-400 ml-auto">Click to explore</span>
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {detailedComponents.filter(c => c.parent === 'platform-components').map(component => (
+                    <ComponentCard key={component.id} component={component} isAnimating={isAnimating} />
+                  ))}
+                </div>
+              </div>
+
+              {/* System Flow Information */}
+              <div className="border-2 border-gray-600/50 rounded-lg bg-gray-600/10 p-6">
+                <h3 className="text-gray-300 font-medium mb-4 flex items-center gap-2">
+                  <Workflow className="w-4 h-4" />
+                  Multi-Agent Orchestration Workflow
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div className="p-3 bg-gray-800/50 rounded-lg">
+                    <div className="text-blue-400 font-medium mb-2">1. Query Analysis</div>
+                    <div className="text-gray-300 text-xs">User submits query → Orchestrator analyzes task type, complexity, and requirements</div>
+                  </div>
+                  <div className="p-3 bg-gray-800/50 rounded-lg">
+                    <div className="text-purple-400 font-medium mb-2">2. Agent Selection</div>
+                    <div className="text-gray-300 text-xs">System discovers agents → Scores relevance → Selects optimal agents</div>
+                  </div>
+                  <div className="p-3 bg-gray-800/50 rounded-lg">
+                    <div className="text-orange-400 font-medium mb-2">3. A2A Execution</div>
+                    <div className="text-gray-300 text-xs">Agents execute sequentially → A2A manages handovers → Context preserved</div>
+                  </div>
+                  <div className="p-3 bg-gray-800/50 rounded-lg">
+                    <div className="text-green-400 font-medium mb-2">4. Response Synthesis</div>
+                    <div className="text-gray-300 text-xs">Orchestrator aggregates outputs → Formats response → Displays verification</div>
+                  </div>
                 </div>
               </div>
             </div>

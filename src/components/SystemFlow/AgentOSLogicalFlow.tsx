@@ -30,159 +30,159 @@ export const AgentOSLogicalFlow: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [activeFlow, setActiveFlow] = useState<string[]>([]);
 
-  // Define grouped flow sections in a 4x2 grid layout for single screen view
-  // Grid: 4 columns x 2 rows with proper spacing
-  // Container: ~1200px wide, sections: 180px wide with 80px gaps
+  // Define grouped flow sections for Multi-Agent Orchestration System
+  // Updated to reflect actual AgentOS Studio Strands architecture
   const flowSections = [
-    // Top Row (4 columns)
+    // Top Row - Frontend & Orchestration
     {
-      id: 'user-interface',
-      title: 'User Interface',
+      id: 'frontend-interface',
+      title: 'Frontend Interface',
       position: { x: 40, y: 80 },
       width: 180,
       height: 140,
       color: 'border-blue-500/50 bg-blue-500/10',
       nodes: [
-        { id: 'sidebar', name: 'Sidebar', icon: Monitor, color: 'bg-blue-500' },
-        { id: 'main-content', name: 'Main Content', icon: Users, color: 'bg-blue-600' }
+        { id: 'orchestrator-card', name: 'Orchestrator Card', icon: Monitor, color: 'bg-blue-500' },
+        { id: 'a2a-monitor', name: 'A2A Monitor', icon: Network, color: 'bg-blue-600' }
       ],
       services: [
         { name: 'React', icon: Globe, color: 'bg-blue-400' },
-        { name: 'Vite', icon: Zap, color: 'bg-blue-300' }
+        { name: 'Port 5173', icon: Zap, color: 'bg-blue-300' }
       ]
     },
     {
-      id: 'industry-context',
-      title: 'Industry Context',
+      id: 'main-orchestrator',
+      title: 'Main Orchestrator',
       position: { x: 260, y: 80 },
       width: 180,
       height: 140,
       color: 'border-purple-500/50 bg-purple-500/10',
       nodes: [
-        { id: 'industry-provider', name: 'Industry Provider', icon: Settings, color: 'bg-purple-500' },
-        { id: 'theme-config', name: 'Theme Config', icon: Shield, color: 'bg-purple-600' }
+        { id: 'query-analysis', name: 'Query Analysis', icon: Brain, color: 'bg-purple-500' },
+        { id: 'agent-selection', name: 'Agent Selection', icon: Shield, color: 'bg-purple-600' }
       ],
       services: [
-        { name: 'Supabase', icon: Database, color: 'bg-purple-400' },
-        { name: 'React Query', icon: Network, color: 'bg-purple-300' }
+        { name: 'Port 5031', icon: Server, color: 'bg-purple-400' },
+        { name: 'Response Synthesis', icon: Network, color: 'bg-purple-300' }
       ]
     },
     {
-      id: 'agent-dashboard',
-      title: 'Agent Dashboard',
+      id: 'a2a-service',
+      title: 'A2A Service',
       position: { x: 480, y: 80 },
-      width: 180,
-      height: 140,
-      color: 'border-cyan-500/50 bg-cyan-500/10',
-      nodes: [
-        { id: 'agents-table', name: 'Agents Table', icon: Bot, color: 'bg-cyan-500' },
-        { id: 'agent-monitoring', name: 'Agent Monitoring', icon: BarChart3, color: 'bg-cyan-600' }
-      ],
-      services: [
-        { name: 'SQLite', icon: Database, color: 'bg-cyan-400' },
-        { name: 'Flask API', icon: Server, color: 'bg-cyan-300' }
-      ]
-    },
-    {
-      id: 'command-centre',
-      title: 'Agent Command Centre',
-      position: { x: 700, y: 80 },
-      width: 180,
-      height: 140,
-      color: 'border-green-500/50 bg-green-500/10',
-      nodes: [
-        { id: 'create-agent', name: 'Create Agent', icon: Plus, color: 'bg-green-500' },
-        { id: 'quick-actions', name: 'Quick Actions', icon: Zap, color: 'bg-green-600' }
-      ],
-      services: [
-        { name: 'AgentCore', icon: Bot, color: 'bg-green-400' },
-        { name: 'Strands', icon: Network, color: 'bg-green-300' }
-      ]
-    },
-    // Bottom Row (4 columns)
-    {
-      id: 'mcp-gateway',
-      title: 'MCP Gateway',
-      position: { x: 40, y: 280 },
       width: 180,
       height: 140,
       color: 'border-orange-500/50 bg-orange-500/10',
       nodes: [
-        { id: 'mcp-settings', name: 'MCP Settings', icon: Server, color: 'bg-orange-500' },
-        { id: 'mcp-dashboard', name: 'MCP Dashboard', icon: Network, color: 'bg-orange-600' }
+        { id: 'agent-registry', name: 'Agent Registry', icon: Bot, color: 'bg-orange-500' },
+        { id: 'handover-mgr', name: 'Handover Manager', icon: BarChart3, color: 'bg-orange-600' }
       ],
       services: [
-        { name: 'MCP Protocol', icon: Network, color: 'bg-orange-400' },
-        { name: 'WebSockets', icon: Activity, color: 'bg-orange-300' }
+        { name: 'Port 5008', icon: Database, color: 'bg-orange-400' },
+        { name: 'Message Routing', icon: Server, color: 'bg-orange-300' }
       ]
     },
     {
-      id: 'multi-agent-workspace',
-      title: 'Multi-Agent Workspace',
+      id: 'backend-services',
+      title: 'Backend Services',
+      position: { x: 700, y: 80 },
+      width: 180,
+      height: 140,
+      color: 'border-cyan-500/50 bg-cyan-500/10',
+      nodes: [
+        { id: 'ollama-api', name: 'Ollama API', icon: Brain, color: 'bg-cyan-500' },
+        { id: 'strands-sdk', name: 'Strands SDK', icon: Plus, color: 'bg-cyan-600' }
+      ],
+      services: [
+        { name: 'Port 5002', icon: Bot, color: 'bg-cyan-400' },
+        { name: 'Port 5006', icon: Network, color: 'bg-cyan-300' }
+      ]
+    },
+    // Bottom Row - Agent Ecosystem & Platform Components
+    {
+      id: 'ollama-terminal',
+      title: 'Ollama Terminal',
+      position: { x: 40, y: 280 },
+      width: 180,
+      height: 140,
+      color: 'border-blue-500/50 bg-blue-500/10',
+      nodes: [
+        { id: 'terminal-interface', name: 'Terminal Interface', icon: Server, color: 'bg-blue-500' },
+        { id: 'model-testing', name: 'Model Testing', icon: Activity, color: 'bg-blue-600' }
+      ],
+      services: [
+        { name: 'Direct Access', icon: Brain, color: 'bg-blue-400' },
+        { name: 'CLI Tools', icon: Zap, color: 'bg-blue-300' }
+      ]
+    },
+    {
+      id: 'document-chat',
+      title: 'Document Chat',
       position: { x: 260, y: 280 },
       width: 180,
       height: 140,
-      color: 'border-teal-500/50 bg-teal-500/10',
+      color: 'border-green-500/50 bg-green-500/10',
       nodes: [
-        { id: 'agent-palette', name: 'Agent Palette', icon: Globe, color: 'bg-teal-500' },
-        { id: 'properties-panel', name: 'Properties Panel', icon: Settings, color: 'bg-teal-600' }
+        { id: 'rag-integration', name: 'RAG Integration', icon: Globe, color: 'bg-green-500' },
+        { id: 'file-management', name: 'File Management', icon: Database, color: 'bg-green-600' }
       ],
       services: [
-        { name: 'LangChain', icon: Network, color: 'bg-teal-400' },
-        { name: 'ChromaDB', icon: Database, color: 'bg-teal-300' }
+        { name: 'Document Processing', icon: Brain, color: 'bg-green-400' },
+        { name: 'Context Chat', icon: Network, color: 'bg-green-300' }
       ]
     },
     {
-      id: 'agentcore-observability',
-      title: 'AgentCore Observability',
+      id: 'mcp-gateway',
+      title: 'MCP Gateway',
       position: { x: 480, y: 280 },
       width: 180,
       height: 140,
-      color: 'border-red-500/50 bg-red-500/10',
+      color: 'border-orange-500/50 bg-orange-500/10',
       nodes: [
-        { id: 'real-agent-monitoring', name: 'Real Agent Monitoring', icon: Activity, color: 'bg-red-500' },
-        { id: 'deployment-control', name: 'Deployment Control', icon: Cloud, color: 'bg-red-600' }
+        { id: 'tool-integration', name: 'Tool Integration', icon: Settings, color: 'bg-orange-500' },
+        { id: 'server-mgmt', name: 'Server Management', icon: Shield, color: 'bg-orange-600' }
       ],
       services: [
-        { name: 'AWS Bedrock', icon: Brain, color: 'bg-red-400' },
-        { name: 'Pinecone', icon: Database, color: 'bg-red-300' }
+        { name: 'MCP Protocol', icon: Network, color: 'bg-orange-400' },
+        { name: 'Connection Hub', icon: Server, color: 'bg-orange-300' }
       ]
     },
     {
-      id: 'enhanced-orchestration',
-      title: 'Enhanced LLM Orchestration',
+      id: 'ai-marketplace',
+      title: 'AI Marketplace',
       position: { x: 700, y: 280 },
       width: 180,
       height: 140,
-      color: 'border-purple-600/50 bg-purple-600/10',
+      color: 'border-purple-500/50 bg-purple-500/10',
       nodes: [
-        { id: 'llm-analysis', name: 'LLM Analysis Engine', icon: Brain, color: 'bg-purple-500' },
-        { id: 'orchestration-monitor', name: 'Orchestration Monitor', icon: Monitor, color: 'bg-purple-600' }
+        { id: 'agent-marketplace', name: 'Agent Marketplace', icon: Bot, color: 'bg-purple-500' },
+        { id: 'template-library', name: 'Template Library', icon: BarChart3, color: 'bg-purple-600' }
       ],
       services: [
-        { name: 'llama3.2:1b', icon: Brain, color: 'bg-purple-400' },
-        { name: 'Port 5014', icon: Server, color: 'bg-purple-300' }
+        { name: 'Tool Discovery', icon: Brain, color: 'bg-purple-400' },
+        { name: 'Community Sharing', icon: Network, color: 'bg-purple-300' }
       ]
     }
 
   ];
 
-  // Define main flow connections optimized for 4x2 grid layout
+  // Define main flow connections for Multi-Agent Orchestration System
   const sectionConnections = [
-    // Top row connections
-    { from: 'user-interface', to: 'industry-context', label: 'Context', type: 'user' },
-    { from: 'industry-context', to: 'agent-dashboard', label: 'Templates', type: 'data' },
-    { from: 'agent-dashboard', to: 'command-centre', label: 'Create', type: 'user' },
+    // Top row connections - Orchestration Flow
+    { from: 'frontend-interface', to: 'main-orchestrator', label: 'Query', type: 'user' },
+    { from: 'main-orchestrator', to: 'a2a-service', label: 'Agent Selection', type: 'control' },
+    { from: 'a2a-service', to: 'backend-services', label: 'Execute', type: 'control' },
     
-    // Vertical flows (top to bottom)
-    { from: 'user-interface', to: 'mcp-gateway', label: 'Tools', type: 'control' },
-    { from: 'industry-context', to: 'multi-agent-workspace', label: 'Deploy', type: 'data' },
-    { from: 'agent-dashboard', to: 'agentcore-observability', label: 'Monitor', type: 'control' },
-    { from: 'command-centre', to: 'enhanced-orchestration', label: 'Query', type: 'user' },
+    // Vertical flows (top to bottom) - Platform Components
+    { from: 'frontend-interface', to: 'ollama-terminal', label: 'Direct Access', type: 'user' },
+    { from: 'main-orchestrator', to: 'document-chat', label: 'Document Query', type: 'control' },
+    { from: 'a2a-service', to: 'mcp-gateway', label: 'Tool Integration', type: 'control' },
+    { from: 'backend-services', to: 'ai-marketplace', label: 'Agent Discovery', type: 'data' },
     
-    // Enhanced Orchestration connections
-    { from: 'enhanced-orchestration', to: 'multi-agent-workspace', label: 'Route', type: 'control' },
-    { from: 'enhanced-orchestration', to: 'agentcore-observability', label: 'Execute', type: 'control' }
+    // Platform Component connections
+    { from: 'ollama-terminal', to: 'document-chat', label: 'Model Access', type: 'data' },
+    { from: 'document-chat', to: 'mcp-gateway', label: 'Tool Request', type: 'data' },
+    { from: 'mcp-gateway', to: 'ai-marketplace', label: 'Tool Discovery', type: 'data' }
 
   ];
 
@@ -340,10 +340,10 @@ export const AgentOSLogicalFlow: React.FC = () => {
         <div>
           <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
-            AgentOS Logical Flow
+            Multi-Agent Orchestration Flow
           </CardTitle>
           <p className="text-gray-400 text-sm mt-1">
-            Interactive visualization of how AgentOS components connect and communicate
+            Interactive visualization of A2A communication, agent coordination, and orchestration workflow
           </p>
         </div>
         <div className="flex gap-2">
@@ -622,37 +622,42 @@ export const AgentOSLogicalFlow: React.FC = () => {
     </Card>
   );
 
-  // Helper function to get node functions
+  // Helper function to get node functions for Multi-Agent Orchestration System
   function getNodeFunctions(nodeId: string): string[] {
     const functions: { [key: string]: string[] } = {
-      'sidebar': ['Navigation menu', 'Industry-specific routing', 'User interface'],
-      'main-content': ['Page rendering', 'Component routing', 'Content display'],
-      'industry-provider': ['Industry context management', 'Theme configuration', 'Settings provider'],
-      'theme-config': ['UI theming', 'Brand customization', 'Color schemes'],
-      'create-agent': ['Agent creation wizard', 'Configuration forms', 'Deployment setup'],
-      'quick-actions': ['Rapid agent creation', 'Template selection', 'Workflow shortcuts'],
-      'agents-table': ['Agent listing', 'Status display', 'Management interface'],
-      'agent-monitoring': ['Performance metrics', 'Health monitoring', 'Real-time status'],
-      'mcp-settings': ['MCP server configuration', 'Connection management', 'Tool settings'],
-      'mcp-dashboard': ['MCP server overview', 'Tool registry', 'Connection status'],
-      'agent-palette': ['Pre-built agent templates', 'Drag & drop interface', 'Agent library'],
-      'properties-panel': ['Agent configuration', 'Parameter settings', 'Connection setup'],
-      'real-agent-monitoring': ['Live agent tracking', 'Performance analytics', 'Error monitoring'],
-      'deployment-control': ['Agent lifecycle', 'Start/stop controls', 'Resource management'],
-      'general-settings': ['Application settings', 'User preferences', 'System configuration'],
-      'logo-settings': ['Brand customization', 'Logo upload', 'Visual identity'],
-      'aws-bedrock': ['Foundation models', 'Claude AI integration', 'Model inference'],
-      'aws-lambda': ['Serverless functions', 'Event processing', 'Microservices'],
-      'aws-s3': ['Object storage', 'Static assets', 'Data persistence'],
-      'aws-dynamodb': ['NoSQL database', 'Agent state storage', 'Configuration data'],
-      'aws-cloudwatch': ['Monitoring & logging', 'Performance metrics', 'Error tracking'],
-      'aws-iam': ['Identity management', 'Access control', 'Security policies'],
-      'aws-guardrails': ['Content filtering', 'Safety controls', 'Compliance monitoring'],
-      'agentcore': ['Agent orchestration', 'Workflow management', 'State coordination'],
-      'strands': ['Multi-agent workflows', 'Complex reasoning', 'Agent coordination'],
-      'langgraph': ['Graph-based workflows', 'State machines', 'Agent orchestration'],
-      'llm-analysis': ['Query context analysis', 'Agent capability evaluation', 'Contextual matching', '5-stage processing'],
-      'orchestration-monitor': ['Real-time processing visualization', 'Performance metrics', 'Session management', 'Memory optimization']
+      // Frontend Interface Layer
+      'orchestrator-card': ['Query input interface', 'Agent selection display', 'Response formatting', 'Configuration panel'],
+      'a2a-monitor': ['Real-time agent coordination', 'Handover tracking', 'Execution metrics', 'Verification display'],
+      
+      // Main Orchestrator Layer
+      'query-analysis': ['Query type detection', 'Task decomposition', 'Complexity analysis', 'Workflow pattern selection'],
+      'agent-selection': ['Agent discovery', 'Relevance scoring', 'Capability matching', 'Dynamic selection'],
+      
+      // A2A Service Layer
+      'agent-registry': ['Agent discovery', 'Capability mapping', 'Status tracking', 'Health monitoring'],
+      'handover-mgr': ['Task transitions', 'Context preservation', 'Verification markers', 'Error recovery'],
+      
+      // Backend Services Layer
+      'ollama-api': ['Model management', 'Response generation', 'Health monitoring', 'Agent configuration'],
+      'strands-sdk': ['Tool registration', 'Workflow execution', 'Agent framework', 'Integration layer'],
+      
+      // Agent Ecosystem Layer
+      'weather-data': ['Weather data retrieval', 'Meteorological analysis', 'Climate information', 'Forecast services'],
+      'meteorological': ['Weather pattern analysis', 'Climate data processing', 'Forecast generation', 'Data validation'],
+      'creative-writing': ['Creative content generation', 'Poetry creation', 'Storytelling', 'Content optimization'],
+      'poetry-gen': ['Poem generation', 'Rhyme schemes', 'Creative expression', 'Artistic content'],
+      'math-compute': ['Mathematical calculations', 'Numerical processing', 'Formula evaluation', 'Computation engine'],
+      'data-analysis': ['Statistical analysis', 'Data processing', 'Trend analysis', 'Report generation'],
+      
+      // Platform Components Layer
+      'terminal-interface': ['Command line interface', 'Direct model access', 'Debug tools', 'System monitoring'],
+      'model-testing': ['Model validation', 'Performance testing', 'Response evaluation', 'Quality assurance'],
+      'rag-integration': ['Retrieval augmented generation', 'Document processing', 'Context extraction', 'Knowledge base'],
+      'file-management': ['Document storage', 'File organization', 'Version control', 'Access management'],
+      'tool-integration': ['Tool registration', 'API integration', 'Service discovery', 'Connection management'],
+      'server-mgmt': ['Server configuration', 'Health monitoring', 'Load balancing', 'Resource management'],
+      'agent-marketplace': ['Agent discovery', 'Template sharing', 'Community features', 'Rating system'],
+      'template-library': ['Pre-built templates', 'Custom templates', 'Version control', 'Documentation']
     };
     
     return functions[nodeId] || ['Core functionality', 'System integration', 'Data processing'];

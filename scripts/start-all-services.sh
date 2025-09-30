@@ -71,14 +71,14 @@ start_service() {
     
     # Start the service
     cd "$PROJECT_ROOT/backend"
-    nohup python "$script_path" > "$PROJECT_ROOT/logs/${service_name}.log" 2>&1 &
+    nohup python "$script_path" > "$PROJECT_ROOT/logs/${service_name// /_}.log" 2>&1 &
     local pid=$!
     
     # Wait and check if it started successfully
     sleep 5
     if ps -p $pid > /dev/null; then
         echo -e "${GREEN}✅ $service_name started successfully (PID: $pid)${NC}"
-        echo $pid > "$PROJECT_ROOT/logs/${service_name}.pid"
+        echo $pid > "$PROJECT_ROOT/logs/${service_name// /_}.pid"
     else
         echo -e "${RED}❌ Failed to start $service_name${NC}"
         exit 1
@@ -87,7 +87,8 @@ start_service() {
 
 # Create logs directory
 SCRIPT_DIR="$(dirname "$0")"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+echo "PROJECT_ROOT: $PROJECT_ROOT"
 mkdir -p "$PROJECT_ROOT/logs"
 
 # Start services in correct order
@@ -99,8 +100,13 @@ start_service "Strands SDK API" 5006 "strands_sdk_api.py"
 # 2. A2A Service (port 5008) 
 start_service "A2A Service" 5008 "a2a_service.py"
 
-# 3. Main System Orchestrator (port 5030)
-start_service "Main System Orchestrator" 5030 "main_system_orchestrator.py"
+# 3. Main System Orchestrator (port 5031)
+start_service "Main System Orchestrator" 5031 "main_system_orchestrator.py"
+
+# 4. Utility Services (ports 5041-5044)
+echo -e "${BLUE}🚀 Starting Utility Services...${NC}"
+cd "$PROJECT_ROOT"
+./scripts/start-utility-services.sh
 
 # Wait for all services to be ready
 echo -e "${BLUE}⏳ Waiting for all services to be ready...${NC}"
@@ -124,16 +130,25 @@ else
 fi
 
 # Check Main System Orchestrator
-if curl -s http://localhost:5030/api/main-orchestrator/discover-agents >/dev/null 2>&1; then
+if curl -s http://localhost:5031/api/simple-orchestration/health >/dev/null 2>&1; then
     echo -e "${GREEN}✅ Main System Orchestrator: Healthy${NC}"
 else
     echo -e "${RED}❌ Main System Orchestrator: Unhealthy${NC}"
+fi
+
+# Check Utility Services
+if curl -s http://localhost:5044/api/utility/health >/dev/null 2>&1; then
+    echo -e "${GREEN}✅ Utility Services: Healthy${NC}"
+else
+    echo -e "${RED}❌ Utility Services: Unhealthy${NC}"
 fi
 
 echo -e "${GREEN}🎉 All services started successfully!${NC}"
 echo -e "${BLUE}📊 Service Status:${NC}"
 echo -e "   • Strands SDK API: http://localhost:5006"
 echo -e "   • A2A Service: http://localhost:5008" 
-echo -e "   • Main System Orchestrator: http://localhost:5030"
+echo -e "   • Main System Orchestrator: http://localhost:5031"
+echo -e "   • Utility Services Gateway: http://localhost:5044"
+echo -e "   • Frontend: http://localhost:5173"
 echo -e "${BLUE}📝 Logs are available in: logs/${NC}"
 echo -e "${BLUE}🛑 To stop all services: ./scripts/stop-all-services.sh${NC}"
