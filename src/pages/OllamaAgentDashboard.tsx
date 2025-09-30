@@ -278,7 +278,7 @@ export const OllamaAgentDashboard: React.FC = () => {
 
   const loadSystemMetrics = async () => {
     try {
-      const response = await fetch('http://localhost:5015/api/modern-orchestration/health');
+      const response = await fetch('http://localhost:5015/api/simple-orchestration/health');
       const data = await response.json();
       setSystemMetrics({
         memory_usage: data.memory_usage,

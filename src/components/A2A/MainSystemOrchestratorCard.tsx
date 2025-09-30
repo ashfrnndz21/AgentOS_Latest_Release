@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { MainSystemOrchestratorConfigModal } from './MainSystemOrchestratorConfigModal';
 import { 
   Brain, 
   MessageSquare, 
@@ -47,8 +48,213 @@ export const MainSystemOrchestratorCard: React.FC = () => {
   const [orchestrationError, setOrchestrationError] = useState<string | null>(null);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [expandedAgents, setExpandedAgents] = useState<Set<string>>(new Set());
 
   const BASE_URL = 'http://localhost:5031';
+
+  // Helper function to format agent output text (same logic as final response)
+  const formatAgentOutput = (text: string) => {
+    if (!text) return '';
+    
+    // First, try to detect and format JSON content
+    let processedText = text;
+    
+    // Check for JSON patterns (similar to backend logic)
+    const jsonPattern = /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g;
+    const jsonMatches = text.match(jsonPattern);
+    
+    if (jsonMatches) {
+      // Try to parse and format each JSON block
+      for (const jsonMatch of jsonMatches) {
+        try {
+          const parsedJson = JSON.parse(jsonMatch);
+          
+          // Check if this looks like structured content (poems, data, etc.)
+          if (isStructuredContent(parsedJson)) {
+            const formattedContent = formatStructuredContent(parsedJson);
+            processedText = processedText.replace(jsonMatch, formattedContent);
+          } else {
+            // For other JSON, remove it to clean up the output
+            processedText = processedText.replace(jsonMatch, '');
+          }
+        } catch (error) {
+          // If it's not valid JSON, remove it
+          processedText = processedText.replace(jsonMatch, '');
+        }
+      }
+    }
+    
+    // Clean up any remaining technical artifacts
+    processedText = removeTechnicalArtifacts(processedText);
+    
+    // Check if response contains formatted content (poems, structured data)
+    if (processedText.includes('**') && processedText.includes('*')) {
+      // Parse markdown-like formatting for better display
+      const formattedResponse = processedText
+        .split('\n')
+        .map((line, index) => {
+          // Handle bold text
+          if (line.includes('**')) {
+            const boldText = line.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+            return <div key={index} dangerouslySetInnerHTML={{ __html: boldText }} />;
+          }
+          // Handle italic text
+          else if (line.includes('*') && !line.includes('**')) {
+            const italicText = line.replace(/\*(.*?)\*/g, '<em class="text-gray-400 italic">$1</em>');
+            return <div key={index} dangerouslySetInnerHTML={{ __html: italicText }} />;
+          }
+          // Handle bullet points
+          else if (line.trim().startsWith('•')) {
+            return <div key={index} className="ml-4 text-gray-300">{line}</div>;
+          }
+          // Handle regular lines
+          else if (line.trim()) {
+            return <div key={index} className="text-gray-300">{line}</div>;
+          }
+          // Handle empty lines
+          else {
+            return <div key={index} className="h-2" />;
+          }
+        });
+      
+      return (
+        <div className="space-y-1">
+          {formattedResponse}
+        </div>
+      );
+    }
+    
+    // Default formatting for plain text
+    return (
+      <div className="whitespace-pre-wrap text-gray-300">
+        {processedText}
+      </div>
+    );
+  };
+
+  // Helper function to check if JSON contains structured content
+  const isStructuredContent = (parsedJson: any) => {
+    if (typeof parsedJson !== 'object') return false;
+    const structuredKeys = ['title', 'author', 'poem', 'lines', 'content', 'data', 'result', 'output'];
+    return structuredKeys.some(key => key in parsedJson);
+  };
+
+  // Helper function to format structured JSON content (similar to backend)
+  const formatStructuredContent = (parsedJson: any) => {
+    try {
+      // Handle poem-like content
+      if ('poem' in parsedJson && parsedJson.poem && 'lines' in parsedJson.poem) {
+        const poemData = parsedJson.poem;
+        const lines = poemData.lines || [];
+        
+        let formatted = "";
+        if ('title' in parsedJson) {
+          formatted += `**${parsedJson.title}**\n\n`;
+        }
+        if ('author' in parsedJson) {
+          formatted += `*by ${parsedJson.author}*\n\n`;
+        }
+        
+        // Format poem lines
+        for (const line of lines) {
+          formatted += `${line}\n`;
+        }
+        
+        // Add metadata if available
+        if ('metadata' in parsedJson) {
+          const metadata = parsedJson.metadata;
+          formatted += "\n";
+          for (const [key, value] of Object.entries(metadata)) {
+            formatted += `*${key.replace('_', ' ')}: ${value}*\n`;
+          }
+        }
+        
+        return formatted.trim();
+      }
+      
+      // Handle general structured content
+      else if ('content' in parsedJson || 'result' in parsedJson || 'output' in parsedJson) {
+        const content = parsedJson.content || parsedJson.result || parsedJson.output;
+        if (typeof content === 'string') {
+          return content;
+        } else if (Array.isArray(content)) {
+          return content.join('\n');
+        } else if (typeof content === 'object') {
+          let formatted = "";
+          for (const [key, value] of Object.entries(content)) {
+            formatted += `**${key.replace('_', ' ')}**: ${value}\n`;
+          }
+          return formatted.trim();
+        }
+      }
+      
+      // Handle data arrays
+      else if ('data' in parsedJson && Array.isArray(parsedJson.data)) {
+        let formatted = "";
+        for (const item of parsedJson.data) {
+          if (typeof item === 'object') {
+            for (const [key, value] of Object.entries(item)) {
+              formatted += `**${key.replace('_', ' ')}**: ${value}\n`;
+            }
+            formatted += "\n";
+          } else {
+            formatted += `${item}\n`;
+          }
+        }
+        return formatted.trim();
+      }
+      
+      // Default formatting for other structured content
+      else {
+        let formatted = "";
+        for (const [key, value] of Object.entries(parsedJson)) {
+          if (typeof value === 'object') {
+            formatted += `**${key.replace('_', ' ')}**:\n`;
+            for (const [subKey, subValue] of Object.entries(value)) {
+              formatted += `  • ${subKey.replace('_', ' ')}: ${subValue}\n`;
+            }
+          } else if (Array.isArray(value)) {
+            formatted += `**${key.replace('_', ' ')}**:\n`;
+            for (const item of value) {
+              formatted += `  • ${item}\n`;
+            }
+          } else {
+            formatted += `**${key.replace('_', ' ')}**: ${value}\n`;
+          }
+        }
+        return formatted.trim();
+      }
+    } catch (error) {
+      console.error('Error formatting structured content:', error);
+      return JSON.stringify(parsedJson, null, 2);
+    }
+  };
+
+  // Helper function to remove technical artifacts
+  const removeTechnicalArtifacts = (text: string) => {
+    let cleaned = text;
+    
+    // Remove technical wrapper patterns
+    cleaned = cleaned.replace(/HTTP \d+:/g, '');
+    cleaned = cleaned.replace(/execution_time.*?seconds?/g, '');
+    cleaned = cleaned.replace(/model.*?qwen3:1\.7b/g, '');
+    cleaned = cleaned.replace(/from_agent.*?Main System Orchestrator/g, '');
+    cleaned = cleaned.replace(/to_agent.*?/g, '');
+    cleaned = cleaned.replace(/timestamp.*?/g, '');
+    
+    // Remove escaped characters and clean up
+    cleaned = cleaned.replace(/\\n/g, '\n');
+    cleaned = cleaned.replace(/\\"/g, '"');
+    cleaned = cleaned.replace(/\\t/g, '\t');
+    
+    // Remove excessive whitespace and clean up formatting
+    cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n'); // Multiple newlines to double
+    cleaned = cleaned.replace(/^\s+/gm, ''); // Leading whitespace
+    cleaned = cleaned.trim();
+    
+    return cleaned;
+  };
 
   // Load health status and agents
   useEffect(() => {
@@ -284,6 +490,7 @@ export const MainSystemOrchestratorCard: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                onClick={() => setConfigModalOpen(true)}
               >
                 <Gear className="w-4 h-4" />
               </Button>
@@ -581,16 +788,73 @@ export const MainSystemOrchestratorCard: React.FC = () => {
                               </Badge>
                             </div>
                           </div>
-                          {result.response && (
-                            <div className="text-xs text-gray-300 bg-gray-700/30 p-2 rounded border border-gray-500 max-h-32 overflow-y-auto">
-                              <div className="text-gray-400 mb-1">Agent Output:</div>
-                              <div className="whitespace-pre-wrap">{result.response}</div>
+                          {(result.response || result.result || result.output || result.content) && (
+                            <div className="text-xs text-gray-300 bg-gray-700/30 p-2 rounded border border-gray-500">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="text-gray-400">Agent Output:</div>
+                                <button
+                                  onClick={() => {
+                                    const newExpanded = new Set(expandedAgents);
+                                    if (newExpanded.has(agentName)) {
+                                      newExpanded.delete(agentName);
+                                    } else {
+                                      newExpanded.add(agentName);
+                                    }
+                                    setExpandedAgents(newExpanded);
+                                  }}
+                                  className="text-blue-400 hover:text-blue-300 text-xs underline"
+                                >
+                                  {expandedAgents.has(agentName) ? 'Show Less' : 'Show Full Output'}
+                                </button>
+                              </div>
+                              <div className={`text-xs leading-relaxed ${expandedAgents.has(agentName) ? 'max-h-none' : 'max-h-32 overflow-y-auto'}`}>
+                                {(() => {
+                                  const output = result.response || result.result || result.output || result.content;
+                                  if (!output) return <div className="text-gray-500 italic">No output content available</div>;
+                                  
+                                  if (expandedAgents.has(agentName)) {
+                                    return formatAgentOutput(output);
+                                  } else {
+                                    const truncated = output.length > 300 ? `${output.substring(0, 300)}...` : output;
+                                    return formatAgentOutput(truncated);
+                                  }
+                                })()}
+                              </div>
+                              {!expandedAgents.has(agentName) && (result.response || result.result || result.output || result.content) && (result.response || result.result || result.output || result.content).length > 300 && (
+                                <div className="text-gray-500 mt-1 text-xs">
+                                  Output truncated - {((result.response || result.result || result.output || result.content).length - 300)} more characters
+                                </div>
+                              )}
                             </div>
                           )}
+                          
+                          {/* Show status and execution info when no output content */}
+                          {!(result.response || result.result || result.output || result.content) && result.status === 'success' && (
+                            <div className="text-xs text-yellow-300 bg-yellow-900/20 p-2 rounded border border-yellow-500">
+                              <div className="text-yellow-400 mb-1">⚠️ Agent completed but no output content</div>
+                              <div className="text-gray-300">
+                                Status: {result.status} | Model: {result.model || 'Unknown'} | Time: {result.execution_time ? `${result.execution_time.toFixed(2)}s` : 'N/A'}
+                              </div>
+                            </div>
+                          )}
+                          
                           {result.error && (
                             <div className="text-xs text-red-300 bg-red-900/20 p-2 rounded border border-red-500">
                               <div className="text-red-400 mb-1">Error:</div>
                               <div>{result.error}</div>
+                            </div>
+                          )}
+                          
+                          {/* Verification Section - Shows authenticity markers */}
+                          {result.verification && (
+                            <div className="text-xs text-green-300 bg-green-900/20 p-2 rounded border border-green-500 mt-2">
+                              <div className="text-green-400 mb-1">🔍 Authentic Agent Output Verification:</div>
+                              <div className="space-y-1">
+                                <div>✅ Source: <span className="font-mono">{result.verification.source_agent}</span></div>
+                                <div>✅ Agent ID: <span className="font-mono">{result.verification.source_agent_id}</span></div>
+                                <div>✅ A2A Handoff: <span className="font-mono">{result.verification.a2a_handoff_id}</span></div>
+                                <div>✅ Timestamp: <span className="font-mono">{new Date(result.verification.execution_timestamp * 1000).toLocaleTimeString()}</span></div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -768,6 +1032,12 @@ export const MainSystemOrchestratorCard: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Configuration Modal */}
+      <MainSystemOrchestratorConfigModal
+        isOpen={configModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+      />
     </>
   );
 };

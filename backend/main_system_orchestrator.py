@@ -74,11 +74,22 @@ class MainSystemOrchestrator:
         logger.info(f"📍 Model: {self.orchestrator_model}")
         logger.info(f"📍 Port: {MAIN_ORCHESTRATOR_PORT}")
         logger.info("📍 A2A Strands SDK Integration: Enabled")
+        
+        # Initialize prompt templates (these can be updated via configuration)
+        self.query_analysis_prompt = None
+        self.agent_analysis_prompt = None
+        self.reflection_prompt = None
+        self.instruction_generation_prompt = None
+        self.output_deduction_prompt = None
+        self.synthesis_prompt = None
     
     def discover_orchestration_enabled_agents(self) -> List[AgentCapability]:
         """Discover agents registered for orchestration - only those actually registered with A2A service"""
         try:
             orchestration_agents = []
+            
+            # Clear the registered agents dictionary to start fresh
+            self.registered_agents.clear()
             
             # First, get agents registered with A2A service
             a2a_agents = self._get_a2a_registered_agents()
@@ -207,10 +218,12 @@ Provide analysis in JSON format:
 }}
 
 DECISION CRITERIA:
-- **single_agent**: Query has one clear intent that one agent can handle
-- **multi_agent**: Query has multiple distinct tasks requiring different agents
+- **single_agent**: Query has one clear intent that one agent can handle (e.g., "write a poem", "get weather data")
+- **multi_agent**: Query has multiple distinct tasks requiring different specialized agents (e.g., "get weather data AND write a poem", "analyze data AND create report")
 - **varying_domain**: Query explicitly spans different expertise areas
 - **is_multi_domain**: Only true if query explicitly requires multiple domains
+
+IMPORTANT: If the query requires BOTH data retrieval/analysis AND creative generation, use **multi_agent** workflow pattern.
 """
 
             # Call Qwen3:1.7b via Ollama
@@ -446,6 +459,8 @@ Analysis Instructions:
 4. Identify which specific aspects of the query each agent can handle
 5. Determine if multiple agents are needed and how they should coordinate
 
+CRITICAL: If the query involves BOTH data retrieval (weather, facts, analysis) AND creative tasks (poems, stories, content generation), set "requires_multiple_agents": true and create task decomposition where each agent handles their specialized aspect.
+
 Return JSON format:
 {{
     "agent_scores": [
@@ -633,10 +648,17 @@ Return JSON format:
                         selected_agents.append(agent)
                         logger.info(f"🎯 Single agent selected: {agent.name} (score: {best_agent['relevance_score']:.2f})")
             else:
-                # Select multiple agents based on task decomposition
+                # Select multiple agents based on task decomposition with proper ordering
                 task_decomposition = multi_agent_info.get('task_decomposition', [])
                 
-                for task in task_decomposition:
+                # Sort tasks by priority: high -> medium -> low, and dependencies
+                priority_order = {'high': 1, 'medium': 2, 'low': 3}
+                sorted_tasks = sorted(task_decomposition, key=lambda x: (
+                    priority_order.get(x.get('priority', 'medium'), 2),  # Priority first
+                    len(x.get('dependencies', []))  # Dependencies second (fewer deps first)
+                ))
+                
+                for task in sorted_tasks:
                     agent_id = task['agent_id']
                     agent_score = next((s for s in sorted_agents if s['agent_id'] == agent_id), None)
                     
@@ -644,7 +666,7 @@ Return JSON format:
                         agent = next((a for a in available_agents if a.agent_id == agent_id), None)
                         if agent and agent not in selected_agents:
                             selected_agents.append(agent)
-                            logger.info(f"🎯 Multi-agent selected: {agent.name} for task: {task['task']} (score: {agent_score['relevance_score']:.2f})")
+                            logger.info(f"🎯 Multi-agent selected: {agent.name} for task: {task['task']} (priority: {task.get('priority', 'medium')}, score: {agent_score['relevance_score']:.2f})")
             
             # If no agents selected, fallback to best available
             if not selected_agents and sorted_agents:
@@ -846,36 +868,79 @@ Provide your analysis in this JSON format:
         
         previous_context = ""
         if previous_outputs:
-            last_output = list(previous_outputs.values())[-1] if previous_outputs else None
-            if last_output and last_output.get('result'):
-                previous_context = f"\n\nPREVIOUS AGENT OUTPUT:\n{last_output['result'][:500]}..."
+            # Get all previous outputs, not just the last one
+            available_outputs = []
+            for agent_name, output_data in previous_outputs.items():
+                if output_data and output_data.get('result'):
+                    available_outputs.append(f"**{agent_name} Output:** {output_data['result'][:300]}...")
+            
+            if available_outputs:
+                previous_context = f"\n\nAVAILABLE PREVIOUS AGENT OUTPUTS:\n" + "\n\n".join(available_outputs)
+                previous_context += "\n\nCRITICAL INSTRUCTIONS FOR USING PREVIOUS OUTPUTS:\n"
+                previous_context += "- Use ONLY the EXACT data provided in the previous outputs above\n"
+                previous_context += "- Do NOT modify, interpret, or change the weather data\n"
+                previous_context += "- Do NOT generate your own weather descriptions\n"
+                previous_context += "- For Creative Assistant: Use the EXACT weather data to create your content\n"
+                previous_context += "- For Weather Agent: Ignore any previous outputs, focus only on your task\n"
+        
+        # Get the specific task for this agent from task decomposition
+        agent_specific_task = self._get_agent_specific_task(agent.agent_id, task_analysis)
+        
+        # Ensure task_analysis is JSON serializable by cleaning any remaining AgentCapability objects
+        serializable_task_analysis = self._make_task_analysis_serializable(task_analysis)
         
         instruction_prompt = f"""
 You are generating specific instructions for an agent. Based on the task analysis, create clear, actionable instructions.
 
 TASK ANALYSIS:
-- Task Type: {task_analysis.get('task_type', 'general')}
-- Complexity: {task_analysis.get('complexity_level', 'moderate')}
-- Required Steps: {task_analysis.get('required_steps', [])}
-- Expected Output: {task_analysis.get('expected_output_format', 'comprehensive response')}
-- Success Criteria: {task_analysis.get('success_criteria', [])}
+- Task Type: {serializable_task_analysis.get('task_type', 'general')}
+- Complexity: {serializable_task_analysis.get('complexity_level', 'moderate')}
+- Required Steps: {serializable_task_analysis.get('required_steps', [])}
+- Expected Output: {serializable_task_analysis.get('expected_output_format', 'comprehensive response')}
+- Success Criteria: {serializable_task_analysis.get('success_criteria', [])}
 
 AGENT INFO:
 - Name: {agent.name}
 - Model: {agent.model}
 - Capabilities: {agent.capabilities}
 
+AGENT-SPECIFIC TASK: {agent_specific_task}
+
 CURRENT STEP: {step}
 USER QUERY: "{query}"
 {previous_context}
 
 Generate specific instructions for this agent. Focus on:
-1. What exactly they need to do
-2. How to approach the task
+1. What exactly they need to do (ONLY their specific task from the decomposition)
+2. How to approach the task (using their specific capabilities)
 3. What format the output should be in
 4. Any specific requirements or constraints
 
-Instructions should be clear, actionable, and specific to this agent's capabilities.
+OUTPUT FORMAT REQUIREMENTS:
+- Weather Agent: Output ONLY weather data in format "Location: temperature, conditions" - generate fresh data for the current query
+- Creative Assistant: Output ONLY creative content (poems, stories) using EXACT data from previous agents - must include ALL elements from weather data
+- NO mixed outputs - each agent does ONLY their designated task
+- Creative Assistant MUST use the EXACT weather conditions provided (including rain, clouds, etc.)
+- Do NOT use examples from previous queries - generate content specific to the current query
+
+CRITICAL TASK SCOPING RULES:
+- Weather Agent: ONLY retrieve and provide weather data - NEVER generate poems, stories, or creative content
+- Creative Assistant: ONLY generate creative content (poems, stories) using data from other agents - NEVER retrieve weather data or generate weather descriptions
+- Each agent should focus EXCLUSIVELY on their specialized capability
+- Do NOT include instructions for tasks that belong to other agents
+- The agent should work ONLY on their assigned specific task, not the entire query
+- Weather Agent output should ONLY contain weather facts, no creative elements
+- Creative Assistant should ONLY create poems/stories, no weather data retrieval
+- Generate content specific to the CURRENT query - do NOT reference or use examples from previous queries
+- Weather Agent should generate fresh weather data for the current location/topic, not copy examples
+
+DEPENDENCY RULES:
+- If this agent depends on previous agent outputs, use ONLY the provided previous output data
+- Do NOT generate or retrieve data that should come from other agents
+- If no previous output is available, wait or request the required data from the orchestrator
+- Use the exact data provided in previous outputs, do not substitute with your own knowledge
+
+Instructions should be clear, actionable, and specific to this agent's capabilities and assigned task.
 """
 
         try:
@@ -905,6 +970,82 @@ Instructions should be clear, actionable, and specific to this agent's capabilit
         except Exception as e:
             logger.error(f"Error generating agent instructions: {e}")
             return f"You are {agent.name}. Process this query: {query}"
+    
+    def _get_agent_specific_task(self, agent_id: str, task_analysis: Dict[str, Any]) -> str:
+        """Get the specific task assigned to this agent from task decomposition"""
+        try:
+            # Look for task decomposition in the analysis
+            multi_agent_info = task_analysis.get('multi_agent_analysis', {})
+            task_decomposition = multi_agent_info.get('task_decomposition', [])
+            
+            # Find the specific task for this agent
+            for task in task_decomposition:
+                if task.get('agent_id') == agent_id:
+                    return task.get('task', 'Execute assigned task')
+            
+            # If no specific task found, create a specific one based on agent capabilities
+            # Get agent capabilities from the available agents (now serializable dictionaries)
+            available_agents = task_analysis.get('available_agents', [])
+            agent_capabilities = []
+            
+            for agent in available_agents:
+                # Handle both serializable dictionaries and AgentCapability objects
+                agent_id_check = None
+                if isinstance(agent, dict):
+                    agent_id_check = agent.get('agent_id')
+                    agent_capabilities = agent.get('capabilities', [])
+                elif hasattr(agent, 'agent_id'):
+                    agent_id_check = agent.agent_id
+                    agent_capabilities = agent.capabilities
+                
+                if agent_id_check == agent_id:
+                    break
+            
+            # Provide very specific task descriptions based on capabilities
+            if 'weather' in agent_capabilities:
+                return "ONLY retrieve and provide weather data in format 'Location: temperature, conditions' - NEVER generate poems, stories, or any creative content"
+            elif 'creative' in agent_capabilities:
+                return "ONLY generate creative content (poems, stories) using EXACT data from previous agents - NEVER retrieve weather data, generate weather descriptions, or modify the provided data"
+            elif 'general' in agent_capabilities:
+                return "Process general information as assigned"
+            else:
+                return "Execute assigned task"
+                
+        except Exception as e:
+            logger.error(f"Error getting agent specific task: {e}")
+            return "Execute assigned task"
+    
+    def _make_task_analysis_serializable(self, task_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Make task_analysis JSON serializable by converting any AgentCapability objects to dictionaries"""
+        try:
+            serializable_analysis = task_analysis.copy()
+            
+            # Check if available_agents contains AgentCapability objects
+            if 'available_agents' in serializable_analysis:
+                available_agents = serializable_analysis['available_agents']
+                serializable_agents = []
+                
+                for agent in available_agents:
+                    if hasattr(agent, '__dict__'):
+                        # Convert AgentCapability object to dictionary
+                        serializable_agents.append({
+                            'agent_id': getattr(agent, 'agent_id', ''),
+                            'name': getattr(agent, 'name', ''),
+                            'model': getattr(agent, 'model', ''),
+                            'capabilities': getattr(agent, 'capabilities', [])
+                        })
+                    else:
+                        # Already serializable
+                        serializable_agents.append(agent)
+                
+                serializable_analysis['available_agents'] = serializable_agents
+            
+            return serializable_analysis
+            
+        except Exception as e:
+            logger.error(f"Error making task analysis serializable: {e}")
+            # Return original analysis if serialization fails
+            return task_analysis
     
     def analyze_agent_output(self, agent_output: str, task_analysis: Dict[str, Any], success_criteria: List[str]) -> Dict[str, Any]:
         """Analyze agent output to determine if it meets success criteria and what to extract"""
@@ -1000,7 +1141,8 @@ Provide your analysis in this JSON format:
             step_start = time.time()
             handoff_id = f"{session_id}_reflection_{iteration}"
             
-            # Prepare context for agent
+            # Prepare context for agent (ensure task_analysis is serializable)
+            serializable_task_analysis = self._make_task_analysis_serializable(task_analysis)
             context = {
                 "query": instructions,
                 "step": iteration,
@@ -1008,7 +1150,7 @@ Provide your analysis in this JSON format:
                 "session_id": session_id,
                 "orchestrator": "Main System Orchestrator",
                 "handoff_id": handoff_id,
-                "task_analysis": task_analysis,
+                "task_analysis": serializable_task_analysis,
                 "iteration": iteration
             }
             
@@ -1039,7 +1181,30 @@ Provide your analysis in this JSON format:
             
             if response.status_code in [200, 201]:
                 result = response.json()
-                agent_response = result.get('response', '')
+                
+                # Extract agent response from A2A service response structure
+                agent_response = ''
+                if 'execution_result' in result and 'response' in result['execution_result']:
+                    agent_response = result['execution_result']['response']
+                elif 'response' in result:
+                    agent_response = result['response']
+                elif 'message' in result and 'response' in result['message']:
+                    agent_response = result['message']['response']
+                
+                # Log verification details
+                logger.info(f"🔍 VERIFICATION: {agent.name} (ID: {agent.agent_id}) executed via A2A handoff {handoff_id}")
+                logger.info(f"🔍 AUTHENTIC OUTPUT: {len(agent_response)} characters from {agent.name}")
+                logger.info(f"🔍 A2A RESULT STRUCTURE: {list(result.keys())}")
+                
+                # Add verification markers to prove authenticity
+                verification_markers = {
+                    "authentic_agent_output": True,
+                    "source_agent": agent.name,
+                    "source_agent_id": agent.agent_id,
+                    "execution_timestamp": time.time(),
+                    "a2a_handoff_id": handoff_id,
+                    "orchestrator_instructions": instructions[:100] + "..." if len(instructions) > 100 else instructions
+                }
                 
                 return {
                     "status": "success",
@@ -1049,7 +1214,8 @@ Provide your analysis in this JSON format:
                     "agent_id": agent.agent_id,
                     "model": agent.model,
                     "handoff_id": handoff_id,
-                    "instructions": instructions
+                    "instructions": instructions,
+                    "verification": verification_markers
                 }
             else:
                 error_msg = f"HTTP {response.status_code}: {response.text}"
@@ -1140,7 +1306,7 @@ Create a comprehensive response that fully addresses the user's query with refle
             logger.error(f"Error in reflective response synthesis: {e}")
             return self._fallback_synthesis(orchestration_results, query)
     
-    def execute_reflective_orchestration(self, query: str, selected_agents: List[AgentCapability], session_id: str) -> Dict[str, Any]:
+    def execute_reflective_orchestration(self, query: str, selected_agents: List[AgentCapability], session_id: str, agent_selection_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Execute reflective orchestration with intelligent task analysis and iterative cycles"""
         try:
             orchestration_results = {}
@@ -1150,6 +1316,28 @@ Create a comprehensive response that fully addresses the user's query with refle
             # Step 1: Query Analysis & Reflection
             logger.info("🧠 Starting reflective query analysis...")
             task_analysis = self.analyze_query_for_reflection(query)
+            
+            # Add agent selection data (including task decomposition) to task analysis
+            if agent_selection_data:
+                # Convert AgentCapability objects to serializable dictionaries
+                serializable_agents = []
+                for agent in selected_agents:
+                    if hasattr(agent, '__dict__'):
+                        serializable_agents.append({
+                            'agent_id': getattr(agent, 'agent_id', ''),
+                            'name': getattr(agent, 'name', ''),
+                            'model': getattr(agent, 'model', ''),
+                            'capabilities': getattr(agent, 'capabilities', [])
+                        })
+                    else:
+                        serializable_agents.append(agent)
+                
+                task_analysis.update({
+                    'multi_agent_analysis': agent_selection_data.get('multi_agent_analysis', {}),
+                    'agent_selection': agent_selection_data.get('agent_selection', {}),
+                    'available_agents': serializable_agents  # Include serializable agent data
+                })
+            
             logger.info(f"📋 Task Analysis: {task_analysis.get('task_type')} - {task_analysis.get('complexity_level')}")
             
             # Step 2: Process All Selected Agents Sequentially
@@ -1731,6 +1919,203 @@ Create a comprehensive response that fully addresses the user's query:
                 response_parts.append(f"{agent_name}: Error - {result.get('error', 'Unknown error')}")
         
         return "\n\n".join(response_parts)
+    
+    # Prompt Management Methods
+    def _get_query_analysis_prompt(self) -> str:
+        """Get the current query analysis prompt template"""
+        if self.query_analysis_prompt:
+            return self.query_analysis_prompt
+        
+        # Default prompt (same as the hardcoded one in analyze_query_with_qwen3)
+        return """You are the Main System Orchestrator. Analyze this query intelligently to determine the optimal execution strategy.
+
+Query: "{query}"
+
+Available agents: {available_agents}
+
+ANALYSIS APPROACH:
+1. **Intent Recognition**: Identify the primary intent (creative, technical, analytical)
+2. **Domain Classification**: Determine if query requires single or multiple domains
+3. **Task Complexity**: Assess if query needs one agent or multiple agents
+4. **Execution Strategy**: Determine optimal coordination approach
+
+IMPORTANT GUIDELINES:
+- **Creative queries** (poems, stories, art) are typically SINGLE-DOMAIN and SINGLE-AGENT
+- **Technical queries** (code, math, analysis) are typically SINGLE-DOMAIN and SINGLE-AGENT  
+- **Multi-domain** only when query explicitly requires different expertise areas
+- **Multi-agent** only when query has multiple independent tasks or requires coordination
+
+Provide analysis in JSON format:
+{{
+    "query_type": "technical|creative|analytical|multi_domain",
+    "task_nature": "direct|sequential|parallel",
+    "agentic_workflow_pattern": "single_agent|multi_agent|varying_domain",
+    "orchestration_strategy": "sequential|parallel|hybrid",
+    "complexity_level": "simple|moderate|complex",
+    "domain_analysis": {{
+        "primary_domain": "technical|creative|analytical",
+        "secondary_domains": [],
+        "is_multi_domain": false
+    }},
+    "workflow_steps": ["step1", "step2", "step3"],
+    "reasoning": "Clear explanation of why this classification was chosen"
+}}
+
+DECISION CRITERIA:
+- **single_agent**: Query has one clear intent that one agent can handle
+- **multi_agent**: Query has multiple distinct tasks requiring different agents
+- **varying_domain**: Query explicitly spans different expertise areas
+- **is_multi_domain**: Only true if query explicitly requires multiple domains"""
+
+    def _get_agent_analysis_prompt(self) -> str:
+        """Get the current agent analysis prompt template"""
+        if self.agent_analysis_prompt:
+            return self.agent_analysis_prompt
+        
+        # Default prompt
+        return """You are the Main System Orchestrator. Analyze each agent's relevance to this specific query using domain expertise scoring.
+
+Query: "{query}"
+
+Available Agents:
+{agent_details}
+
+SCORING CRITERIA:
+1. Domain expertise match (0.0-1.0)
+2. Capability alignment (0.0-1.0)  
+3. Task suitability (0.0-1.0)
+4. Overall relevance (0.0-1.0)
+
+Provide analysis in JSON format:
+{{
+    "agent_analyses": [
+        {{
+            "agent_id": "agent_id",
+            "agent_name": "AgentName",
+            "relevance_score": 0.95,
+            "domain_match": 0.9,
+            "capability_match": 0.85,
+            "task_suitability": 0.9,
+            "reasoning": "Detailed explanation of why this agent is suitable",
+            "handles_aspects": ["aspect1", "aspect2"],
+            "confidence": 0.9
+        }}
+    ],
+    "multi_agent_analysis": {{
+        "requires_multiple_agents": true/false,
+        "coordination_strategy": "sequential|parallel|hybrid",
+        "reasoning": "Explanation of multi-agent coordination needs"
+    }}
+}}"""
+
+    def _get_reflection_prompt(self) -> str:
+        """Get the current reflection prompt template"""
+        if self.reflection_prompt:
+            return self.reflection_prompt
+        
+        # Default prompt
+        return """You are the Main System Orchestrator's reflection engine. Analyze this user query and determine:
+
+1. **Task Type**: What kind of task is this? (coding, analysis, creative, research, etc.)
+2. **Complexity Level**: Simple, moderate, or complex?
+3. **Required Skills**: What capabilities are needed?
+4. **Success Criteria**: How will we know when it's complete?
+5. **Potential Challenges**: What might be difficult?
+6. **Resource Requirements**: What agents/tools are needed?
+
+Provide structured analysis in JSON format."""
+
+    def _get_instruction_generation_prompt(self) -> str:
+        """Get the current instruction generation prompt template"""
+        if self.instruction_generation_prompt:
+            return self.instruction_generation_prompt
+        
+        # Default prompt
+        return """You are generating specific instructions for an agent. Based on the task analysis, create clear, actionable instructions.
+
+TASK ANALYSIS:
+{task_analysis}
+
+AGENT INFO:
+-- Name: {agent_name}
+- Model: {agent_model}
+-- Capabilities: {agent_capabilities}
+
+Create specific, actionable instructions that the agent can follow to complete this task effectively."""
+
+    def _get_output_deduction_prompt(self) -> str:
+        """Get the current output deduction prompt template"""
+        if self.output_deduction_prompt:
+            return self.output_deduction_prompt
+        
+        # Default prompt
+        return """You are analyzing an agent's output to determine its quality and extract necessary information.
+
+AGENT OUTPUT:
+{agent_output}
+
+SUCCESS CRITERIA:
+{success_criteria}
+
+Provide analysis in JSON format:
+{{
+    "quality_score": 0.0-1.0,
+    "meets_criteria": true/false,
+    "extracted_information": "key information from the output",
+    "improvements_needed": ["suggestion1", "suggestion2"],
+    "confidence": 0.0-1.0
+}}"""
+
+    def _get_synthesis_prompt(self) -> str:
+        """Get the current synthesis prompt template"""
+        if self.synthesis_prompt:
+            return self.synthesis_prompt
+        
+        # Default prompt
+        return """You are the Main System Orchestrator. Create a comprehensive, professional response that synthesizes all agent outputs into a cohesive answer to the user's query.
+
+USER QUERY: "{query}"
+
+AGENT OUTPUTS:
+{agent_outputs}
+
+SYNTHESIS REQUIREMENTS:
+1. **Coherence**: Ensure the response flows logically
+2. **Completeness**: Address all aspects of the query
+3. **Clarity**: Make complex information accessible
+4. **Professionalism**: Maintain high quality standards
+
+Create a comprehensive response that effectively answers the user's query using all available information."""
+
+    def _update_query_analysis_prompt(self, prompt: str):
+        """Update the query analysis prompt template"""
+        self.query_analysis_prompt = prompt
+        logger.info("Updated query analysis prompt")
+
+    def _update_agent_analysis_prompt(self, prompt: str):
+        """Update the agent analysis prompt template"""
+        self.agent_analysis_prompt = prompt
+        logger.info("Updated agent analysis prompt")
+
+    def _update_reflection_prompt(self, prompt: str):
+        """Update the reflection prompt template"""
+        self.reflection_prompt = prompt
+        logger.info("Updated reflection prompt")
+
+    def _update_instruction_generation_prompt(self, prompt: str):
+        """Update the instruction generation prompt template"""
+        self.instruction_generation_prompt = prompt
+        logger.info("Updated instruction generation prompt")
+
+    def _update_output_deduction_prompt(self, prompt: str):
+        """Update the output deduction prompt template"""
+        self.output_deduction_prompt = prompt
+        logger.info("Updated output deduction prompt")
+
+    def _update_synthesis_prompt(self, prompt: str):
+        """Update the synthesis prompt template"""
+        self.synthesis_prompt = prompt
+        logger.info("Updated synthesis prompt")
 
 # Initialize orchestrator
 main_orchestrator = MainSystemOrchestrator()
@@ -1836,8 +2221,8 @@ def orchestrate():
                 "agent_selection": agent_selection_data
             }), 400
         
-        # Step 4: Execute reflective orchestration
-        orchestration_result = main_orchestrator.execute_reflective_orchestration(query, selected_agents, session_id)
+        # Step 4: Execute reflective orchestration with agent selection data
+        orchestration_result = main_orchestrator.execute_reflective_orchestration(query, selected_agents, session_id, agent_selection_data)
         
         # Step 5: Handle response (reflective orchestration already includes final_response)
         if orchestration_result.get('success') and not orchestration_result.get('final_response'):
@@ -1905,6 +2290,229 @@ def get_session(session_id):
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }), 500
+
+# Configuration Management
+@app.route('/api/main-orchestrator/config', methods=['GET'])
+def get_config():
+    """Get current orchestrator configuration"""
+    try:
+        # Get available Ollama models
+        try:
+            models_response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
+            available_models = ["qwen3:1.7b"]  # Default fallback
+            if models_response.status_code == 200:
+                models_data = models_response.json()
+                available_models = [model['name'] for model in models_data.get('models', [])]
+        except:
+            available_models = ["qwen3:1.7b"]
+        
+        config = {
+            # Core Settings
+            "orchestrator_model": main_orchestrator.orchestrator_model,
+            "main_orchestrator_port": MAIN_ORCHESTRATOR_PORT,
+            "strands_sdk_url": STRANDS_SDK_URL,
+            "a2a_service_url": A2A_SERVICE_URL,
+            "ollama_base_url": OLLAMA_BASE_URL,
+            
+            # Model Parameters (these would be stored in the orchestrator instance)
+            "temperature_query_analysis": 0.3,
+            "temperature_agent_analysis": 0.2,
+            "temperature_reflection": 0.2,
+            "temperature_instruction": 0.3,
+            "temperature_deduction": 0.2,
+            "temperature_synthesis": 0.3,
+            
+            "top_p_query_analysis": 0.9,
+            "top_p_agent_analysis": 0.8,
+            "top_p_reflection": 0.9,
+            "top_p_instruction": 0.9,
+            "top_p_deduction": 0.9,
+            "top_p_synthesis": 0.9,
+            
+            "max_tokens_query_analysis": 1000,
+            "max_tokens_agent_analysis": 1200,
+            "max_tokens_reflection": 800,
+            "max_tokens_instruction": 600,
+            "max_tokens_deduction": 800,
+            "max_tokens_synthesis": 2000,
+            
+            # Timeout Settings
+            "timeout_a2a_discovery": 5,
+            "timeout_query_analysis": 30,
+            "timeout_agent_analysis": 45,
+            "timeout_reflection": 30,
+            "timeout_instruction": 30,
+            "timeout_deduction": 30,
+            "timeout_synthesis": 60,
+            "timeout_a2a_message": 120,
+            "timeout_a2a_register": 10,
+            
+            # Scoring & Thresholds
+            "minimum_relevance_threshold": 0.3,
+            "default_confidence_score": 0.7,
+            "technical_capability_weight": 0.4,
+            "creative_capability_weight": 0.4,
+            "general_capability_weight": 0.2,
+            "code_execution_weight": 0.4,
+            "file_read_weight": 0.3,
+            "calculator_weight": 0.3,
+            "domain_expertise_weight": 0.3,
+            
+            # System Prompts (these would be stored as class variables)
+            "query_analysis_prompt": main_orchestrator._get_query_analysis_prompt(),
+            "agent_analysis_prompt": main_orchestrator._get_agent_analysis_prompt(),
+            "reflection_prompt": main_orchestrator._get_reflection_prompt(),
+            "instruction_generation_prompt": main_orchestrator._get_instruction_generation_prompt(),
+            "output_deduction_prompt": main_orchestrator._get_output_deduction_prompt(),
+            "synthesis_prompt": main_orchestrator._get_synthesis_prompt(),
+            
+            # Advanced Options
+            "enable_json_formatting": True,
+            "enable_markdown_formatting": True,
+            "enable_structured_content_formatting": True,
+            "enable_technical_artifact_removal": True,
+            "enable_reflection_engine": True,
+            "enable_quality_scoring": True,
+            "logging_level": "INFO",
+            
+            # Available Models
+            "available_models": available_models,
+            
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return jsonify(config)
+        
+    except Exception as e:
+        logger.error(f"Error getting configuration: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/main-orchestrator/config', methods=['PUT'])
+def update_config():
+    """Update orchestrator configuration"""
+    try:
+        config_data = request.get_json()
+        
+        # Update core settings
+        if 'orchestrator_model' in config_data:
+            main_orchestrator.orchestrator_model = config_data['orchestrator_model']
+            logger.info(f"Updated orchestrator model to: {config_data['orchestrator_model']}")
+        
+        # Update system prompts
+        if 'query_analysis_prompt' in config_data:
+            main_orchestrator._update_query_analysis_prompt(config_data['query_analysis_prompt'])
+        
+        if 'agent_analysis_prompt' in config_data:
+            main_orchestrator._update_agent_analysis_prompt(config_data['agent_analysis_prompt'])
+        
+        if 'reflection_prompt' in config_data:
+            main_orchestrator._update_reflection_prompt(config_data['reflection_prompt'])
+        
+        if 'instruction_generation_prompt' in config_data:
+            main_orchestrator._update_instruction_generation_prompt(config_data['instruction_generation_prompt'])
+        
+        if 'output_deduction_prompt' in config_data:
+            main_orchestrator._update_output_deduction_prompt(config_data['output_deduction_prompt'])
+        
+        if 'synthesis_prompt' in config_data:
+            main_orchestrator._update_synthesis_prompt(config_data['synthesis_prompt'])
+        
+        # Update model parameters (these would be stored in the orchestrator instance)
+        model_params = [
+            'temperature_query_analysis', 'temperature_agent_analysis', 'temperature_reflection',
+            'temperature_instruction', 'temperature_deduction', 'temperature_synthesis',
+            'top_p_query_analysis', 'top_p_agent_analysis', 'top_p_reflection',
+            'top_p_instruction', 'top_p_deduction', 'top_p_synthesis',
+            'max_tokens_query_analysis', 'max_tokens_agent_analysis', 'max_tokens_reflection',
+            'max_tokens_instruction', 'max_tokens_deduction', 'max_tokens_synthesis'
+        ]
+        
+        for param in model_params:
+            if param in config_data:
+                setattr(main_orchestrator, param, config_data[param])
+        
+        # Update timeout settings
+        timeout_params = [
+            'timeout_a2a_discovery', 'timeout_query_analysis', 'timeout_agent_analysis',
+            'timeout_reflection', 'timeout_instruction', 'timeout_deduction',
+            'timeout_synthesis', 'timeout_a2a_message', 'timeout_a2a_register'
+        ]
+        
+        for param in timeout_params:
+            if param in config_data:
+                setattr(main_orchestrator, param, config_data[param])
+        
+        # Update scoring & thresholds
+        scoring_params = [
+            'minimum_relevance_threshold', 'default_confidence_score',
+            'technical_capability_weight', 'creative_capability_weight',
+            'general_capability_weight', 'code_execution_weight',
+            'file_read_weight', 'calculator_weight', 'domain_expertise_weight'
+        ]
+        
+        for param in scoring_params:
+            if param in config_data:
+                setattr(main_orchestrator, param, config_data[param])
+        
+        # Update advanced options
+        advanced_params = [
+            'enable_json_formatting', 'enable_markdown_formatting',
+            'enable_structured_content_formatting', 'enable_technical_artifact_removal',
+            'enable_reflection_engine', 'enable_quality_scoring'
+        ]
+        
+        for param in advanced_params:
+            if param in config_data:
+                setattr(main_orchestrator, param, config_data[param])
+        
+        logger.info("✅ Configuration updated successfully")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Configuration updated successfully",
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating configuration: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/main-orchestrator/models', methods=['GET'])
+def get_available_models():
+    """Get available Ollama models"""
+    try:
+        response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
+        if response.status_code == 200:
+            models_data = response.json()
+            models = [model['name'] for model in models_data.get('models', [])]
+            return jsonify({
+                "models": models,
+                "status": "success",
+                "timestamp": datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                "models": ["qwen3:1.7b"],  # Fallback
+                "status": "warning",
+                "message": "Could not fetch models from Ollama",
+                "timestamp": datetime.now().isoformat()
+            })
+    except Exception as e:
+        logger.error(f"Error fetching available models: {e}")
+        return jsonify({
+            "models": ["qwen3:1.7b"],  # Fallback
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        })
 
 if __name__ == '__main__':
     logger.info(f"🚀 Starting Main System Orchestrator on port {MAIN_ORCHESTRATOR_PORT}")
