@@ -62,8 +62,9 @@ export const DatabaseAgentInterface: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setAvailableModels(data.available_models || []);
-        setSelectedModel(data.primary_model || '');
-        setNewDatabase(prev => ({ ...prev, model: data.primary_model || '' }));
+        // No automatic model selection - user must choose
+        setSelectedModel('');
+        setNewDatabase(prev => ({ ...prev, model: '' }));
       }
     } catch (error) {
       console.error('Failed to load available models:', error);
@@ -232,7 +233,7 @@ export const DatabaseAgentInterface: React.FC = () => {
       const result = await response.json();
       if (result.success) {
         loadDatabases(); // Reload the list
-        setNewDatabase({ name: '', description: '', model: selectedModel });
+        setNewDatabase({ name: '', description: '', model: '' });
         setSchemaPreview(null); // Clear preview
         toast({
           title: "Database Created",
@@ -301,10 +302,10 @@ export const DatabaseAgentInterface: React.FC = () => {
               onValueChange={(value) => setNewDatabase(prev => ({ ...prev, model: value }))}
             >
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Select an LLM model">
+                <SelectValue placeholder="Select an LLM model (Required)">
                   <div className="flex items-center gap-2">
                     <Cpu className="h-4 w-4" />
-                    {newDatabase.model || 'Select model'}
+                    {newDatabase.model || 'Select model (Required)'}
                   </div>
                 </SelectValue>
               </SelectTrigger>
@@ -320,7 +321,7 @@ export const DatabaseAgentInterface: React.FC = () => {
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-400 mt-1">
-              Choose which AI model will generate your database schema
+              <strong>Required:</strong> Choose which AI model will generate your database schema
             </p>
           </div>
           

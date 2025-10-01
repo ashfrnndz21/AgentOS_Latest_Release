@@ -1,95 +1,126 @@
 #!/bin/bash
 
-# Unified Agent System Stop Script
-# Stops all services started by start-unified-system.sh
+# AgentOS Studio Strands - Unified System Stop Script
+# This script stops ALL services cleanly
 
-set -e
+echo "🛑 Stopping AgentOS Studio Strands - Unified System..."
+echo "====================================================="
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🛑 Stopping Unified Agent System...${NC}"
-echo "=================================="
+# Get project root
+SCRIPT_DIR="$(dirname "$0")"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR" && pwd)"
 
-# Function to stop service by PID
-stop_service() {
-    local pid=$1
+# Function to stop service by port
+stop_service_by_port() {
+    local port=$1
     local service_name=$2
     
-    if [ ! -z "$pid" ] && [ "$pid" != "null" ]; then
-        if kill -0 $pid 2>/dev/null; then
-            echo -e "${YELLOW}Stopping $service_name (PID: $pid)...${NC}"
-            kill $pid
-            sleep 2
-            
-            # Force kill if still running
-            if kill -0 $pid 2>/dev/null; then
-                echo -e "${YELLOW}Force stopping $service_name...${NC}"
-                kill -9 $pid
-            fi
-            
-            echo -e "${GREEN}✅ $service_name stopped${NC}"
+    echo -e "${BLUE}🛑 Stopping $service_name on port $port...${NC}"
+    
+    if lsof -ti:$port >/dev/null 2>&1; then
+        lsof -ti:$port | xargs kill -9 2>/dev/null || true
+        sleep 2
+        if lsof -ti:$port >/dev/null 2>&1; then
+            echo -e "${RED}❌ Could not stop $service_name${NC}"
+            return 1
         else
-            echo -e "${YELLOW}$service_name (PID: $pid) was not running${NC}"
+            echo -e "${GREEN}✅ $service_name stopped${NC}"
+            return 0
         fi
     else
-        echo -e "${YELLOW}$service_name PID not found${NC}"
+        echo -e "${YELLOW}⚠️  $service_name not running${NC}"
+        return 0
     fi
 }
 
-# Load PIDs from file
-if [ -f ".unified_system_pids" ]; then
-    source .unified_system_pids
+# Function to stop service by process name
+stop_service_by_name() {
+    local service_name=$1
+    local process_pattern=$2
     
-    # Stop services in reverse order
-    stop_service "$FRONTEND_PID" "Frontend"
-    stop_service "$UNIFIED_SERVICE_PID" "Unified Agent Service"
-    stop_service "$AGENT_REGISTRY_PID" "Agent Registry"
-    stop_service "$FRONTEND_BRIDGE_PID" "Frontend Agent Bridge"
-    stop_service "$A2A_SERVICE_PID" "A2A Service"
-    stop_service "$STRANDS_SDK_PID" "Strands SDK API"
-    stop_service "$OLLAMA_PID" "Ollama"
+    echo -e "${BLUE}🛑 Stopping $service_name...${NC}"
     
-    # Remove PID file
-    rm .unified_system_pids
-    echo -e "${GREEN}✅ PID file cleaned up${NC}"
-else
-    echo -e "${YELLOW}No PID file found. Attempting to stop services by port...${NC}"
-    
-    # Stop services by port
-    for port in 5015 5012 5010 5008 5006; do
-        pid=$(lsof -ti:$port)
-        if [ ! -z "$pid" ]; then
-            echo -e "${YELLOW}Stopping service on port $port (PID: $pid)...${NC}"
-            kill $pid 2>/dev/null || true
+    if pgrep -f "$process_pattern" >/dev/null 2>&1; then
+        pkill -f "$process_pattern" 2>/dev/null || true
+        sleep 2
+        if pgrep -f "$process_pattern" >/dev/null 2>&1; then
+            echo -e "${RED}❌ Could not stop $service_name${NC}"
+            return 1
+        else
+            echo -e "${GREEN}✅ $service_name stopped${NC}"
+            return 0
         fi
-    done
+    else
+        echo -e "${YELLOW}⚠️  $service_name not running${NC}"
+        return 0
+    fi
+}
+
+# Stop all services
+echo -e "${BLUE}🧹 Stopping all services...${NC}"
+
+# Core Services
+stop_service_by_port 5006 "Strands SDK API"
+stop_service_by_port 5008 "A2A Service"
+stop_service_by_port 5031 "Main System Orchestrator"
+
+# Utility Services
+stop_service_by_port 5041 "Database Agent Service"
+stop_service_by_port 5042 "Synthetic Data Service"
+stop_service_by_port 5043 "Utility Orchestration Engine"
+stop_service_by_port 5044 "Utility API Gateway"
+
+# Monitoring Services
+stop_service_by_port 5011 "Resource Monitor API"
+stop_service_by_port 5002 "Ollama API"
+
+# Additional Services
+stop_service_by_port 5014 "Enhanced Orchestration API"
+stop_service_by_port 5021 "Working Orchestration API"
+stop_service_by_port 5019 "Text Cleaning Service"
+stop_service_by_port 5020 "Dynamic Context Refinement API"
+stop_service_by_port 5003 "RAG API"
+stop_service_by_port 5005 "Chat Orchestrator API"
+stop_service_by_port 5004 "Strands API"
+stop_service_by_port 5010 "Agent Registry Service"
+stop_service_by_port 5018 "A2A Observability API"
+
+# Additional cleanup
+echo -e "${BLUE}🧹 Additional cleanup...${NC}"
+stop_service_by_name "Any remaining Python services" "python.*backend"
+stop_service_by_name "Any remaining utility services" "utility_agents"
+
+# Kill any background jobs
+echo -e "${BLUE}🧹 Cleaning up background jobs...${NC}"
+jobs -p | xargs kill 2>/dev/null || true
+
+# Wait for all processes to die
+sleep 3
+
+# Final verification
+echo -e "${BLUE}🔍 Verifying all services are stopped...${NC}"
+remaining_services=0
+
+for port in 5002 5003 5004 5005 5006 5008 5010 5011 5014 5018 5019 5020 5021 5031 5041 5042 5043 5044; do
+    if lsof -ti:$port >/dev/null 2>&1; then
+        echo -e "${RED}❌ Port $port still in use${NC}"
+        remaining_services=$((remaining_services + 1))
+    fi
+done
+
+if [ $remaining_services -eq 0 ]; then
+    echo -e "${GREEN}🎉 All services stopped successfully!${NC}"
+    echo -e "${GREEN}✅ System is now clean and ready for restart${NC}"
+else
+    echo -e "${YELLOW}⚠️  $remaining_services services still running${NC}"
+    echo -e "${YELLOW}You may need to manually kill remaining processes${NC}"
 fi
 
-# Stop any remaining Ollama processes
-echo -e "${YELLOW}Checking for remaining Ollama processes...${NC}"
-pkill -f "ollama serve" 2>/dev/null || true
-
-# Stop any remaining Vite processes
-echo -e "${YELLOW}Checking for remaining Vite processes...${NC}"
-pkill -f "vite" 2>/dev/null || true
-
-echo ""
-echo -e "${GREEN}🎉 Unified Agent System Stopped Successfully!${NC}"
-echo "=================================="
-echo ""
-echo -e "${BLUE}All services have been stopped:${NC}"
-echo "• Ollama"
-echo "• Strands SDK API"
-echo "• A2A Service"
-echo "• Agent Registry"
-echo "• Frontend Agent Bridge"
-echo "• Unified Agent Service"
-echo "• Frontend Development Server"
-echo ""
-echo -e "${YELLOW}Note: Some services may take a few seconds to fully stop${NC}"
-
+echo -e "${BLUE}📝 To restart all services: ./start-unified-system.sh${NC}"
