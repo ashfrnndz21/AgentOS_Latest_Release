@@ -46,7 +46,7 @@ export const A2AAgentRegistrationDialog: React.FC<A2AAgentRegistrationDialogProp
         id: agent.id!,
         name: agent.name,
         description: agent.description || '',
-        model: (agent as any).model_id || 'llama3.2:latest',
+        model: (agent as any).model_id || agent.model || 'granite4:micro',
         capabilities: agent.tools || []
       });
 

@@ -100,13 +100,13 @@ class DedicatedOllamaManager:
     
     def __init__(self):
         self.allocated_ports = set()
-        self.start_port = 5023
-        self.end_port = 5035  # Extended range to avoid conflicts
+        self.start_port = 5040
+        self.end_port = 5060  # Extended range to avoid conflicts
         self.active_backends = {}  # agent_id -> backend_config
         self.active_processes = {}  # agent_id -> process
     
     def get_next_available_port(self):
-        """Get next available port in range 5023-5035"""
+        """Get next available port in range 5040-5060"""
         for port in range(self.start_port, self.end_port + 1):
             if port not in self.allocated_ports:
                 return port
@@ -238,13 +238,14 @@ class DedicatedOllamaManager:
         
         logger.info(f"Starting Ollama process on port {port} with data dir {data_dir}")
         
-        # Start Ollama process
+        # Start Ollama process with proper signal handling
         process = subprocess.Popen(
             ['ollama', 'serve'],
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=data_dir
+            cwd=data_dir,
+            preexec_fn=os.setsid  # Create new process group to avoid signal issues
         )
         
         return process
@@ -529,17 +530,23 @@ class A2AService:
                 'a2a_status': 'registered'
             }
             
-            # Register with Enhanced Orchestration API
-            response = requests.post(
-                f"http://localhost:5014/api/enhanced-orchestration/register-agent",
-                json=orchestrator_data,
-                timeout=10
-            )
+            # FIX: Use the correct Main System Orchestrator port (5031) instead of non-existent 5014
+            # The Main System Orchestrator doesn't have a register-agent endpoint, 
+            # so we'll skip this step since agents are already registered via A2A service
+            logger.info(f"Agent {a2a_agent.name} orchestration-enabled via A2A service (Main Orchestrator auto-discovers A2A agents)")
             
-            if response.status_code == 200:
-                logger.info(f"Agent {a2a_agent.name} registered with System Orchestrator")
-            else:
-                logger.warning(f"Failed to register agent {a2a_agent.name} with System Orchestrator")
+            # Optional: Try to ping the main orchestrator health endpoint to verify it's running
+            try:
+                health_response = requests.get(
+                    f"http://localhost:5031/health",
+                    timeout=3
+                )
+                if health_response.status_code == 200:
+                    logger.info(f"Main System Orchestrator is healthy and will discover {a2a_agent.name}")
+                else:
+                    logger.warning(f"Main System Orchestrator health check failed: {health_response.status_code}")
+            except Exception as health_e:
+                logger.warning(f"Could not verify Main System Orchestrator health: {health_e}")
                 
         except Exception as e:
             logger.error(f"Failed to register with orchestrator: {str(e)}")

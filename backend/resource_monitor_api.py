@@ -24,6 +24,7 @@ RAG_API_URL = "http://localhost:5003"
 STRANDS_API_URL = "http://localhost:5004"
 CHAT_ORCHESTRATOR_URL = "http://localhost:5005"
 STRANDS_SDK_URL = "http://localhost:5006/api/strands-sdk"
+RESOURCE_MONITOR_URL = "http://localhost:5007"
 A2A_API_URL = "http://localhost:5008/api/a2a"
 AGENT_REGISTRY_URL = "http://localhost:5010"
 ENHANCED_ORCHESTRATION_URL = "http://localhost:5014"
@@ -37,10 +38,10 @@ WORKING_ORCHESTRATION_URL = "http://localhost:5021/health"
 MAIN_SYSTEM_ORCHESTRATOR_URL = "http://localhost:5031"
 
 # Utility Services (from start-all-services.sh)
-UTILITY_API_GATEWAY_URL = "http://localhost:5044/api/utility"
 DATABASE_AGENT_URL = "http://localhost:5041"
 SYNTHETIC_DATA_URL = "http://localhost:5042"
 UTILITY_ORCHESTRATION_URL = "http://localhost:5043"
+UTILITY_API_GATEWAY_URL = "http://localhost:5044/api/utility"
 
 class ResourceMonitor:
     """Monitor system resources and service status"""
@@ -414,6 +415,75 @@ class ResourceMonitor:
                 'status': 'stopped',
                 'port': 5031,
                 'message': 'Main System Orchestrator is not running'
+            }
+        
+        # Check Database Agent Service
+        try:
+            response = requests.get(f"{DATABASE_AGENT_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['database_agent'] = {
+                    'status': 'running',
+                    'port': 5041,
+                    'message': f"Database Agent running (Model: {data.get('model', 'unknown')})"
+                }
+            else:
+                services['database_agent'] = {
+                    'status': 'error',
+                    'port': 5041,
+                    'message': f'Database Agent error: {response.status_code}'
+                }
+        except:
+            services['database_agent'] = {
+                'status': 'stopped',
+                'port': 5041,
+                'message': 'Database Agent is not running'
+            }
+        
+        # Check Synthetic Data Service
+        try:
+            response = requests.get(f"{SYNTHETIC_DATA_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['synthetic_data'] = {
+                    'status': 'running',
+                    'port': 5042,
+                    'message': f"Synthetic Data Service running (Models: {len(data.get('available_models', []))})"
+                }
+            else:
+                services['synthetic_data'] = {
+                    'status': 'error',
+                    'port': 5042,
+                    'message': f'Synthetic Data Service error: {response.status_code}'
+                }
+        except:
+            services['synthetic_data'] = {
+                'status': 'stopped',
+                'port': 5042,
+                'message': 'Synthetic Data Service is not running'
+            }
+        
+        # Check Utility Orchestration Engine
+        try:
+            response = requests.get(f"{UTILITY_ORCHESTRATION_URL}/health", timeout=3)
+            if response.status_code == 200:
+                data = response.json()
+                services['utility_orchestration'] = {
+                    'status': 'running',
+                    'port': 5043,
+                    'message': f"Utility Orchestration Engine running (Services: {len(data.get('managed_services', []))})"
+                }
+            else:
+                services['utility_orchestration'] = {
+                    'status': 'error',
+                    'port': 5043,
+                    'message': f'Utility Orchestration Engine error: {response.status_code}'
+                }
+        except:
+            services['utility_orchestration'] = {
+                'status': 'stopped',
+                'port': 5043,
+                'message': 'Utility Orchestration Engine is not running'
             }
         
         # Check Utility Services Gateway

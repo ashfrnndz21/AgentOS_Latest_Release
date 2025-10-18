@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { mcpGatewayService, MCPTool } from '@/lib/services/MCPGatewayService';
 import { useStrandsNativeTools, StrandsNativeTool } from '@/hooks/useStrandsNativeTools';
 import { StrandsToolConfigDialog } from './config/StrandsToolConfigDialog';
-import { StrandsAgentAdaptationDialog } from './StrandsAgentAdaptationDialog';
-import { strandsAgentService, DisplayableOllamaAgent, StrandsAgent } from '@/lib/services/StrandsAgentService';
 
 interface StrandsAgentPaletteProps {
   onAddAgent: (agentType: string, agentData?: any) => void;
@@ -78,54 +76,33 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
   const [toolConfigDialog, setToolConfigDialog] = useState<{ tool: StrandsNativeTool; config?: any } | null>(null);
   const [configuredTools, setConfiguredTools] = useState<Set<string>>(new Set());
 
-  // Strands agents state
-  const [strandsAgents, setStrandsAgents] = useState<StrandsAgent[]>([]);
-  const [strandsLoading, setStrandsLoading] = useState(false);
-
-  // Ollama agents for display (read-only)
-  const [ollamaAgents, setOllamaAgents] = useState<DisplayableOllamaAgent[]>([]);
-  const [ollamaLoading, setOllamaLoading] = useState(false);
-
-  // Adaptation dialog state
-  const [showAdaptationDialog, setShowAdaptationDialog] = useState(false);
-  const [selectedOllamaAgent, setSelectedOllamaAgent] = useState<DisplayableOllamaAgent | null>(null);
+  // A2A Orchestration agents state
+  const [orchestrationAgents, setOrchestrationAgents] = useState<any[]>([]);
+  const [orchestrationLoading, setOrchestrationLoading] = useState(false);
 
   // Tooltip state - track which agent's tooltip is shown
   const [activeTooltipAgentId, setActiveTooltipAgentId] = useState<string | null>(null);
 
-  // Load Strands agents
-  const loadStrandsAgents = async () => {
-    console.log('🔄 StrandsAgentPalette: Loading Strands agents...');
-    setStrandsLoading(true);
+  // Load A2A Orchestration agents
+  const loadOrchestrationAgents = async () => {
+    console.log('🔄 StrandsAgentPalette: Loading A2A Orchestration agents...');
+    setOrchestrationLoading(true);
     try {
-      const agents = await strandsAgentService.getStrandsAgents();
-      console.log('✅ StrandsAgentPalette: Loaded agents:', agents);
-      setStrandsAgents(agents);
+      const response = await fetch('http://localhost:5008/api/a2a/orchestration-agents');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ StrandsAgentPalette: Loaded orchestration agents:', data);
+        setOrchestrationAgents(data.agents || []);
+      } else {
+        console.error('❌ Failed to load orchestration agents:', response.status);
+        setOrchestrationAgents([]);
+      }
     } catch (error) {
-      console.error('❌ StrandsAgentPalette: Failed to load Strands agents:', error);
+      console.error('❌ StrandsAgentPalette: Failed to load orchestration agents:', error);
+      setOrchestrationAgents([]);
     } finally {
-      setStrandsLoading(false);
+      setOrchestrationLoading(false);
     }
-  };
-
-  // Load Ollama agents for display
-  const loadOllamaAgents = async () => {
-    setOllamaLoading(true);
-    try {
-      const agents = await strandsAgentService.getOllamaAgentsForDisplay();
-      setOllamaAgents(agents);
-    } catch (error) {
-      console.error('Failed to load Ollama agents for display:', error);
-    } finally {
-      setOllamaLoading(false);
-    }
-  };
-
-  // Handle agent adaptation
-  const handleAgentAdapted = (strandsAgent: StrandsAgent) => {
-    setStrandsAgents(prev => [...prev, strandsAgent]);
-    setShowAdaptationDialog(false);
-    setSelectedOllamaAgent(null);
   };
 
   // Handle tooltip toggle
@@ -134,42 +111,45 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
     setActiveTooltipAgentId(prev => prev === agentId ? null : agentId);
   };
 
-  // Handle agent deletion
+  // Handle agent deletion (for orchestration agents)
   const handleDeleteAgent = async (agentId: string, agentName: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent triggering the onClick of the parent div
     
     // Confirmation dialog
-    const confirmed = window.confirm(`Are you sure you want to delete the agent "${agentName}"? This action cannot be undone.`);
+    const confirmed = window.confirm(`Are you sure you want to remove the agent "${agentName}" from orchestration? This will unregister it from A2A.`);
     
     if (!confirmed) {
       return;
     }
     
     try {
-      const success = await strandsAgentService.deleteStrandsAgent(agentId);
-      if (success) {
-        setStrandsAgents(prev => prev.filter(agent => agent.id !== agentId));
+      // Call A2A service to unregister agent
+      const response = await fetch(`http://localhost:5008/api/a2a/agents/${agentId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        // Refresh the orchestration agents list
+        await loadOrchestrationAgents();
         setActiveTooltipAgentId(null); // Close tooltip if this agent was showing it
-        console.log(`Agent ${agentName} deleted successfully`);
+        console.log(`Agent ${agentName} removed from orchestration successfully`);
       } else {
-        console.error('Failed to delete agent: Server returned error');
-        alert('Failed to delete agent. Please try again.');
+        console.error('Failed to remove agent: Server returned error');
+        alert('Failed to remove agent. Please try again.');
       }
     } catch (error) {
-      console.error('Failed to delete agent:', error);
-      alert('Failed to delete agent. Please check your connection and try again.');
+      console.error('Failed to remove agent:', error);
+      alert('Failed to remove agent. Please check your connection and try again.');
     }
   };
 
   // Load agents on mount
   useEffect(() => {
-    loadStrandsAgents();
-    loadOllamaAgents();
+    loadOrchestrationAgents();
 
     // Refresh every 30 seconds
     const interval = setInterval(() => {
-      loadStrandsAgents();
-      loadOllamaAgents();
+      loadOrchestrationAgents();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -332,83 +312,185 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
       </div>
 
       <div className="flex-1 overflow-y-auto p-4" style={{ overflowX: 'visible' }}>
-        <Tabs defaultValue="strands-agents" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-beam-dark">
-            <TabsTrigger value="strands-agents" className="text-gray-300 data-[state=active]:text-white text-xs">Strands</TabsTrigger>
-            <TabsTrigger value="adapt-ollama" className="text-gray-300 data-[state=active]:text-white text-xs">Adapt</TabsTrigger>
+        <Tabs defaultValue="a2a-agents" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 bg-beam-dark">
+            <TabsTrigger value="a2a-agents" className="text-gray-300 data-[state=active]:text-white text-xs">A2A Agents</TabsTrigger>
             <TabsTrigger value="utilities" className="text-gray-300 data-[state=active]:text-white text-xs">Utilities</TabsTrigger>
             <TabsTrigger value="local-tools" className="text-gray-300 data-[state=active]:text-white text-xs">Local</TabsTrigger>
             <TabsTrigger value="external-tools" className="text-gray-300 data-[state=active]:text-white text-xs">External</TabsTrigger>
             <TabsTrigger value="mcp-tools" className="text-gray-300 data-[state=active]:text-white text-xs">MCP</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="strands-agents" className="space-y-3 mt-4">
+          <TabsContent value="a2a-agents" className="space-y-3 mt-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-medium text-gray-300">Strands Agents</h3>
-                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
-                    {strandsAgents.length}
+                  <h3 className="text-sm font-medium text-gray-300">A2A Orchestration Agents</h3>
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5 bg-green-600">
+                    {orchestrationAgents.length + 1}
                   </Badge>
                 </div>
                 <span className="text-xs text-gray-500">
-                  Advanced AI agents with reasoning capabilities
+                  Orchestration-enabled agents ready for multi-agent workflows
                 </span>
               </div>
               <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={loadStrandsAgents}
-                  disabled={strandsLoading}
+                  onClick={loadOrchestrationAgents}
+                  disabled={orchestrationLoading}
                   className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                  title="Refresh Strands agents"
+                  title="Refresh A2A agents"
                 >
-                  <RefreshCw className={`h-3 w-3 ${strandsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-3 w-3 ${orchestrationLoading ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>
 
             {/* Loading state */}
-            {strandsLoading && (
+            {orchestrationLoading && (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-                <p className="text-gray-400 text-sm mt-2">Loading Strands agents...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto"></div>
+                <p className="text-gray-400 text-sm mt-2">Loading orchestration agents...</p>
               </div>
             )}
 
             {/* No agents state */}
-            {!strandsLoading && strandsAgents.length === 0 && (
+            {!orchestrationLoading && orchestrationAgents.length === 0 && (
               <div className="text-center py-8">
-                <Brain className="h-12 w-12 text-gray-500 mx-auto mb-2" />
-                <p className="text-gray-400 text-sm">No Strands agents yet</p>
-                <p className="text-gray-500 text-xs mt-1 mb-3">Adapt Ollama agents or create new ones</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAdaptationDialog(true)}
-                  className="text-xs"
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Adapt from Ollama
-                </Button>
+                <Network className="h-12 w-12 text-gray-500 mx-auto mb-2" />
+                <p className="text-gray-400 text-sm">No orchestration agents registered</p>
+                <p className="text-gray-500 text-xs mt-1">Create agents in Ollama Agent Dashboard and enable orchestration</p>
               </div>
             )}
 
-            {/* Strands agents list */}
-            {!strandsLoading && strandsAgents.map((agent) => (
+            {/* Main System Orchestrator - Always First */}
+            {!orchestrationLoading && (
+              <div
+                key="main-system-orchestrator"
+                className="relative p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/50 rounded-lg hover:border-purple-400 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/20 group"
+                draggable={true}
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  const dragData = {
+                    type: 'main-system-orchestrator',
+                    agent: {
+                      id: 'main-system-orchestrator',
+                      name: 'Main System Orchestrator',
+                      capabilities: ['orchestration', 'coordination', 'routing', 'execution'],
+                      orchestration_enabled: true,
+                      a2a_status: 'registered',
+                      dedicated_ollama_backend: {
+                        port: 5031,
+                        model: 'qwen3:1.7b',
+                        status: 'running'
+                      }
+                    }
+                  };
+                  e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.currentTarget.style.opacity = '0.5';
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onClick={() => onAddAgent('main-system-orchestrator', {
+                  id: 'main-system-orchestrator',
+                  name: 'Main System Orchestrator',
+                  capabilities: ['orchestration', 'coordination', 'routing', 'execution']
+                })}
+                style={{ userSelect: 'none' }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/30 ring-2 ring-purple-400/50">
+                      <Brain className="h-5 w-5 text-purple-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                        Main System Orchestrator
+                        <Badge variant="outline" className="text-xs border-purple-400/50 text-purple-300">
+                          Core System
+                        </Badge>
+                      </h4>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-300">
+                          Master Coordinator
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capabilities */}
+                <div className="mb-3">
+                  <p className="text-gray-400 text-xs mb-1">Functions:</p>
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-500/20">
+                      Orchestration
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-500/20">
+                      Coordination
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-500/20">
+                      Routing
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-500/20">
+                      Execution
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Port:</span>
+                    <Badge variant="secondary" className="text-xs bg-purple-500/20">
+                      5031
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1 text-purple-300">
+                    <CheckCircle className="h-3 w-3" />
+                    <span>System Core</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Separator between orchestrator and agents */}
+            {!orchestrationLoading && orchestrationAgents.length > 0 && (
+              <div className="relative my-3">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-beam-dark-accent px-2 text-gray-500">Orchestration Agents</span>
+                </div>
+              </div>
+            )}
+
+            {/* A2A Orchestration agents list */}
+            {!orchestrationLoading && orchestrationAgents.map((agent) => (
               <div
                 key={agent.id}
-                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-blue-400/50 cursor-pointer transition-all duration-200 hover:bg-gray-800/60 group"
-                draggable
+                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-green-400/50 cursor-grab active:cursor-grabbing transition-all duration-200 hover:bg-gray-800/60 group"
+                draggable={true}
                 onDragStart={(e) => {
-                  e.dataTransfer.setData('application/json', JSON.stringify({
-                    type: 'strands-agent',
+                  e.stopPropagation();
+                  const dragData = {
+                    type: 'a2a-orchestration-agent',
                     agent: agent
-                  }));
+                  };
+                  e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.currentTarget.style.opacity = '0.5';
                 }}
-                onClick={() => onAddAgent('strands-agent', agent)}
+                onDragEnd={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onClick={() => onAddAgent('a2a-orchestration-agent', agent)}
+                style={{ userSelect: 'none' }}
               >
                 {/* Click-based Tooltip for Strands Agents */}
                 {activeTooltipAgentId === agent.id && (
@@ -421,63 +503,78 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                       zIndex: 10000
                     }}
                   >
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-3 pb-2 border-b border-gray-700">
-                      <div className="p-2 rounded-lg bg-blue-500/20">
-                        <Brain className="h-5 w-5 text-blue-400" />
+                      <div className="p-2 rounded-lg bg-green-500/20">
+                        <Network className="h-5 w-5 text-green-400" />
                       </div>
                       <div>
                         <h3 className="text-sm font-semibold text-white">{agent.name}</h3>
-                        <p className="text-xs text-gray-400">Strands Intelligence Agent</p>
+                        <p className="text-xs text-gray-400">A2A Orchestration Agent</p>
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-2">Agent Configuration</h4>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-gray-400">Role:</span>
-                          <div className="text-white font-medium">{agent.role}</div>
+                    {/* A2A Status Section */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-gray-300">A2A Status</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Registered:</span>
+                          <span className="text-green-400 font-medium">Yes</span>
                         </div>
-                        <div>
-                          <span className="text-gray-400">Model:</span>
-                          <div className="text-white font-medium">{agent.model}</div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Orchestration:</span>
+                          <span className="text-green-400 font-medium">Enabled</span>
                         </div>
-                        <div>
-                          <span className="text-gray-400">Reasoning:</span>
-                          <div className="text-blue-400 font-medium capitalize">{agent.reasoning_pattern}</div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">A2A ID:</span>
+                          <span className="text-white font-mono text-xs truncate max-w-[180px]">{agent.id}</span>
                         </div>
-                        <div>
-                          <span className="text-gray-400">Architecture:</span>
-                          <div className="text-white font-medium capitalize">{agent.agent_architecture}</div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Connections:</span>
+                          <span className="text-white font-medium">0</span>
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-2">Advanced Features</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {agent.reflection_enabled && (
-                          <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
-                            <Eye className="h-3 w-3 mr-1" />
-                            Reflection
+                    {/* Tools/Capabilities Section */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-gray-300">Tools ({agent.capabilities?.length || 0})</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {agent.capabilities && agent.capabilities.map((cap: string, idx: number) => (
+                          <Badge key={idx} variant="secondary" className="text-xs px-1.5 py-0.5">
+                            {cap}
                           </Badge>
+                        ))}
+                        {(!agent.capabilities || agent.capabilities.length === 0) && (
+                          <p className="text-xs text-gray-500">No tools assigned</p>
                         )}
-                        {agent.telemetry_enabled && (
-                          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
-                            <BarChart3 className="h-3 w-3 mr-1" />
-                            Telemetry
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
-                          CoT Depth: {agent.chain_of_thought_depth}
-                        </Badge>
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-1">Description</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{agent.description}</p>
+                    {/* Backend Configuration */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-gray-300">Backend Configuration</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Backend:</span>
+                          <span className="text-white font-medium">
+                            {agent.dedicated_ollama_backend ? `Port ${agent.dedicated_ollama_backend.port}` : 'Shared'}
+                          </span>
+                        </div>
+                        {agent.dedicated_ollama_backend && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Model:</span>
+                              <span className="text-white font-medium">{agent.dedicated_ollama_backend.model || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Status:</span>
+                              <span className="text-green-400 font-medium capitalize">{agent.dedicated_ollama_backend.status || 'running'}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div className="pt-2 border-t border-gray-700 flex items-center justify-between">
@@ -510,300 +607,54 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
 
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/20">
-                      <Brain className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium text-sm">{agent.name}</h4>
-                      <p className="text-gray-400 text-xs">{agent.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Badge variant="outline" className="text-xs">
-                      {agent.reasoning_pattern}
-                    </Badge>
-                    <button
-                      onClick={(e) => handleTooltipToggle(agent.id, e)}
-                      className="p-1 rounded-full hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-colors"
-                      title="View Details"
-                    >
-                      <Info className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-
-                <p className="text-gray-300 text-xs mb-3 line-clamp-2">
-                  {agent.description}
-                </p>
-
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Model:</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {agent.model}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {agent.reflection_enabled && (
-                      <div className="flex items-center gap-1 text-green-400">
-                        <Eye className="h-3 w-3" />
-                        <span>Reflection</span>
-                      </div>
-                    )}
-                    {agent.telemetry_enabled && (
-                      <div className="flex items-center gap-1 text-blue-400">
-                        <BarChart3 className="h-3 w-3" />
-                        <span>Telemetry</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="adapt-ollama" className="space-y-3 mt-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-medium text-gray-300">Adapt from Ollama</h3>
-                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
-                    {ollamaAgents.length}
-                  </Badge>
-                </div>
-                <span className="text-xs text-gray-500">
-                  Convert Ollama agents to Strands intelligence agents
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={loadOllamaAgents}
-                  disabled={ollamaLoading}
-                  className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                  title="Refresh Ollama agents"
-                >
-                  <RefreshCw className={`h-3 w-3 ${ollamaLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
-            </div>
-
-            {/* Loading state */}
-            {ollamaLoading && (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto"></div>
-                <p className="text-gray-400 text-sm mt-2">Loading Ollama agents...</p>
-              </div>
-            )}
-
-            {/* No agents state */}
-            {!ollamaLoading && ollamaAgents.length === 0 && (
-              <div className="text-center py-8">
-                <Bot className="h-12 w-12 text-gray-500 mx-auto mb-2" />
-                <p className="text-gray-400 text-sm">No Ollama agents found</p>
-                <p className="text-gray-500 text-xs mt-1">Create agents in Ollama Agent Management first</p>
-              </div>
-            )}
-
-            {/* Ollama agents list */}
-            {!ollamaLoading && ollamaAgents.map((agent) => (
-              <div
-                key={agent.id}
-                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-green-400/50 cursor-pointer transition-all duration-200 hover:bg-gray-800/60 group"
-                onClick={() => {
-                  setSelectedOllamaAgent(agent);
-                  setShowAdaptationDialog(true);
-                }}
-              >
-                {/* Hover Tooltip for Ollama Agents */}
-                <div
-                  className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-lg shadow-2xl p-4 w-96 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: '400px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10000
-                  }}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 pb-2 border-b border-gray-700">
-                      <div className="p-2 rounded-lg bg-green-500/20">
-                        <Bot className="h-5 w-5 text-green-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">{agent.name}</h3>
-                        <p className="text-xs text-gray-400">Ollama Agent (Ready for Adaptation)</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-2">Current Configuration</h4>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <span className="text-gray-400">Role:</span>
-                          <div className="text-white font-medium">{agent.role}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Model:</span>
-                          <div className="text-white font-medium">{agent.model}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Temperature:</span>
-                          <div className="text-white font-medium">{agent.temperature}</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Max Tokens:</span>
-                          <div className="text-white font-medium">{agent.max_tokens}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-2">Capabilities</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {agent.capabilities.map((cap) => (
-                          <Badge key={cap} variant="outline" className="text-xs border-green-500/30 text-green-400">
-                            {cap}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-2">Security Features</h4>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">Guardrails:</span>
-                          {agent.guardrails?.enabled ? (
-                            <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
-                              <Shield className="h-3 w-3 mr-1" />
-                              {agent.guardrails.safety_level} level
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs border-gray-500/30 text-gray-400">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Basic
-                            </Badge>
-                          )}
-                        </div>
-                        {agent.guardrails?.enabled && (
-                          <div className="flex flex-wrap gap-1">
-                            {agent.guardrails.content_filters?.map((filter, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs border-red-500/30 text-red-400">
-                                {filter}
-                              </Badge>
-                            ))}
-                            {agent.guardrails.rules?.length > 0 && (
-                              <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-400">
-                                {agent.guardrails.rules.length} rules
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">Configuration:</span>
-                          {agent.is_configured ? (
-                            <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Complete
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-400">
-                              <Settings className="h-3 w-3 mr-1" />
-                              Partial
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-300 mb-1">Description</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{agent.description}</p>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-700">
-                      <p className="text-xs text-gray-500 text-center">
-                        Click to adapt to Strands Intelligence Agent
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-green-500/20">
-                      <Bot className="h-5 w-5 text-green-400" />
+                      <Network className="h-5 w-5 text-green-400" />
                     </div>
                     <div>
                       <h4 className="text-white font-medium text-sm">{agent.name}</h4>
-                      <p className="text-gray-400 text-xs">{agent.role}</p>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
+                          Orchestration Ready
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Badge variant="outline" className="text-xs text-green-400 border-green-400/30">
-                      Ollama
-                    </Badge>
-                  </div>
+                  <button
+                    onClick={(e) => handleTooltipToggle(agent.id, e)}
+                    className="p-1 rounded-full hover:bg-green-500/20 text-green-400 hover:text-green-300 transition-colors"
+                    title="View Details"
+                  >
+                    <Info className="h-3 w-3" />
+                  </button>
                 </div>
 
-                <p className="text-gray-300 text-xs mb-3 line-clamp-2">
-                  {agent.description}
-                </p>
+                {/* Capabilities */}
+                <div className="mb-3">
+                  <p className="text-gray-400 text-xs mb-1">Capabilities:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {agent.capabilities && agent.capabilities.slice(0, 3).map((cap: string, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="text-xs px-1.5 py-0.5">
+                        {cap}
+                      </Badge>
+                    ))}
+                    {agent.capabilities && agent.capabilities.length > 3 && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                        +{agent.capabilities.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Model:</span>
+                    <span className="text-gray-400">Backend:</span>
                     <Badge variant="secondary" className="text-xs">
-                      {agent.model}
+                      {agent.dedicated_ollama_backend ? `Port ${agent.dedicated_ollama_backend.port}` : 'Shared'}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-wrap gap-1">
-                      {agent.capabilities.slice(0, 2).map((cap) => (
-                        <Badge key={cap} variant="secondary" className="text-xs">
-                          {cap}
-                        </Badge>
-                      ))}
-                      {agent.capabilities.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{agent.capabilities.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2 pt-2 border-t border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      {agent.has_guardrails && (
-                        <div className="flex items-center gap-1 text-green-400">
-                          <Shield className="h-3 w-3" />
-                          <span>Protected</span>
-                        </div>
-                      )}
-                      {agent.is_configured && (
-                        <div className="flex items-center gap-1 text-blue-400">
-                          <CheckCircle className="h-3 w-3" />
-                          <span>Configured</span>
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 text-xs px-2 border-green-400/30 text-green-400 hover:bg-green-400/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedOllamaAgent(agent);
-                        setShowAdaptationDialog(true);
-                      }}
-                    >
-                      <ArrowRight className="h-3 w-3 mr-1" />
-                      Adapt
-                    </Button>
+                  <div className="flex items-center gap-1 text-green-400">
+                    <CheckCircle className="h-3 w-3" />
+                    <span>A2A Registered</span>
                   </div>
                 </div>
               </div>
@@ -811,35 +662,33 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
           </TabsContent>
 
           <TabsContent value="utilities" className="space-y-3 mt-4">
-            <div className="text-xs text-gray-400 mb-3">
-              Strands-powered workflow utilities with dynamic configuration
+            {/* Utilities Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-medium text-gray-300">Utility Nodes</h3>
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
+                    {utilityNodes.length}
+                  </Badge>
+                </div>
+                <span className="text-xs text-gray-500">
+                  Flow control and orchestration utilities
+                </span>
+              </div>
             </div>
 
-            {utilitiesLoading && (
-              <div className="flex items-center justify-center p-4 text-gray-400">
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                Loading Strands utilities...
-              </div>
-            )}
-
-            {utilitiesError && (
-              <div className="flex items-center justify-center p-4 text-red-400">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Failed to load utilities
-              </div>
-            )}
-
-            {!utilitiesLoading && !utilitiesError && utilityNodes.map((node) => (
+            {/* Utility nodes list */}
+            {utilityNodes.map((utility) => (
               <div
-                key={node.name}
-                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-blue-400/50 cursor-grab active:cursor-grabbing transition-all duration-200 hover:bg-gray-800/60 group"
+                key={utility.id}
+                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-purple-400/50 cursor-grab active:cursor-grabbing transition-all duration-200 hover:bg-gray-800/60 group"
                 draggable={true}
                 onDragStart={(e) => {
                   e.stopPropagation();
                   const dragData = {
                     type: 'utility-node',
-                    nodeType: node.name,
-                    nodeData: { ...node, needsConfiguration: node.configurable }
+                    nodeType: utility.category,
+                    nodeData: { ...utility, needsConfiguration: utility.configurable }
                   };
                   e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                   e.dataTransfer.effectAllowed = 'move';
@@ -848,117 +697,17 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                 onDragEnd={(e) => {
                   e.currentTarget.style.opacity = '1';
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (node.configurable) {
-                    onAddUtility(node.name, { ...node, needsConfiguration: true });
-                  } else {
-                    onAddUtility(node.name, node);
-                  }
-                }}
+                onClick={() => onAddUtility(utility.category, utility)}
                 style={{ userSelect: 'none' }}
               >
-                {/* Enhanced Hover Tooltip for Utilities */}
-                <div
-                  className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-lg shadow-2xl p-4 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: '400px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10000
-                  }}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gray-700/50 ${node.color}`}>
-                        <node.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white capitalize">{node.name} Node</h3>
-                        <p className="text-xs text-gray-400">Strands Workflow Utility</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-1">Description</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{node.description}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-2">Configuration Options</h4>
-                      <div className="space-y-1">
-                        {node.criteria.map((criterion) => (
-                          <div key={criterion} className="flex items-center gap-2">
-                            <div className={`w-1.5 h-1.5 rounded-full ${node.name === 'decision' ? 'bg-yellow-400' :
-                              node.name === 'handoff' ? 'bg-blue-400' :
-                                node.name === 'human' ? 'bg-orange-400' :
-                                  node.name === 'memory' ? 'bg-green-400' :
-                                    node.name === 'guardrail' ? 'bg-red-400' :
-                                      node.name === 'aggregator' ? 'bg-purple-400' :
-                                        node.name === 'monitor' ? 'bg-cyan-400' : 'bg-gray-400'
-                              }`} />
-                            <span className="text-xs text-gray-400 capitalize">
-                              {criterion.replace('-', ' ')}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-2">Features</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {node.configurable && (
-                          <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
-                            <Settings className="h-3 w-3 mr-1" />
-                            Configurable
-                          </Badge>
-                        )}
-                        {node.localOnly && (
-                          <Badge variant="outline" className="text-xs border-green-500/30 text-green-400">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Local Only
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs border-gray-500/30 text-gray-400">
-                          Status: {getUtilityStatus(node.category)}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-700">
-                      <p className="text-xs text-gray-500 text-center">
-                        Drag to canvas or click to configure and add
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`p-2 rounded-lg bg-gray-700/50 ${node.color}`}>
-                    <node.icon className="h-5 w-5" />
+                {/* Utility Node Card */}
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg bg-purple-500/20`}>
+                    {React.createElement(utility.icon, { className: `h-5 w-5 ${utility.color}` })}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white capitalize">{node.name}</h3>
-                    <p className="text-xs text-gray-400">{node.description}</p>
-                  </div>
-                  {node.configurable && (
-                    <Settings className="h-4 w-4 text-gray-400" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Status:</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {getUtilityStatus(node.category)}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {node.localOnly && (
-                      <Badge variant="outline" className="text-xs">
-                        Local
-                      </Badge>
-                    )}
+                    <h4 className="text-white font-medium text-sm capitalize">{utility.name}</h4>
+                    <p className="text-gray-400 text-xs">{utility.description}</p>
                   </div>
                 </div>
               </div>
@@ -966,21 +715,40 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
           </TabsContent>
 
           <TabsContent value="local-tools" className="space-y-3 mt-4">
-            <div className="text-xs text-gray-400 mb-3">
-              Local Strands tools for enhanced agent capabilities
+            {/* Local Tools Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-medium text-gray-300">Local Tools</h3>
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
+                    {localTools.length}
+                  </Badge>
+                </div>
+                <span className="text-xs text-gray-500">
+                  Built-in tools for local operations
+                </span>
+              </div>
             </div>
 
+            {/* Local tools list */}
             {toolsLoading && (
-              <div className="flex items-center justify-center p-4 text-gray-400">
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                Loading local tools...
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+                <p className="text-gray-400 text-sm mt-2">Loading local tools...</p>
+              </div>
+            )}
+
+            {!toolsLoading && localTools.length === 0 && (
+              <div className="text-center py-8">
+                <Code className="h-12 w-12 text-gray-500 mx-auto mb-2" />
+                <p className="text-gray-400 text-sm">No local tools available</p>
               </div>
             )}
 
             {!toolsLoading && localTools.map((tool) => (
-              <Card
+              <div
                 key={tool.id}
-                className="p-4 bg-gray-800/40 border-gray-600/30 hover:border-blue-400/50 cursor-grab active:cursor-grabbing transition-all duration-200 hover:bg-gray-800/60 group"
+                className="relative p-4 bg-gray-800/40 border border-gray-600/30 rounded-lg hover:border-blue-400/50 cursor-grab active:cursor-grabbing transition-all duration-200 hover:bg-gray-800/60 group"
                 draggable={true}
                 onDragStart={(e) => {
                   e.stopPropagation();
@@ -996,95 +764,53 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                   e.currentTarget.style.opacity = '1';
                 }}
                 onClick={() => {
-                  if (tool.requiresConfiguration && !configuredTools.has(tool.id)) {
-                    setToolConfigDialog({ tool });
-                  } else {
-                    onSelectStrandsTool?.(tool);
+                  if (onSelectStrandsTool) {
+                    onSelectStrandsTool(tool);
                   }
                 }}
                 style={{ userSelect: 'none' }}
               >
-                {/* Hover Tooltip for Local Tools */}
-                <div
-                  className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-lg shadow-2xl p-4 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: '400px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10000
-                  }}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gray-700/50 ${tool.color}`}>
-                        <tool.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">{tool.name}</h3>
-                        <p className="text-xs text-gray-400">Local Strands Tool</p>
-                      </div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/20">
+                      <Code className="h-5 w-5 text-blue-400" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-1">Description</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{tool.description}</p>
+                      <h4 className="text-white font-medium text-sm">{tool.name}</h4>
+                      <p className="text-gray-400 text-xs">{tool.category}</p>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-2">Configuration</h4>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Category:</span>
-                          <Badge variant="secondary" className="text-xs capitalize">{tool.category}</Badge>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Requires Setup:</span>
-                          <span className={tool.requiresConfiguration ? 'text-yellow-400' : 'text-green-400'}>
-                            {tool.requiresConfiguration ? 'Yes' : 'No'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Status:</span>
-                          <span className="text-blue-400">Ready</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-gray-700">
-                      <p className="text-xs text-gray-500 text-center">
-                        Drag to canvas or click to configure
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`p-2 rounded-lg bg-gray-700/50 ${tool.color}`}>
-                    <tool.icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white">{tool.name}</h3>
-                    <p className="text-xs text-gray-400">{tool.description}</p>
-                  </div>
-                  {tool.requiresConfiguration && !configuredTools.has(tool.id) && (
-                    <Settings className="h-4 w-4 text-yellow-400" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Category:</span>
-                    <Badge variant="secondary" className="text-xs capitalize">
-                      {tool.category}
-                    </Badge>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
+                    <Badge variant="outline" className="text-xs text-blue-400 border-blue-400/30">
                       Local
                     </Badge>
-                    {configuredTools.has(tool.id) && (
-                      <CheckCircle className="h-3 w-3 text-green-400" />
+                  </div>
+                </div>
+
+                <p className="text-gray-300 text-xs mb-3 line-clamp-2">
+                  {tool.description}
+                </p>
+
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <span>Click to configure tool</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {tool.requiresApiKey && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Key className="h-3 w-3 mr-1" />
+                        API Key
+                      </Badge>
+                    )}
+                    {tool.configurable && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Settings className="h-3 w-3 mr-1" />
+                        Config
+                      </Badge>
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </TabsContent>
 
@@ -1127,59 +853,6 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                 }}
                 style={{ userSelect: 'none' }}
               >
-                {/* Hover Tooltip for External Tools */}
-                <div
-                  className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-lg shadow-2xl p-4 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: '400px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: 10000
-                  }}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gray-700/50 ${tool.color}`}>
-                        <tool.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">{tool.name}</h3>
-                        <p className="text-xs text-gray-400">External Strands Tool</p>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-1">Description</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{tool.description}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-gray-300 mb-2">Requirements</h4>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">API Key:</span>
-                          <span className={tool.requiresApi ? 'text-yellow-400' : 'text-green-400'}>
-                            {tool.requiresApi ? 'Required' : 'Not Required'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Configuration:</span>
-                          <span className={tool.requiresConfiguration ? 'text-yellow-400' : 'text-green-400'}>
-                            {tool.requiresConfiguration ? 'Required' : 'Ready'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Category:</span>
-                          <Badge variant="secondary" className="text-xs capitalize">{tool.category}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-gray-700">
-                      <p className="text-xs text-gray-500 text-center">
-                        Drag to canvas or click to configure
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`p-2 rounded-lg bg-gray-700/50 ${tool.color}`}>
                     <tool.icon className="h-5 w-5" />
@@ -1256,65 +929,6 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
                   onClick={() => onSelectMCPTool?.(tool)}
                   style={{ userSelect: 'none' }}
                 >
-                  {/* Hover Tooltip for MCP Tools */}
-                  <div
-                    className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-lg shadow-2xl p-4 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none"
-                    style={{
-                      left: '400px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 10000
-                    }}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gray-700/50 text-cyan-400">
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold text-white">{tool.name}</h3>
-                          <p className="text-xs text-gray-400">MCP Protocol Tool</p>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-300 mb-1">Description</h4>
-                        <p className="text-xs text-gray-400 leading-relaxed">{tool.description}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-300 mb-2">Server Details</h4>
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">Server:</span>
-                            <Badge variant="secondary" className="text-xs">{tool.serverName}</Badge>
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">Category:</span>
-                            <Badge variant="secondary" className="text-xs capitalize">{tool.category}</Badge>
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">Complexity:</span>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${tool.usageComplexity === 'low'
-                                ? 'border-green-600 text-green-400'
-                                : tool.usageComplexity === 'medium'
-                                  ? 'border-yellow-600 text-yellow-400'
-                                  : 'border-red-600 text-red-400'
-                                }`}
-                            >
-                              {tool.usageComplexity}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-gray-700">
-                        <p className="text-xs text-gray-500 text-center">
-                          Drag to canvas to integrate with workflow
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 rounded-lg bg-gray-700/50 text-cyan-400">
                       <IconComponent className="h-5 w-5" />
@@ -1374,16 +988,6 @@ export const StrandsAgentPalette: React.FC<StrandsAgentPaletteProps> = ({ onAddA
         />
       )}
 
-      {/* Strands Agent Adaptation Dialog */}
-      <StrandsAgentAdaptationDialog
-        isOpen={showAdaptationDialog}
-        onClose={() => {
-          setShowAdaptationDialog(false);
-          setSelectedOllamaAgent(null);
-        }}
-        ollamaAgent={selectedOllamaAgent}
-        onAgentAdapted={handleAgentAdapted}
-      />
     </div>
   );
 };

@@ -97,7 +97,7 @@ export const EnhancedOrchestrationMonitor: React.FC = () => {
 
   const fetchHealthInfo = async () => {
     try {
-      const response = await fetch('http://localhost:5015/api/simple-orchestration/health');
+      const response = await fetch('http://localhost:5031/health');
       const data = await response.json();
       setHealthInfo(data);
     } catch (error) {

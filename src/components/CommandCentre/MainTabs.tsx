@@ -41,7 +41,7 @@ export const MainTabs: React.FC<MainTabsProps> = ({
   const { currentIndustry } = useIndustry();
   
   // Get project data from the appropriate source based on industry
-  const projectDataObj = currentIndustry.id === 'telco' ? 
+  const projectDataObj = (currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? 
     Object.fromEntries(getTelcoProjects().map(p => [p.id, { 
       department: p.department, 
       agents: Array(p.agentCount).fill(null).map((_, i) => ({ name: `Agent ${i + 1}` })) 
@@ -60,11 +60,11 @@ export const MainTabs: React.FC<MainTabsProps> = ({
     .find(([id]) => id === selectedProject)?.[1];
   
   // Get industry-specific project configurations
-  const industryProjects = currentIndustry.id === 'telco' ? getTelcoProjects() : [];
+  const industryProjects = (currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? getTelcoProjects() : [];
   
   // Custom project names - industry aware
   const getProjectNames = () => {
-    if (currentIndustry.id === 'telco') {
+    if (currentIndustry.id === 'telco' || currentIndustry.id === 'true') {
       return Object.fromEntries(industryProjects.map(p => [p.id, p.name]));
     }
     

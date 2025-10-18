@@ -56,12 +56,24 @@ const StrandsAgentNode: React.FC<NodeProps<StrandsAgentNodeData>> = ({ data, sel
 
   return (
     <div className={`strands-agent-node relative`}>
-      {/* Input Handle */}
+      {/* Input Handle - TOP (Blue - Receives input) */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        className="w-4 h-4 !bg-blue-500 border-2 border-blue-300 hover:!bg-blue-400 hover:scale-150 transition-all cursor-crosshair shadow-lg shadow-blue-500/50"
+        style={{ top: -8, zIndex: 10 }}
+        isConnectable={true}
+      />
+      
+      {/* Input Handle - LEFT (Blue - Receives input) */}
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3 h-3 bg-gray-600 border-2 border-gray-400 hover:bg-gray-500"
-        style={{ left: -6 }}
+        id="left"
+        className="w-4 h-4 !bg-blue-500 border-2 border-blue-300 hover:!bg-blue-400 hover:scale-150 transition-all cursor-crosshair shadow-lg shadow-blue-500/50"
+        style={{ left: -8, zIndex: 10 }}
+        isConnectable={true}
       />
 
       {/* Main Node Container */}
@@ -105,60 +117,179 @@ const StrandsAgentNode: React.FC<NodeProps<StrandsAgentNodeData>> = ({ data, sel
           </div>
         </div>
 
-        {/* Description */}
-        {data.description && (
-          <p className="text-xs text-gray-300 mb-3 line-clamp-2">
-            {data.description}
-          </p>
-        )}
+            {/* Description */}
+            {(data.description || data.agent?.name) && (
+              <p className="text-xs text-gray-300 mb-3 line-clamp-2">
+                {data.description || 
+                 (data.agent?.name === 'Main System Orchestrator' ? 'Master coordinator for multi-agent workflows with intelligent routing and execution management.' :
+                  data.agent?.name?.includes('Network') ? 'Specialized agent for telecommunications network optimization and management.' :
+                  data.agent?.name?.includes('Customer') ? 'Customer service agent for handling telco support and inquiries.' :
+                  data.agent?.name?.includes('Service') ? 'Service management agent for telco operations and maintenance.' :
+                  'AI agent specialized for telecommunications operations and management.')}
+              </p>
+            )}
 
         {/* Agent Details */}
         <div className="space-y-2 mb-3">
-          {/* Model Info */}
-          {data.agent?.model && (
+          {/* Model & Configuration */}
+          <div className="space-y-1 p-2 bg-gray-700/30 rounded border border-gray-600/30">
             <div className="flex items-center justify-between text-xs">
               <span className="text-gray-400">Model:</span>
-              <span className="text-gray-300 font-mono">{data.agent.model}</span>
+              <span className="text-gray-300 font-mono">{data.agent?.model || 'N/A'}</span>
             </div>
-          )}
+            
+            {(data.agent?.temperature || data.agent?.maxTokens) && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Config:</span>
+                <span className="text-gray-300">
+                  {data.agent.temperature && `T:${data.agent.temperature}`}
+                  {data.agent.temperature && data.agent.maxTokens && ' • '}
+                  {data.agent.maxTokens && `Max:${data.agent.maxTokens}`}
+                </span>
+              </div>
+            )}
 
-          {/* Capabilities */}
-          {data.agent?.capabilities && data.agent.capabilities.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {data.agent.capabilities.slice(0, 3).map((capability: string) => (
-                <span
-                  key={capability}
-                  className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded border border-gray-600"
-                >
-                  {capability}
-                </span>
-              ))}
-              {data.agent.capabilities.length > 3 && (
-                <span className="px-2 py-1 bg-gray-700/50 text-gray-400 text-xs rounded border border-gray-600">
-                  +{data.agent.capabilities.length - 3}
-                </span>
+            {data.agent?.model_provider && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Provider:</span>
+                <span className="text-gray-300">{data.agent.model_provider}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Backend & A2A Status */}
+          <div className="space-y-1 p-2 bg-blue-500/10 rounded border border-blue-500/20">
+            {data.agent?.dedicatedBackend?.port && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Backend Port:</span>
+                <span className="text-blue-400 font-mono">{data.agent.dedicatedBackend.port}</span>
+              </div>
+            )}
+
+            {data.agent?.dedicatedBackend?.status && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Status:</span>
+                <span className="text-green-400 capitalize">{data.agent.dedicatedBackend.status}</span>
+              </div>
+            )}
+
+            {data.agent?.a2aEnabled && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">A2A:</span>
+                <span className="text-green-400">✓ Enabled</span>
+              </div>
+            )}
+
+            {data.agent?.orchestrationEnabled && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Orchestration:</span>
+                <span className="text-green-400">✓ Ready</span>
+              </div>
+            )}
+          </div>
+
+
+          {/* Tools & Capabilities Details */}
+          {(data.agent?.capabilities?.length > 0 || data.agent?.tools?.length > 0 || data.agent?.sdkType || data.agent?.host) && (
+            <div className="space-y-1 p-2 bg-purple-500/10 rounded border border-purple-500/20">
+              {/* Capabilities with descriptions */}
+              {data.agent?.capabilities && data.agent.capabilities.length > 0 && (
+                <div className="space-y-1">
+                  <span className="text-gray-400 text-xs">Capabilities ({data.agent.capabilities.length}):</span>
+                  <div className="space-y-1">
+                    {data.agent.capabilities.map((capability: string) => (
+                      <div key={capability} className="flex items-center justify-between text-xs">
+                        <span className="text-purple-300">{capability}</span>
+                        <span className="text-gray-500">
+                          {capability === 'general' ? 'General purpose AI tasks' :
+                           capability === 'research' ? 'Research and analysis' :
+                           capability === 'orchestration' ? 'Multi-agent coordination' :
+                           capability === 'coordination' ? 'Agent coordination' :
+                           capability === 'routing' ? 'Request routing' :
+                           capability === 'execution' ? 'Task execution' :
+                           'Specialized function'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tools */}
+              {data.agent?.tools && data.agent.tools.length > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400">Tools:</span>
+                  <span className="text-purple-400">{data.agent.tools.length} available</span>
+                </div>
+              )}
+
+              {/* SDK Information */}
+              {data.agent?.sdkType && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400">SDK Type:</span>
+                  <span className="text-purple-400">{data.agent.sdkType}</span>
+                </div>
+              )}
+
+              {data.agent?.host && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400">Host:</span>
+                  <span className="text-purple-400">{data.agent.host}</span>
+                </div>
+              )}
+
+              {data.agent?.sdk_version && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400">SDK Version:</span>
+                  <span className="text-purple-400">v{data.agent.sdk_version}</span>
+                </div>
               )}
             </div>
           )}
         </div>
 
         {/* Strands Features */}
-        <div className="flex items-center justify-between mb-3 p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-          <div className="flex items-center space-x-2">
-            <Zap className="h-3 w-3 text-purple-400" />
-            <span className="text-xs text-purple-300 font-medium">
-              {data.agent?.sdkType === 'strands-sdk' ? 'Strands SDK' : 'Strands Powered'}
-            </span>
+        <div className="space-y-2 mb-3 p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Zap className="h-3 w-3 text-purple-400" />
+              <span className="text-xs text-purple-300 font-medium">
+                {data.agent?.sdkType === 'strands-sdk' ? 'Strands SDK' : 'Strands Powered'}
+              </span>
+            </div>
+            {data.agent?.sdkType === 'strands-sdk' && data.agent?.tools && (
+              <span className="text-xs text-purple-400">
+                {data.agent.tools.length} tools
+              </span>
+            )}
           </div>
-          {data.agent?.sdkType === 'strands-sdk' && data.agent?.tools && (
-            <span className="text-xs text-purple-400">
-              {data.agent.tools.length} tools
-            </span>
-          )}
+          
+          {/* Reasoning Pattern */}
           {data.strandsConfig?.reasoningPattern && (
-            <span className="text-xs text-purple-400 capitalize">
-              {data.strandsConfig.reasoningPattern}
-            </span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-400">Reasoning:</span>
+              <span className="text-purple-400 capitalize">{data.strandsConfig.reasoningPattern}</span>
+            </div>
+          )}
+
+          {/* Context Management */}
+          {data.strandsConfig?.contextManagement && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-400">Context:</span>
+              <span className="text-purple-400 capitalize">
+                {data.strandsConfig.contextManagement.compressionLevel}
+              </span>
+            </div>
+          )}
+
+          {/* Handoff Strategy */}
+          {data.strandsConfig?.handoffStrategy && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-400">Handoff:</span>
+              <span className="text-purple-400 capitalize">
+                {data.strandsConfig.handoffStrategy.contextTransfer}
+              </span>
+            </div>
           )}
         </div>
 
@@ -187,24 +318,25 @@ const StrandsAgentNode: React.FC<NodeProps<StrandsAgentNodeData>> = ({ data, sel
         )}
       </div>
 
-      {/* Output Handle */}
+      {/* Output Handle - RIGHT (Green - Sends output) */}
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-gray-600 border-2 border-gray-400 hover:bg-gray-500"
-        style={{ right: -6 }}
+        id="right"
+        className="w-4 h-4 !bg-green-500 border-2 border-green-300 hover:!bg-green-400 hover:scale-150 transition-all cursor-crosshair shadow-lg shadow-green-500/50"
+        style={{ right: -8, zIndex: 10 }}
+        isConnectable={true}
       />
 
-      {/* Tool Access Handles (if agent has tool access) */}
-      {data.strandsConfig?.toolAccess?.allowedTools?.length > 0 && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          id="tools"
-          className="w-3 h-3 bg-orange-600 border-2 border-orange-400 hover:bg-orange-500"
-          style={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }}
-        />
-      )}
+      {/* Output Handle - BOTTOM (Green - Sends output) */}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        className="w-4 h-4 !bg-green-500 border-2 border-green-300 hover:!bg-green-400 hover:scale-150 transition-all cursor-crosshair shadow-lg shadow-green-500/50"
+        style={{ bottom: -8, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}
+        isConnectable={true}
+      />
 
       {/* Reasoning Indicator */}
       {data.status === 'running' && (

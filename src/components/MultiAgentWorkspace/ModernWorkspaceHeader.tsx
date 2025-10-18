@@ -2,6 +2,7 @@ import React from 'react';
 import { Workflow, Bot, Share2, Save, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AirLiquideLogo } from '@/components/ui/AirLiquideLogo';
+import { TrueLogo } from '@/components/ui/TrueLogo';
 import { useIndustry } from '@/contexts/IndustryContext';
 
 export const ModernWorkspaceHeader = () => {
@@ -10,11 +11,13 @@ export const ModernWorkspaceHeader = () => {
     <div className="h-10 bg-slate-800/40 backdrop-blur-sm border-b border-slate-600/30 flex items-center justify-between px-3 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
+          {currentIndustry.id === 'true' && <TrueLogo size="sm" />}
           {currentIndustry.id === 'industrial' && <AirLiquideLogo size="sm" />}
           <div>
             <h1 className="text-sm font-bold text-slate-100">{currentIndustry.displayName}</h1>
             <p className="text-[10px] text-slate-400">
-              {currentIndustry.id === 'industrial' ? 'Industrial Gas & Technology Solutions' :
+              {currentIndustry.id === 'true' ? 'Advanced AI Agent Orchestration Platform' :
+               currentIndustry.id === 'industrial' ? 'Industrial Gas & Technology Solutions' :
                currentIndustry.id === 'banking' ? 'Financial Services & Banking Operations' :
                currentIndustry.id === 'telco' ? 'Telecommunications & Network Management' :
                currentIndustry.description}

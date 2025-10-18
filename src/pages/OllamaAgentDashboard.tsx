@@ -278,12 +278,12 @@ export const OllamaAgentDashboard: React.FC = () => {
 
   const loadSystemMetrics = async () => {
     try {
-      const response = await fetch('http://localhost:5015/api/simple-orchestration/health');
+      const response = await fetch('http://localhost:5031/health');
       const data = await response.json();
       setSystemMetrics({
-        memory_usage: data.memory_usage,
+        memory_usage: 'Available', // The orchestrator doesn't provide memory usage, so we show it as available
         active_sessions: data.active_sessions,
-        orchestrator_model: data.orchestrator_model
+        orchestrator_model: data.model
       });
     } catch (error) {
       console.error('Error loading system metrics:', error);
@@ -600,10 +600,10 @@ export const OllamaAgentDashboard: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Bot className="text-purple-400" />
-              Agent Management
+              Bedrock Agent Management
             </h1>
             <p className="text-gray-400 mt-2">
-              Create, manage, and interact with your local AI agents
+              Create, manage, and interact with your AWS Bedrock AI agents
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1493,7 +1493,7 @@ export const OllamaAgentDashboard: React.FC = () => {
       {/* Strands SDK Chat Interface */}
       {showStrandsChat && strandsChatAgent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-4xl h-[80vh]">
+          <div className="w-full max-w-4xl h-[90vh]">
             <StrandsSdkAgentChat 
               agent={strandsChatAgent} 
               onClose={() => {

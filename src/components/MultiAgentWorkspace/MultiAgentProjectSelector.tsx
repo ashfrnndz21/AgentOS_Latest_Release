@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, TrendingUp, Users, Workflow, ArrowRight, Star, Radio, Sparkles, Factory, Truck, DollarSign, UserCheck, FlaskConical, Shield } from 'lucide-react';
+import { Plus, Bot, TrendingUp, Users, Workflow, ArrowRight, Star, Radio, Sparkles, Factory, Truck, DollarSign, UserCheck, FlaskConical, Shield, Heart, CreditCard } from 'lucide-react';
 import { useIndustry } from '@/contexts/IndustryContext';
 
 interface ProjectSelectorProps {
@@ -47,36 +47,66 @@ export const MultiAgentProjectSelector: React.FC<ProjectSelectorProps> = ({ onSe
     }
   ];
 
-  // Telco industry templates
+  // Telco industry templates (also used for True Agent OS)
   const telcoProjects = [
     {
-      id: 'cvm-management',
-      title: 'Telco CVM Management Centre',
-      description: 'Complete Customer Value Management workflow with 6 specialized AI agents for customer segmentation, campaign optimization, and revenue growth.',
+      id: 'network-operations',
+      title: 'Network Operations Center',
+      description: 'Automated network monitoring, fault detection, and performance optimization with 8 specialized AI agents.',
       icon: Users,
-      color: 'text-green-400',
-      bgColor: 'bg-green-900/20',
-      borderColor: 'border-green-400/30',
-      status: 'completed',
-      agents: 6,
-      connections: 12,
-      features: ['Customer Segmentation', 'Campaign Management', 'Churn Prediction', 'Revenue Optimization'],
-      preview: '/placeholder-cvm.jpg',
-      category: 'telco'
-    },
-    {
-      id: 'network-twin',
-      title: 'Network Twin Digital Centre',
-      description: 'Complete network digital twin workflow with 8 specialized AI agents for RAN optimization, predictive maintenance, and coverage analysis.',
-      icon: Radio,
       color: 'text-blue-400',
       bgColor: 'bg-blue-900/20',
       borderColor: 'border-blue-400/30',
       status: 'completed',
       agents: 8,
       connections: 12,
-      features: ['RAN Intelligence', 'Predictive Maintenance', 'Coverage Optimization', 'Energy Efficiency'],
-      preview: '/placeholder-network.jpg',
+      features: ['Network Monitoring', 'Fault Detection', 'Performance Optimization', 'Auto-Remediation'],
+      preview: '/placeholder-network-ops.jpg',
+      category: 'telco'
+    },
+    {
+      id: 'customer-experience',
+      title: 'Customer Experience Center',
+      description: 'AI-powered customer support, service quality monitoring, and issue resolution with 6 specialized agents.',
+      icon: Heart,
+      color: 'text-green-400',
+      bgColor: 'bg-green-900/20',
+      borderColor: 'border-green-400/30',
+      status: 'completed',
+      agents: 6,
+      connections: 10,
+      features: ['Customer Support', 'Service Diagnostics', 'Quality Monitoring', 'Sentiment Analysis'],
+      preview: '/placeholder-cx.jpg',
+      category: 'telco'
+    },
+    {
+      id: 'billing-revenue',
+      title: 'Billing & Revenue Assurance',
+      description: 'Automated billing, usage analytics, fraud detection, and revenue optimization with 5 specialized agents.',
+      icon: CreditCard,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-900/20',
+      borderColor: 'border-purple-400/30',
+      status: 'completed',
+      agents: 5,
+      connections: 8,
+      features: ['Billing Automation', 'Usage Analytics', 'Fraud Detection', 'Revenue Optimization'],
+      preview: '/placeholder-billing.jpg',
+      category: 'telco'
+    },
+    {
+      id: 'network-planning',
+      title: 'Network Planning & Optimization',
+      description: 'Intelligent network planning, capacity management, and optimization with 7 specialized agents.',
+      icon: Radio,
+      color: 'text-orange-400',
+      bgColor: 'bg-orange-900/20',
+      borderColor: 'border-orange-400/30',
+      status: 'completed',
+      agents: 7,
+      connections: 11,
+      features: ['Capacity Planning', 'Coverage Analysis', 'Traffic Optimization', '5G Planning'],
+      preview: '/placeholder-planning.jpg',
       category: 'telco'
     }
   ];
@@ -209,7 +239,7 @@ export const MultiAgentProjectSelector: React.FC<ProjectSelectorProps> = ({ onSe
               ? 'Choose an industrial gas workflow template or create a new multi-agent solution'
               : currentIndustry.id === 'banking'
               ? 'Choose a banking workflow template or create a new financial multi-agent solution'
-              : currentIndustry.id === 'telco'
+              : (currentIndustry.id === 'telco' || currentIndustry.id === 'true')
               ? 'Choose a telecommunications workflow template or create a new network multi-agent solution'
               : `Choose a ${currentIndustry.name} workflow template or create a new multi-agent solution`
             }
@@ -231,16 +261,16 @@ export const MultiAgentProjectSelector: React.FC<ProjectSelectorProps> = ({ onSe
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white mb-1">
-                    Create New {currentIndustry.id === 'industrial' ? 'Industrial' : 
+                    Create New {(currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? 'Telco' :
+                               currentIndustry.id === 'industrial' ? 'Industrial' : 
                                currentIndustry.id === 'banking' ? 'Banking' : 
-                               currentIndustry.id === 'telco' ? 'Telco' : 
                                currentIndustry.name.charAt(0).toUpperCase() + currentIndustry.name.slice(1)} Workflow
                   </h3>
                   <p className="text-slate-400">
                     Start with a blank canvas and build your custom {
+                      (currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? 'telecommunications solution' :
                       currentIndustry.id === 'industrial' ? 'industrial gas solution' :
                       currentIndustry.id === 'banking' ? 'financial services solution' :
-                      currentIndustry.id === 'telco' ? 'telecommunications solution' :
                       `${currentIndustry.name} solution`
                     }
                   </p>
@@ -486,20 +516,22 @@ export const MultiAgentProjectSelector: React.FC<ProjectSelectorProps> = ({ onSe
             <div className="flex items-center gap-3 mb-4">
               <Factory className="h-6 w-6 text-blue-400" />
               <h3 className="text-lg font-medium text-slate-300">
-                {currentIndustry.id === 'industrial' ? 'Industrial Gas Solutions' :
+                {(currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? 'Telecommunications Solutions' :
+                 currentIndustry.id === 'industrial' ? 'Industrial Gas Solutions' :
                  currentIndustry.id === 'banking' ? 'Financial Services Solutions' :
-                 currentIndustry.id === 'telco' ? 'Telecommunications Solutions' :
                  `${currentIndustry.name.charAt(0).toUpperCase() + currentIndustry.name.slice(1)} Solutions`}
               </h3>
               <Badge className="bg-blue-900/20 text-blue-300 border-blue-700/30">
-                {currentIndustry.id === 'industrial' ? '🧪 Air Liquide' :
+                {(currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? '📡 Telco' :
+                 currentIndustry.id === 'industrial' ? '🧪 Air Liquide' :
                  currentIndustry.id === 'banking' ? '🏦 Banking' :
-                 currentIndustry.id === 'telco' ? '📡 Telco' :
                  `🏢 ${currentIndustry.displayName}`}
               </Badge>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {industrialProjects.map((project) => {
+              {(currentIndustry.id === 'telco' || currentIndustry.id === 'true' ? telcoProjects : 
+                currentIndustry.id === 'banking' ? bankingProjects : 
+                industrialProjects).map((project) => {
                 const IconComponent = project.icon;
                 const isSelected = selectedProject === project.id;
                 

@@ -21,6 +21,40 @@ import concurrent.futures
 import threading
 import requests  # Move requests import outside try block for cleanup functions
 
+# Database setup
+DATABASE_PATH = "strands_sdk_agents.db"
+
+def init_database():
+    """Initialize SQLite database"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS strands_sdk_agents (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            model_id TEXT NOT NULL,
+            host TEXT NOT NULL,
+            system_prompt TEXT,
+            tools TEXT,
+            ollama_config TEXT,
+            sdk_version TEXT DEFAULT '1.0.0',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'active'
+        )
+    ''')
+    
+    # Add missing columns if they don't exist
+    try:
+        cursor.execute('ALTER TABLE strands_sdk_agents ADD COLUMN ollama_config TEXT')
+    except:
+        pass  # Column already exists
+    
+    conn.commit()
+    conn.close()
+
 # Custom Strands SDK Implementation (working version)
 from datetime import datetime
 import math
@@ -1073,6 +1107,9 @@ except ImportError as e:
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Initialize database
+init_database()
 
 def _safe_json_loads(json_str, default_value):
     """Safely parse JSON string with fallback to default value"""
@@ -2527,8 +2564,8 @@ def list_strands_sdk_agents():
                 'model_provider': agent[3],        # model_provider (position 3)
                 'model_id': model_id,              # model_id (corrected)
                 'host': host,                      # host (corrected)
-                'system_prompt': agent[6],         # system_prompt (position 6)
-                'tools': _safe_json_loads(agent[7], []),  # tools (position 7)
+                'system_prompt': agent[5],         # system_prompt (position 5)
+                'tools': _safe_json_loads(agent[6], []),  # tools (position 6)
                 'sdk_config': _safe_json_loads(agent[8], {  # sdk_config (position 8)
                     'ollama_config': {
                         'temperature': 0.7,

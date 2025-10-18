@@ -62,7 +62,7 @@ export const MainSystemOrchestrator: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('orchestrate');
 
-  const BASE_URL = 'http://localhost:5030';
+  const BASE_URL = 'http://localhost:5031';
 
   // Load initial data
   useEffect(() => {
@@ -173,13 +173,13 @@ export const MainSystemOrchestrator: React.FC = () => {
         <div>
           <h2 className="text-3xl font-bold text-white">Main System Orchestrator</h2>
           <p className="text-gray-400 mt-2">
-            Independent backend orchestrator using Qwen3:1.7b with A2A Strands SDK integration
+            Independent backend orchestrator using Granite4:micro with A2A Strands SDK integration
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="outline" className="text-green-400 border-green-400">
             <Bot className="w-3 h-3 mr-1" />
-            Qwen3:1.7b
+            Granite4:micro
           </Badge>
           <Badge variant="outline" className="text-blue-400 border-blue-400">
             <Network className="w-3 h-3 mr-1" />
@@ -249,7 +249,7 @@ export const MainSystemOrchestrator: React.FC = () => {
                 Query Orchestration
               </CardTitle>
               <CardDescription className="text-gray-400">
-                Enter a query to orchestrate across available agents using Qwen3:1.7b
+                Enter a query to orchestrate across available agents using Granite4:micro
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

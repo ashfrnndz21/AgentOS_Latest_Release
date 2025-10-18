@@ -79,7 +79,7 @@ export const StrandsBlankWorkspace = () => {
   }, []);
 
   // Legacy support for existing agent palette
-  const addAgent = useCallback((agentType: string, agentData?: PaletteAgent) => {
+  const addAgent = useCallback((agentType: string, agentData?: any) => {
     console.log('Legacy addAgent called - will be handled by drag and drop:', agentType, agentData);
   }, []);
 

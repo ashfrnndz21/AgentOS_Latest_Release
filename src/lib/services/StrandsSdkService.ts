@@ -353,6 +353,8 @@ class StrandsSdkService {
     success: boolean;
     response?: string;
     error?: string;
+    raw_response?: string;
+    full_response?: string;
   }> {
     try {
       const response = await fetch(`${this.baseUrl}/api/strands-sdk/agents/${id}/execute`, {
@@ -365,9 +367,13 @@ class StrandsSdkService {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[StrandsSdkService] Full API response:', data);
+        console.log('[StrandsSdkService] Response length:', (data.response || data.output || 'No response').length);
         return {
           success: true,
-          response: data.response || data.output || 'No response'
+          response: data.response || data.output || 'No response',
+          raw_response: data.raw_response,
+          full_response: data.full_response
         };
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -388,6 +394,8 @@ class StrandsSdkService {
     success: boolean;
     response?: string;
     error?: string;
+    raw_response?: string;
+    full_response?: string;
   }> {
     try {
       // For now, use the regular execute method

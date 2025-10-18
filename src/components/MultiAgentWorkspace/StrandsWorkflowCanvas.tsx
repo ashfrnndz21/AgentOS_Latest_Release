@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ReactFlow,
   Node,
@@ -15,6 +15,9 @@ import {
   Panel
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+
+// Import error boundary
+import ErrorBoundary from './ErrorBoundary';
 
 import { StrandsWorkflowOrchestrator, StrandsWorkflowNode, WorkflowExecution } from '@/lib/services/StrandsWorkflowOrchestrator';
 import { PaletteAgent } from '@/hooks/useOllamaAgentsForPalette';
@@ -43,6 +46,7 @@ import AnimatedStrandsEdge from './edges/AnimatedStrandsEdge';
 import StrandsExecutionOverlay from './StrandsExecutionOverlay';
 
 import { AddChatInterfaceButton } from './AddChatInterfaceButton';
+import { OrchestratorQueryDialog } from './OrchestratorQueryDialog';
 
 // Node types mapping
 const nodeTypes = {
@@ -95,8 +99,54 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
   const [currentExecution, setCurrentExecution] = useState<WorkflowExecution | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionHistory, setExecutionHistory] = useState<WorkflowExecution[]>([]);
+  
+  // Orchestrator query dialog state
+  const [showOrchestratorDialog, setShowOrchestratorDialog] = useState(false);
+  const [orchestratorNode, setOrchestratorNode] = useState<Node | null>(null);
+
+  // FIXED: Add debounced state update mechanism to prevent rapid state changes
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdatesRef = useRef<{ nodes?: Node[], edges?: Edge[] }>({});
 
   const { screenToFlowPosition } = useReactFlow();
+
+  // FIXED: Debounced state update function to prevent rapid state changes
+  const debouncedUpdateState = useCallback((updates: { nodes?: Node[], edges?: Edge[] }) => {
+    // Store pending updates
+    pendingUpdatesRef.current = {
+      ...pendingUpdatesRef.current,
+      ...updates
+    };
+
+    // Clear existing timeout
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    // Set new timeout to apply updates
+    updateTimeoutRef.current = setTimeout(() => {
+      const { nodes: pendingNodes, edges: pendingEdges } = pendingUpdatesRef.current;
+      
+      if (pendingNodes) {
+        setNodes(pendingNodes);
+      }
+      if (pendingEdges) {
+        setEdges(pendingEdges);
+      }
+      
+      // Clear pending updates
+      pendingUpdatesRef.current = {};
+    }, 100); // 100ms debounce
+  }, [setNodes, setEdges]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Listen for chat interface node creation events
   useEffect(() => {
@@ -118,7 +168,7 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
       window.removeEventListener('addChatInterfaceNode', handleAddChatInterfaceNode as EventListener);
       console.log('🧹 Canvas: Event listener removed for addChatInterfaceNode');
     };
-  }, [setNodes]);
+  }, []); // FIXED: Remove setNodes dependency to prevent memory leaks
 
   // Handle node data updates
   const handleNodeUpdate = useCallback((nodeId: string, newData: any) => {
@@ -197,6 +247,20 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
   // Handle node selection
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     const strandsNode = node as StrandsWorkflowNode;
+    
+    console.log('🖱️ Node clicked:', node.data?.name, 'ID:', node.data?.id, 'isMainOrchestrator:', node.data?.isMainOrchestrator);
+    
+    // Check if clicked node is Main System Orchestrator (multiple checks for safety)
+    if (node.data?.isMainOrchestrator || 
+        node.data?.id === 'main-system-orchestrator' ||
+        node.id === 'main-system-orchestrator' ||
+        node.data?.name === 'Main System Orchestrator') {
+      console.log('🧠 Main System Orchestrator clicked - opening query dialog');
+      setOrchestratorNode(node);
+      setShowOrchestratorDialog(true);
+      return;
+    }
+    
     setSelectedNode(strandsNode);
     onNodeSelect?.(strandsNode);
   }, [onNodeSelect]);
@@ -227,6 +291,72 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
         const agent = dragData.agent;
         newNode = orchestrator.createAgentNode(agent, position);
         console.log('🤖 Created Strands agent node:', newNode);
+      } else if (dragData.type === 'main-system-orchestrator') {
+        // Handle Main System Orchestrator drop
+        console.log('🎯 Canvas: Received Main System Orchestrator drop');
+        const agent = dragData.agent;
+        
+        // Create orchestrator node with special styling
+        const paletteAgent = {
+          id: 'main-system-orchestrator',
+          name: 'Main System Orchestrator',
+          role: 'System Coordinator',
+          description: 'Coordinates A2A handoffs between orchestration-enabled agents',
+          model: 'qwen3:1.7b',
+          systemPrompt: 'You are the main system orchestrator coordinating multi-agent workflows.',
+          temperature: 0.3,
+          maxTokens: 2000,
+          capabilities: ['orchestration', 'coordination', 'routing', 'execution'],
+          created_at: new Date().toISOString(),
+          icon: '🧠',
+          guardrails: true,
+          a2aEnabled: true,
+          orchestrationEnabled: true,
+          isMainOrchestrator: true,
+          dedicatedBackend: { port: 5031, model: 'qwen3:1.7b', status: 'running' },
+          a2aId: 'main-system-orchestrator',
+          status: 'active'
+        };
+        
+        newNode = orchestrator.createAgentNode(paletteAgent, position);
+        // Add special styling for orchestrator node
+        if (newNode) {
+          newNode.style = {
+            ...newNode.style,
+            background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)',
+            border: '2px solid #a78bfa',
+            boxShadow: '0 0 20px rgba(167, 139, 250, 0.3)'
+          };
+        }
+        console.log('🧠 Created Main System Orchestrator node:', newNode);
+      } else if (dragData.type === 'a2a-orchestration-agent') {
+        // Handle A2A Orchestration agent drop
+        console.log('🎯 Canvas: Received A2A orchestration agent drop:', dragData.agent.name);
+        const agent = dragData.agent;
+        
+        // Convert A2A orchestration agent to PaletteAgent format
+        const paletteAgent = {
+          id: agent.id || `a2a-${Date.now()}`,
+          name: agent.name,
+          role: 'A2A Orchestration Agent',
+          description: `Orchestration-enabled agent with ${agent.capabilities?.length || 0} capabilities`,
+          model: agent.dedicated_ollama_backend?.model || 'shared',
+          systemPrompt: 'You are an orchestration-enabled AI agent.',
+          temperature: 0.7,
+          maxTokens: 1000,
+          capabilities: agent.capabilities || [],
+          created_at: new Date().toISOString(),
+          icon: '🌐',
+          guardrails: true,
+          a2aEnabled: true,
+          orchestrationEnabled: true,
+          dedicatedBackend: agent.dedicated_ollama_backend,
+          a2aId: agent.id,
+          status: 'active'
+        };
+        
+        newNode = orchestrator.createAgentNode(paletteAgent, position);
+        console.log('🤖 Created A2A orchestration agent node:', newNode);
       } else if (dragData.type === 'strands-sdk-agent') {
         // Handle Strands SDK agent drop
         console.log('🎯 Canvas: Received Strands SDK agent drop:', dragData.agent.name);
@@ -358,7 +488,159 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
     onNodeSelect?.(null);
   }, [onNodeSelect]);
 
-  // Duplicate drag handlers removed - using the ones defined earlier
+  // Get agents connected to orchestrator
+  const getConnectedAgents = useCallback((orchestratorNodeId: string) => {
+    // Find all edges where orchestrator is the source
+    const outgoingEdges = edges.filter(e => e.source === orchestratorNodeId);
+    
+    // Get the target nodes (connected agents)
+    const connectedNodes = outgoingEdges
+      .map(edge => nodes.find(n => n.id === edge.target))
+      .filter(n => n !== undefined) as Node[];
+    
+    console.log('🔗 Connected agents:', connectedNodes.map(n => n.data?.name));
+    return connectedNodes;
+  }, [edges, nodes]);
+
+  // Execute query through orchestrator with multi-agent support
+  const executeOrchestratorQuery = useCallback(async (query: string) => {
+    if (!orchestratorNode) {
+      throw new Error('No orchestrator node selected');
+    }
+
+    // Get connected agents
+    const connectedAgents = getConnectedAgents(orchestratorNode.id);
+    
+    if (connectedAgents.length === 0) {
+      throw new Error('No agents connected to orchestrator. Please connect agents first.');
+    }
+
+    console.log('🚀 Executing query through orchestrator:', query);
+    console.log('🔗 Connected agents:', connectedAgents.map(a => a.data?.name));
+
+    // Prepare connected agents data with full context
+    const agentsData = connectedAgents.map(agent => ({
+      id: agent.data?.a2aId || agent.data?.id || agent.id,
+      name: agent.data?.name || 'Unknown Agent',
+      capabilities: agent.data?.capabilities || [],
+      port: agent.data?.dedicatedBackend?.port || null,
+      node_id: agent.id
+    }));
+
+    // Visual feedback: highlight orchestrator as analyzing
+    setNodes(nds => nds.map(n => 
+      n.id === orchestratorNode.id 
+        ? { ...n, data: { ...n.data, status: 'running' } }
+        : n
+    ));
+
+    try {
+      // Call Chat Orchestrator API (now with advanced features)
+      const response = await fetch('http://localhost:5005/api/chat/orchestrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: query,
+          session_id: `canvas-${workflowId}`,
+          workflow_context: {
+            canvas_mode: true,
+            connected_agents: agentsData,
+            total_agents: connectedAgents.length,
+            enable_multi_agent: true,
+            execution_strategy: 'intelligent' // Can be: intelligent, parallel, sequential, broadcast
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Orchestrator returned ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      // Visual feedback: highlight connections and agents that were used
+      if (result.selected_agents && Array.isArray(result.selected_agents)) {
+        console.log('📊 Agents used:', result.selected_agents.map((a: any) => a.name || a.agent_name));
+        
+        // Highlight all agents that were used
+        const usedAgentIds = result.selected_agents.map((a: any) => a.id || a.agent_id);
+        
+        // Animate all connections to used agents
+        usedAgentIds.forEach((agentId: string) => {
+          const targetNode = connectedAgents.find(
+            a => a.data?.a2aId === agentId || a.data?.id === agentId || a.id === agentId
+          );
+          
+          if (targetNode) {
+            // Highlight the node
+            setNodes(nds => nds.map(n => 
+              n.id === targetNode.id 
+                ? { ...n, data: { ...n.data, status: 'completed' } }
+                : n
+            ));
+            
+            // Find and animate the edge
+            const usedEdge = edges.find(
+              e => e.source === orchestratorNode.id && e.target === targetNode.id
+            );
+            
+            if (usedEdge) {
+              setEdges(eds => eds.map(e => 
+                e.id === usedEdge.id 
+                  ? { 
+                      ...e, 
+                      animated: true, 
+                      style: { ...e.style, stroke: '#10b981', strokeWidth: 3 },
+                      label: '✓ Used'
+                    }
+                  : e
+              ));
+            }
+          }
+        });
+        
+        // Reset animations after 4 seconds - FIXED: Use debounced updates
+        setTimeout(() => {
+          debouncedUpdateState({
+            edges: edges.map(e => ({
+              ...e,
+              animated: false,
+              style: { ...e.style, stroke: '#6b7280', strokeWidth: 2 },
+              label: undefined
+            })),
+            nodes: nodes.map(n => ({
+              ...n,
+              data: { ...n.data, status: 'idle' }
+            }))
+          });
+        }, 4000);
+      }
+
+      // Mark orchestrator as completed - FIXED: Add null check and debounce updates
+      if (orchestratorNode?.id) {
+        setNodes(nds => nds.map(n => 
+          n.id === orchestratorNode.id 
+            ? { ...n, data: { ...n.data, status: 'completed' } }
+            : n
+        ));
+      }
+
+      console.log('✅ Orchestrator query completed:', result);
+      return result;
+      
+    } catch (error) {
+      // Reset orchestrator status on error - FIXED: Add null check
+      if (orchestratorNode?.id) {
+        setNodes(nds => nds.map(n => 
+          n.id === orchestratorNode.id 
+            ? { ...n, data: { ...n.data, status: 'error' } }
+            : n
+        ));
+      }
+      throw error;
+    }
+  }, [orchestratorNode, getConnectedAgents, workflowId, edges, setEdges, setNodes]);
+
   // Execute workflow
   const executeWorkflow = useCallback(async () => {
     if (isExecuting || nodes.length === 0) return;
@@ -496,23 +778,24 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
   }, [loadWorkflow]);
 
   return (
-    <div className={`strands-workflow-canvas h-full w-full ${className}`}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        attributionPosition="bottom-left"
-        className="bg-gray-900"
-      >
+    <ErrorBoundary>
+      <div className={`strands-workflow-canvas h-full w-full ${className}`}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          attributionPosition="bottom-left"
+          className="bg-gray-900"
+        >
         <Background 
           variant="dots" 
           gap={20} 
@@ -592,7 +875,17 @@ const StrandsWorkflowCanvas: React.FC<StrandsWorkflowCanvasProps> = ({
         )}
 
       </ReactFlow>
+
+      {/* Orchestrator Query Dialog */}
+      <OrchestratorQueryDialog
+        open={showOrchestratorDialog}
+        onOpenChange={setShowOrchestratorDialog}
+        orchestratorNode={orchestratorNode}
+        connectedAgents={orchestratorNode ? getConnectedAgents(orchestratorNode.id) : []}
+        onExecute={executeOrchestratorQuery}
+      />
     </div>
+    </ErrorBoundary>
   );
 };
 

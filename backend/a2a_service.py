@@ -11,6 +11,7 @@ import uuid
 import time
 import logging
 import threading
+import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
@@ -28,6 +29,7 @@ logger = logging.getLogger(__name__)
 STRANDS_SDK_URL = "http://localhost:5006"
 A2A_SERVICE_PORT = 5008
 SESSION_TIMEOUT = 300  # 5 minutes
+DATABASE_PATH = 'a2a_communication.db'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a2a_service_secret'
@@ -106,7 +108,7 @@ class DedicatedOllamaManager:
         self.active_processes = {}  # agent_id -> process
     
     def get_next_available_port(self):
-        """Get next available port in range 5023-5035"""
+        """Get next available port in range 5040-5060"""
         for port in range(self.start_port, self.end_port + 1):
             if port not in self.allocated_ports:
                 return port
@@ -238,13 +240,14 @@ class DedicatedOllamaManager:
         
         logger.info(f"Starting Ollama process on port {port} with data dir {data_dir}")
         
-        # Start Ollama process
+        # Start Ollama process with proper signal handling
         process = subprocess.Popen(
             ['ollama', 'serve'],
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=data_dir
+            cwd=data_dir,
+            preexec_fn=os.setsid  # Create new process group to avoid signal issues
         )
         
         return process
@@ -316,17 +319,159 @@ class A2AService:
         self.ollama_manager = DedicatedOllamaManager()
         self.message_history: Dict[str, List[A2AMessage]] = {}
         
+        # Initialize database and load existing agents
+        self._init_database()
+        self._load_agents_from_database()
+        
         logger.info("A2A Service initialized with Strands A2A framework")
+    
+    def _init_database(self):
+        """Initialize the A2A database"""
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS a2a_agents (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                model TEXT NOT NULL,
+                capabilities TEXT, -- JSON array
+                status TEXT DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                strands_agent_id TEXT,
+                strands_data TEXT, -- JSON object
+                orchestration_enabled BOOLEAN DEFAULT 0,
+                dedicated_ollama_backend TEXT, -- JSON object
+                original_strands_id TEXT
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+        logger.info("A2A database initialized")
+    
+    def _load_agents_from_database(self):
+        """Load agents from database on startup"""
+        try:
+            conn = sqlite3.connect(DATABASE_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('SELECT * FROM a2a_agents')
+            rows = cursor.fetchall()
+            
+            for row in rows:
+                agent_id, name, description, model, capabilities_json, status, created_at, strands_agent_id, strands_data_json, orchestration_enabled, dedicated_ollama_backend_json, original_strands_id = row
+                
+                # Parse JSON fields
+                capabilities = json.loads(capabilities_json) if capabilities_json else []
+                strands_data = json.loads(strands_data_json) if strands_data_json else {}
+                dedicated_ollama_backend = json.loads(dedicated_ollama_backend_json) if dedicated_ollama_backend_json else None
+                
+                # Create A2A agent
+                agent = A2AAgent(
+                    id=agent_id,
+                    name=name,
+                    description=description,
+                    model=model,
+                    capabilities=capabilities,
+                    status=status,
+                    created_at=datetime.fromisoformat(created_at) if created_at else datetime.now(),
+                    strands_agent_id=strands_agent_id,
+                    strands_data=strands_data,
+                    orchestration_enabled=bool(orchestration_enabled),
+                    dedicated_ollama_backend=dedicated_ollama_backend,
+                    original_strands_id=original_strands_id,
+                    a2a_endpoints={
+                        'receive_message': f"/api/a2a/agents/{agent_id}/receive",
+                        'send_message': f"/api/a2a/agents/{agent_id}/send",
+                        'status': f"/api/a2a/agents/{agent_id}/status"
+                    }
+                )
+                
+                self.agents[agent_id] = agent
+            
+            conn.close()
+            logger.info(f"Loaded {len(rows)} agents from database")
+            
+        except Exception as e:
+            logger.error(f"Error loading agents from database: {e}")
+    
+    def _delete_agent_from_database(self, agent_id: str):
+        """Delete agent from database"""
+        try:
+            conn = sqlite3.connect(DATABASE_PATH)
+            cursor = conn.cursor()
+            
+            # Delete agent from database
+            cursor.execute('DELETE FROM a2a_agents WHERE id = ?', (agent_id,))
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Deleted agent {agent_id} from database")
+            
+        except Exception as e:
+            logger.error(f"Error deleting agent from database: {e}")
+    
+    def _find_agent_by_name(self, name: str) -> Optional[A2AAgent]:
+        """Find an agent by name (case-insensitive)"""
+        for agent in self.agents.values():
+            if agent.name.lower().strip() == name.lower().strip():
+                return agent
+        return None
+    
+    def _save_agent_to_database(self, agent: A2AAgent):
+        """Save agent to database"""
+        try:
+            conn = sqlite3.connect(DATABASE_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO a2a_agents 
+                (id, name, description, model, capabilities, status, created_at, strands_agent_id, strands_data, orchestration_enabled, dedicated_ollama_backend, original_strands_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                agent.id,
+                agent.name,
+                agent.description,
+                agent.model,
+                json.dumps(agent.capabilities),
+                agent.status,
+                agent.created_at.isoformat() if agent.created_at else datetime.now().isoformat(),
+                agent.strands_agent_id,
+                json.dumps(agent.strands_data) if agent.strands_data else None,
+                agent.orchestration_enabled,
+                json.dumps(agent.dedicated_ollama_backend) if agent.dedicated_ollama_backend else None,
+                agent.original_strands_id
+            ))
+            
+            conn.commit()
+            conn.close()
+            logger.info(f"Saved agent {agent.name} to database")
+            
+        except Exception as e:
+            logger.error(f"Error saving agent to database: {e}")
     
     def register_agent(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
         """Register an agent for A2A communication following Strands framework"""
         try:
             agent_id = agent_data.get('id', f"a2a_{uuid.uuid4().hex[:8]}")
+            agent_name = agent_data.get('name', f'Agent {agent_id}')
+            
+            # Check for existing agent with same ID to prevent duplicates
+            if agent_id in self.agents:
+                logger.warning(f"Agent with ID '{agent_id}' already exists (Name: {self.agents[agent_id].name}). Skipping duplicate registration.")
+                return {
+                    "status": "skipped",
+                    "message": f"Agent with ID '{agent_id}' already exists",
+                    "existing_agent": self.agents[agent_id].to_dict()
+                }
             
             # Create A2A agent following Strands framework
             a2a_agent = A2AAgent(
                 id=agent_id,
-                name=agent_data.get('name', f'Agent {agent_id}'),
+                name=agent_name,
                 description=agent_data.get('description', ''),
                 model=agent_data.get('model', ''),
                 capabilities=agent_data.get('capabilities', []),
@@ -343,6 +488,9 @@ class A2AService:
             )
             
             self.agents[agent_id] = a2a_agent
+            
+            # Save to database
+            self._save_agent_to_database(a2a_agent)
             
             logger.info(f"Agent registered for A2A: {a2a_agent.name} (ID: {agent_id})")
             
@@ -370,12 +518,19 @@ class A2AService:
     def register_from_strands(self, strands_agent_id: str) -> Dict[str, Any]:
         """Register Strands SDK agent for A2A orchestration with dedicated backend"""
         try:
+            logger.info(f"🔄 Starting registration process for Strands agent: {strands_agent_id}")
+            
             # 1. Get original Strands agent configuration
+            logger.info(f"📋 Step 1: Retrieving Strands agent configuration...")
             strands_agent = self._get_strands_agent(strands_agent_id)
             if not strands_agent:
+                logger.error(f"❌ Strands agent {strands_agent_id} not found")
                 return {"status": "error", "error": f"Strands agent {strands_agent_id} not found"}
             
+            logger.info(f"✅ Step 1 complete: Found Strands agent '{strands_agent.get('name', 'Unknown')}'")
+            
             # 2. Extract capabilities from system prompt, name, and description
+            logger.info(f"📋 Step 2: Extracting capabilities and validating model...")
             system_prompt = strands_agent.get('host', '')  # system_prompt is in 'host' field due to mapping issue
             agent_name = strands_agent.get('name', '')
             agent_description = strands_agent.get('description', '')
@@ -389,46 +544,71 @@ class A2AService:
             all_capabilities = capabilities + name_capabilities + desc_capabilities
             capabilities = list(set(all_capabilities))  # Remove duplicates
             
-            # 3. Check if agent already has a dedicated backend, or create new one
+            # 3. Validate and correct model name
+            original_model = strands_agent.get('model_id', '')
+            corrected_model = self._validate_and_correct_model(original_model, capabilities)
+            if corrected_model != original_model:
+                logger.info(f"🔧 Model corrected: '{original_model}' -> '{corrected_model}'")
+                strands_agent['model_id'] = corrected_model
+            
+            logger.info(f"✅ Step 2 complete: Capabilities: {capabilities}, Model: {corrected_model}")
+            
+            # 4. Check if agent already has a dedicated backend, or create new one
+            logger.info(f"📋 Step 3: Checking for existing agent and managing backend...")
             existing_agent = None
             logger.info(f"🔍 Looking for existing agent with strands_agent_id: {strands_agent_id}")
+            
+            # First check by exact strands_agent_id match
             for agent_id, agent in self.agents.items():
-                logger.info(f"🔍 Checking agent {agent_id}: strands_agent_id={agent.strands_agent_id}, original_strands_id={agent.original_strands_id}")
-                # Check by strands_agent_id OR by direct agent ID match
                 if (agent.strands_agent_id == strands_agent_id or 
                     agent_id == strands_agent_id or
                     agent.original_strands_id == strands_agent_id):
                     existing_agent = agent
-                    logger.info(f"🔍 Found existing agent: {agent_id}")
+                    logger.info(f"🔍 Found existing agent by ID: {agent_id}")
                     break
+            
+            # If no exact ID match, check for duplicate name to prevent multiple agents with same name
+            if not existing_agent:
+                agent_name = strands_agent.get('name', '')
+                for agent_id, agent in self.agents.items():
+                    if agent.name.lower().strip() == agent_name.lower().strip():
+                        existing_agent = agent
+                        logger.info(f"🔍 Found existing agent by name '{agent_name}': {agent_id}")
+                        break
             
             if existing_agent and existing_agent.dedicated_ollama_backend:
                 # Reuse existing dedicated backend
                 dedicated_backend = existing_agent.dedicated_ollama_backend
                 # Register the existing backend with the Ollama manager
                 self.ollama_manager.register_existing_backend(strands_agent_id, dedicated_backend)
-                logger.info(f"Reusing existing dedicated backend for agent {strands_agent_id}")
+                logger.info(f"✅ Reusing existing dedicated backend for agent {strands_agent_id}")
             else:
                 # Create new dedicated Ollama backend
+                logger.info(f"📋 Creating new dedicated Ollama backend...")
+                model_for_backend = corrected_model  # Use the validated/corrected model
                 dedicated_backend = self.ollama_manager.create_dedicated_backend(
                     agent_id=strands_agent_id,
-                    model=strands_agent.get('model_id', 'qwen3:1.7b')
+                    model=model_for_backend
                 )
+                logger.info(f"✅ Created dedicated backend on port {dedicated_backend.get('port', 'unknown')}")
             
-            # 4. Upgrade existing agent or create new one
-            logger.info(f"🔍 Processing agent with strands_agent_id: {strands_agent_id}")
+            # 5. Upgrade existing agent or create new one
+            logger.info(f"📋 Step 4: Creating or upgrading A2A agent...")
             
             if existing_agent:
                 # Upgrade existing agent to orchestration-enabled
                 existing_agent.orchestration_enabled = True
                 existing_agent.dedicated_ollama_backend = dedicated_backend
-                # Update model to match the current Strands agent configuration
-                existing_agent.model = strands_agent.get('model_id', 'qwen3:1.7b')
+                # Update model with validated/corrected model
+                existing_agent.model = corrected_model
+                logger.info(f"🔍 Updated existing agent model to: {corrected_model}")
                 # Update capabilities from the current Strands agent configuration
                 existing_agent.capabilities = capabilities
                 a2a_agent_id = existing_agent.id
                 a2a_agent = existing_agent
-                logger.info(f"Upgraded existing agent {a2a_agent_id} to orchestration-enabled with model {existing_agent.model} and capabilities {capabilities}")
+                logger.info(f"✅ Upgraded existing agent {a2a_agent_id} to orchestration-enabled with model {existing_agent.model} and capabilities {capabilities}")
+                # Save the updated agent to database
+                self._save_agent_to_database(existing_agent)
             else:
                 # Create new A2A agent with orchestration capabilities
                 a2a_agent_id = f"a2a_{strands_agent_id}"
@@ -436,7 +616,7 @@ class A2AService:
                     id=a2a_agent_id,
                     name=strands_agent.get('name', 'Unknown Agent'),
                     description=strands_agent.get('description', ''),
-                    model=strands_agent.get('model_id', 'qwen3:1.7b'),
+                    model=corrected_model,
                     capabilities=capabilities,
                     strands_agent_id=strands_agent_id,
                     strands_data=strands_agent,
@@ -449,13 +629,18 @@ class A2AService:
                         'status': f"/api/a2a/agents/{a2a_agent_id}/status"
                     }
                 )
-                # 5. Register the A2A agent
+                # Register the A2A agent
                 self.agents[a2a_agent_id] = a2a_agent
+                # Save the new agent to database
+                self._save_agent_to_database(a2a_agent)
+                logger.info(f"✅ Created new A2A agent {a2a_agent_id} with orchestration capabilities")
             
             # 6. Register with System Orchestrator
+            logger.info(f"📋 Step 5: Registering with System Orchestrator...")
             self._register_with_orchestrator(a2a_agent)
+            logger.info(f"✅ Step 5 complete: Agent registered with orchestrator")
             
-            logger.info(f"Strands agent {strands_agent_id} registered for A2A orchestration with dedicated backend on port {dedicated_backend['port']}")
+            logger.info(f"🎉 Registration complete! Strands agent {strands_agent_id} registered for A2A orchestration with dedicated backend on port {dedicated_backend.get('port', 'unknown')}")
             
             return {
                 "status": "success",
@@ -529,17 +714,23 @@ class A2AService:
                 'a2a_status': 'registered'
             }
             
-            # Register with Enhanced Orchestration API
-            response = requests.post(
-                f"http://localhost:5014/api/enhanced-orchestration/register-agent",
-                json=orchestrator_data,
-                timeout=10
-            )
+            # FIX: Use the correct Main System Orchestrator port (5031) instead of non-existent 5014
+            # The Main System Orchestrator doesn't have a register-agent endpoint, 
+            # so we'll skip this step since agents are already registered via A2A service
+            logger.info(f"Agent {a2a_agent.name} orchestration-enabled via A2A service (Main Orchestrator auto-discovers A2A agents)")
             
-            if response.status_code == 200:
-                logger.info(f"Agent {a2a_agent.name} registered with System Orchestrator")
-            else:
-                logger.warning(f"Failed to register agent {a2a_agent.name} with System Orchestrator")
+            # Optional: Try to ping the main orchestrator health endpoint to verify it's running
+            try:
+                health_response = requests.get(
+                    f"http://localhost:5031/health",
+                    timeout=3
+                )
+                if health_response.status_code == 200:
+                    logger.info(f"Main System Orchestrator is healthy and will discover {a2a_agent.name}")
+                else:
+                    logger.warning(f"Main System Orchestrator health check failed: {health_response.status_code}")
+            except Exception as health_e:
+                logger.warning(f"Could not verify Main System Orchestrator health: {health_e}")
                 
         except Exception as e:
             logger.error(f"Failed to register with orchestrator: {str(e)}")
@@ -554,6 +745,7 @@ class A2AService:
                     'name': agent.name,
                     'capabilities': agent.capabilities,
                     'dedicated_ollama_backend': agent.dedicated_ollama_backend,
+                    'strands_agent_id': agent.strands_agent_id,
                     'a2a_status': 'registered',
                     'orchestration_enabled': True
                 })
@@ -817,7 +1009,7 @@ Please provide a comprehensive, specialized response based on your expertise and
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.3,
+                    "temperature": 0.7,  # Increased for creative tasks
                     "max_tokens": 2000
                 }
             }
@@ -858,6 +1050,36 @@ Please provide a comprehensive, specialized response based on your expertise and
                 "execution_time": time.time() - start_time
             }
     
+    def _validate_and_correct_model(self, model: str, capabilities: List[str] = None) -> str:
+        """Validate and correct model name"""
+        if not model or not isinstance(model, str):
+            return 'granite4:micro'
+        
+        # Check if model is a description (invalid)
+        if (model.startswith('You are') or 
+            model.startswith('I am') or 
+            model.startswith('This is') or
+            'assistant' in model.lower() or
+            'expert' in model.lower() or
+            'specialist' in model.lower()):
+            
+            # Determine model based on capabilities
+            if capabilities:
+                capabilities_str = ' '.join(capabilities).lower()
+                if any(word in capabilities_str for word in ['technical', 'programming', 'code', 'system']):
+                    return 'granite4:micro'
+                elif any(word in capabilities_str for word in ['creative', 'writing', 'poetry', 'content']):
+                    return 'qwen3:1.7b'
+            
+            return 'granite4:micro'
+        
+        # Check if model has valid format (name:version)
+        if ':' in model and not model.startswith('http'):
+            return model
+        
+        # Default fallback
+        return 'granite4:micro'
+    
     def _get_agent_specialization(self, agent: A2AAgent) -> Dict[str, Any]:
         """Get agent specialization based on agent name and capabilities"""
         agent_name = agent.name.lower()
@@ -865,7 +1087,7 @@ Please provide a comprehensive, specialized response based on your expertise and
         if "ran" in agent_name or "radio" in agent_name:
             return {
                 "domain": "Radio Access Network (RAN) Performance Analysis",
-                "role_description": "You are a specialized Telco RAN Agent with deep expertise in Radio Access Network performance analysis. You excel at analyzing PRB (Physical Resource Block) utilization patterns, identifying performance bottlenecks, and correlating network metrics with customer behavior patterns.",
+                "role_description": "You are a specialized AWS Bedrock RAN Agent with deep expertise in Radio Access Network performance analysis powered by advanced AI models. You excel at analyzing PRB (Physical Resource Block) utilization patterns, identifying performance bottlenecks, and correlating network metrics with customer behavior patterns using AWS Bedrock foundation models.",
                 "capabilities": [
                     "PRB utilization analysis",
                     "RAN performance monitoring",
@@ -880,7 +1102,7 @@ Please provide a comprehensive, specialized response based on your expertise and
         elif "churn" in agent_name:
             return {
                 "domain": "Customer Churn Analysis and Retention",
-                "role_description": "You are a specialized Telco Churn Agent with expertise in customer churn prediction, retention strategies, and behavioral analysis. You analyze customer data patterns to identify churn risk factors and recommend retention strategies.",
+                "role_description": "You are a specialized AWS Bedrock Churn Agent with expertise in customer churn prediction, retention strategies, and behavioral analysis powered by advanced AI models. You analyze customer data patterns to identify churn risk factors and recommend retention strategies using AWS Bedrock foundation models.",
                 "capabilities": [
                     "Churn prediction modeling",
                     "Customer behavior analysis",
@@ -895,7 +1117,7 @@ Please provide a comprehensive, specialized response based on your expertise and
         elif "customer service" in agent_name or "service" in agent_name:
             return {
                 "domain": "Customer Service and Support",
-                "role_description": "You are a specialized Telco Customer Service Agent with expertise in customer complaint handling, issue resolution, and service optimization. You provide comprehensive support and identify service improvement opportunities.",
+                "role_description": "You are a specialized AWS Bedrock Customer Service Agent with expertise in customer complaint handling, issue resolution, and service optimization powered by advanced AI models. You provide comprehensive support and identify service improvement opportunities using AWS Bedrock foundation models.",
                 "capabilities": [
                     "Customer complaint analysis",
                     "Issue resolution",
@@ -1044,9 +1266,12 @@ def register_from_strands():
         if not strands_agent_id:
             return jsonify({"status": "error", "error": "strands_agent_id is required"}), 400
         
+        # Register the agent without signal-based timeout (signals don't work in multi-threaded environments)
         result = a2a_service.register_from_strands(strands_agent_id)
         return jsonify(result), 201 if result.get("status") == "success" else 400
+        
     except Exception as e:
+        logger.error(f"Registration error for agent {strands_agent_id}: {str(e)}")
         return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/a2a/orchestration-agents', methods=['GET'])
@@ -1064,22 +1289,96 @@ def get_orchestration_agents():
 
 @app.route('/api/a2a/agents/<agent_id>/update-capabilities', methods=['POST'])
 def update_agent_capabilities(agent_id: str):
-    """Update agent capabilities"""
+    """Update agent capabilities and orchestration status"""
     try:
         data = request.get_json()
         capabilities = data.get('capabilities', [])
+        orchestration_enabled = data.get('orchestration_enabled', None)
         
         if agent_id in a2a_service.agents:
-            a2a_service.agents[agent_id].capabilities = capabilities
+            agent = a2a_service.agents[agent_id]
+            agent.capabilities = capabilities
+            
+            # Update orchestration status if provided
+            if orchestration_enabled is not None:
+                agent.orchestration_enabled = orchestration_enabled
+                logger.info(f"Updated orchestration status for agent {agent_id}: {orchestration_enabled}")
+            
+            # Save to database
+            a2a_service._save_agent_to_database(agent)
+            
             logger.info(f"Updated capabilities for agent {agent_id}: {capabilities}")
             return jsonify({
                 "status": "success",
                 "agent_id": agent_id,
                 "capabilities": capabilities,
-                "message": f"Capabilities updated for agent {agent_id}"
+                "orchestration_enabled": agent.orchestration_enabled,
+                "message": f"Capabilities and orchestration status updated for agent {agent_id}"
             })
         else:
             return jsonify({"status": "error", "error": f"Agent {agent_id} not found"}), 404
+            
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/a2a/agents/<agent_id>/update-model', methods=['POST'])
+def update_agent_model(agent_id: str):
+    """Update agent model"""
+    try:
+        data = request.get_json()
+        model = data.get('model')
+        
+        if not model:
+            return jsonify({"status": "error", "error": "Model is required"}), 400
+        
+        if agent_id in a2a_service.agents:
+            agent = a2a_service.agents[agent_id]
+            old_model = agent.model
+            agent.model = model
+            
+            # Save to database
+            a2a_service._save_agent_to_database(agent)
+            
+            logger.info(f"Updated model for agent {agent_id}: {old_model} -> {model}")
+            return jsonify({
+                "status": "success",
+                "agent_id": agent_id,
+                "old_model": old_model,
+                "new_model": model,
+                "message": f"Model updated for agent {agent_id}"
+            })
+        else:
+            return jsonify({"status": "error", "error": f"Agent {agent_id} not found"}), 404
+            
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/api/a2a/agents/register-for-orchestration', methods=['POST'])
+def register_agent_for_orchestration():
+    """Register an agent specifically for orchestration with proper defaults"""
+    try:
+        data = request.get_json()
+        
+        # Ensure orchestration is enabled for this registration
+        data['orchestration_enabled'] = True
+        
+        # Validate required fields for orchestration
+        if not data.get('model'):
+            return jsonify({"status": "error", "error": "Model is required for orchestration-enabled agents"}), 400
+        
+        if not data.get('capabilities'):
+            return jsonify({"status": "error", "error": "Capabilities are required for orchestration-enabled agents"}), 400
+        
+        result = a2a_service.register_agent(data)
+        
+        if result.get("status") == "success":
+            logger.info(f"Agent registered for orchestration: {data.get('name')}")
+            return jsonify({
+                **result,
+                "message": "Agent successfully registered for orchestration"
+            }), 201
+        else:
+            return jsonify(result), 400
             
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)}), 500
@@ -1172,15 +1471,19 @@ def get_agent_status(agent_id):
 
 @app.route('/api/a2a/agents/<agent_id>', methods=['DELETE'])
 def delete_agent(agent_id):
-    """Delete an A2A agent"""
+    """Delete an A2A agent from both memory and database"""
     try:
         if agent_id in a2a_service.agents:
             agent = a2a_service.agents.pop(agent_id)
+            
             # Clean up connections
             connections_to_remove = [key for key in a2a_service.connections.keys() 
                                    if agent_id in key]
             for key in connections_to_remove:
                 a2a_service.connections.pop(key)
+            
+            # Remove from database
+            a2a_service._delete_agent_from_database(agent_id)
             
             logger.info(f"A2A agent deleted: {agent.name}")
             return jsonify({

@@ -98,7 +98,7 @@ interface MainSystemOrchestratorConfigModalProps {
 }
 
 const DEFAULT_CONFIG: Partial<OrchestratorConfig> = {
-  orchestrator_model: 'qwen3:1.7b',
+  orchestrator_model: 'granite4:micro',
   main_orchestrator_port: 5031,
   strands_sdk_url: 'http://localhost:5006',
   a2a_service_url: 'http://localhost:5008',
@@ -157,7 +157,7 @@ const DEFAULT_CONFIG: Partial<OrchestratorConfig> = {
   enable_quality_scoring: true,
   logging_level: 'INFO',
   
-  available_models: ['qwen3:1.7b', 'llama3.2', 'llama3.1', 'mistral', 'codellama']
+  available_models: ['granite4:micro', 'qwen3:1.7b', 'llama3.2', 'llama3.1', 'mistral', 'codellama']
 };
 
 const DEFAULT_PROMPTS = {

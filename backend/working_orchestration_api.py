@@ -279,7 +279,7 @@ def orchestrate():
 
 if __name__ == '__main__':
     logger.info("🚀 Starting Working Orchestration API...")
-    logger.info("📍 Port: 5021")
+    logger.info("📍 Port: 5022")
     logger.info("🎯 Direct connection to unified orchestrator")
     
-    app.run(host='0.0.0.0', port=5021, debug=True)
+    app.run(host='0.0.0.0', port=5022, debug=True)

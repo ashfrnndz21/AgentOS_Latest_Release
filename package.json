@@ -1,8 +1,30 @@
 {
-  "name": "ashrepo",
+  "name": "true-agent-os",
+  "description": "Advanced AI Agent Orchestration Platform for Enterprise Operations",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "keywords": [
+    "ai",
+    "agents",
+    "orchestration",
+    "multi-agent",
+    "enterprise",
+    "ollama",
+    "strands-sdk",
+    "a2a",
+    "telecommunications",
+    "banking",
+    "healthcare",
+    "industrial"
+  ],
+  "author": "Ashley Fernandez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashfrnndz21/AgentOS_Oct_181025.git"
+  },
+  "homepage": "https://github.com/ashfrnndz21/AgentOS_Oct_181025#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

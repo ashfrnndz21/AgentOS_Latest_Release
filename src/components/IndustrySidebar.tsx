@@ -81,8 +81,8 @@ export function IndustrySidebar() {
         { path: '/agent-command', label: 'Agent Command Centre', icon: 'Command' },
         { path: '/multi-agent-workspace', label: 'Multi Agent Workspace', icon: 'Bot' },
         { path: '/document-workspace', label: 'Document Chat', icon: 'FileText' },
-        { path: '/ollama-agents', label: 'Ollama Agents', icon: 'Bot' },
-        { path: '/ollama-terminal', label: 'Ollama Terminal', icon: 'Terminal' },
+        { path: '/ollama-agents', label: 'Bedrock Agents', icon: 'Bot' },
+        { path: '/ollama-terminal', label: 'Bedrock Terminal', icon: 'Terminal' },
         { path: '/mcp-dashboard', label: 'MCP Gateway', icon: 'Server' },
         { path: '/agent-exchange', label: 'AI Marketplace', icon: 'ShoppingBag' }
       ]
@@ -91,13 +91,15 @@ export function IndustrySidebar() {
       id: 'use-cases',
       label: 'Agent Use Cases',
       icon: 'TrendingUp',
-      items: currentIndustry.id === 'banking' ? [
+        items: currentIndustry.id === 'banking' ? [
         { path: '/risk-analytics', label: 'Risk Analytics', icon: 'TrendingUp' },
         { path: '/wealth-management', label: 'Wealth Management', icon: 'TrendingUp' },
         { path: '/customer-insights', label: 'Customer Insights', icon: 'Users' }
-      ] : currentIndustry.id === 'telco' ? [
+      ] : (currentIndustry.id === 'telco' || currentIndustry.id === 'true') ? [
         { path: '/network-twin', label: 'Network Twin', icon: 'Globe' },
-        { path: '/customer-analytics', label: 'Customer Analytics', icon: 'Users' }
+        { path: '/customer-analytics', label: 'Customer Analytics', icon: 'Users' },
+        { path: '/network-optimization', label: 'Network Optimization', icon: 'Network' },
+        { path: '/service-quality', label: 'Service Quality Management', icon: 'BarChart3' }
       ] : currentIndustry.id === 'industrial' ? [
         { path: '/procurement-analytics', label: 'Procurement Analytics', icon: 'TrendingUp' },
         { path: '/safety-monitoring', label: 'Safety Monitoring', icon: 'Shield' },

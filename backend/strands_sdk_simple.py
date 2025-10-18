@@ -116,7 +116,8 @@ def create_strands_agent():
                 'model': data.get('model_id'),
                 'capabilities': data.get('tools', []),
                 'status': 'active',
-                'strands_agent_id': agent_id
+                'strands_agent_id': agent_id,
+                'original_strands_id': agent_id
             }
             
             a2a_response = requests.post(

@@ -37,6 +37,40 @@ interface IndustryContextType {
 
 const industryConfigurations: IndustryConfig[] = [
   {
+    id: 'true',
+    name: 'true',
+    displayName: 'True Agent OS',
+    description: 'Advanced AI agent orchestration platform for enterprise operations',
+    logo: 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idHJ1ZUdyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRjAwMDAiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjRkYwMEZGIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM4MDAwODAiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjEwIiBmaWxsPSJ1cmwoI3RydWVMb2dvR3JhZGllbnQpIi8+CiAgPHRleHQgeD0iNTAiIHk9IjU1IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+dHJ1ZTwvdGV4dD4KPC9zdmc+',
+    primaryColor: 'hsl(300, 100%, 50%)', // Purple/magenta
+    accentColor: 'hsl(0, 100%, 50%)', // Red
+    gradientBg: 'linear-gradient(145deg, #FF0000 0%, #FF00FF 50%, #800080 100%)',
+    borderColor: 'hsl(300, 100%, 50% / 0.3)',
+    navigation: [
+      { path: '/', label: 'Dashboard', icon: 'Command' },
+      { path: '/agent-command', label: 'Agent Command Centre', icon: 'Command' },
+      { path: '/multi-agent-workspace', label: 'Multi Agent Workspace', icon: 'Bot' },
+      { path: '/document-workspace', label: 'Document Chat', icon: 'FileText' },
+      { path: '/ollama-agents', label: 'Bedrock Agents', icon: 'Bot' },
+      { path: '/ollama-terminal', label: 'Bedrock Terminal', icon: 'Terminal' },
+      { path: '/mcp-dashboard', label: 'MCP Gateway', icon: 'Server' },
+      { path: '/agent-exchange', label: 'AI Marketplace', icon: 'ShoppingBag' },
+      { path: '/system-flow', label: 'AgentOS Architecture Blueprint', icon: 'Network' },
+      { path: '/settings', label: 'Settings', icon: 'Settings' }
+    ],
+        agentUseCases: [
+        ],
+    workflows: [
+      {
+        id: 'multi-agent-orchestration',
+        name: 'Multi-Agent Orchestration System',
+        description: 'Complete multi-agent workflow orchestration with A2A communication',
+        agents: ['Orchestrator', 'Task Manager', 'Resource Allocator', 'Quality Monitor', 'Response Synthesizer', 'Error Handler'],
+        workflows: ['Task Decomposition', 'Agent Selection', 'Execution Management', 'Quality Control', 'Response Synthesis', 'Error Recovery']
+      }
+    ]
+  },
+  {
     id: 'banking',
     name: 'banking',
     displayName: 'Banking Agent OS',
@@ -71,31 +105,33 @@ const industryConfigurations: IndustryConfig[] = [
   {
     id: 'telco',
     name: 'telco',
-    displayName: 'AWS Telco Agent OS',
-    description: 'Telecommunications operations and network management',
-    logo: 'https://aws.amazon.com/favicon.ico',
-    primaryColor: 'hsl(220, 90%, 55%)', // telco blue
-    accentColor: 'hsl(220, 90%, 45%)',
-    gradientBg: 'linear-gradient(145deg, #000000 0%, #0066FF 50%, #FFFFFF 100%)',
-    borderColor: 'hsl(220, 90%, 55% / 0.3)',
+    displayName: 'AWS AgentOS',
+    description: 'AWS cloud-native telecommunications operations and network management powered by AI',
+    logo: '/aws-logo.svg',
+    primaryColor: 'hsl(25, 100%, 50%)', // AWS Orange
+    accentColor: 'hsl(30, 100%, 45%)', // Darker Orange
+    gradientBg: 'linear-gradient(145deg, #FF9900 0%, #FF6600 50%, #E65100 100%)',
+    borderColor: 'hsl(25, 100%, 50% / 0.3)',
     navigation: [
-      { path: '/', label: 'Dashboard', icon: 'Command' },
-      { path: '/agent-command', label: 'Agent Command Centre', icon: 'Command' },
-      { path: '/agent-exchange', label: 'Agent Marketplace', icon: 'ShoppingBag' },
-      { path: '/multi-agent-workspace', label: 'Multi Agent Orchestration', icon: 'Bot' },
-      { path: '/mcp-dashboard', label: 'MCP Gateway', icon: 'Server' },
-      { path: '/network-twin', label: 'Network Twin', icon: 'Globe' },
-      { path: '/customer-analytics', label: 'Customer Analytics', icon: 'Users' },
-      { path: '/system-flow', label: 'AgentOS Architecture Blueprint', icon: 'Network' },
+      { path: '/', label: 'AWS Dashboard', icon: 'Command' },
+      { path: '/agent-command', label: 'AWS Bedrock Command Centre', icon: 'Command' },
+      { path: '/agent-exchange', label: 'AWS Solutions Marketplace', icon: 'ShoppingBag' },
+      { path: '/multi-agent-workspace', label: 'AWS Agent Orchestration', icon: 'Bot' },
+      { path: '/mcp-dashboard', label: 'AWS MCP Gateway', icon: 'Server' },
+      { path: '/network-twin', label: 'AWS Network Twin', icon: 'Globe' },
+      { path: '/customer-analytics', label: 'AWS Customer Analytics', icon: 'Users' },
+      { path: '/telco-agents', label: 'Bedrock Agents', icon: 'Bot' },
+      { path: '/telco-terminal', label: 'Bedrock Terminal', icon: 'Terminal' },
+      { path: '/system-flow', label: 'AWS Architecture Blueprint', icon: 'Network' },
       { path: '/settings', label: 'Settings', icon: 'Settings' }
     ],
     workflows: [
       {
         id: 'network-optimization',
-        name: 'Network Optimization Suite',
-        description: 'Complete network management with specialized agents',
-        agents: ['Network Monitor', 'Performance Optimizer', 'Fault Detector', 'Customer Support', 'Capacity Planner', 'Security Guard'],
-        workflows: ['Network Monitoring', 'Performance Analysis', 'Fault Detection', 'Customer Support', 'Capacity Planning', 'Security Monitoring']
+        name: 'AWS Network Optimization Suite',
+        description: 'Complete AWS cloud-native network management with specialized AI agents',
+        agents: ['AWS Bedrock Network Monitor', 'AWS Bedrock Performance Optimizer', 'AWS Bedrock Fault Detector', 'AWS Bedrock Customer Support', 'AWS Bedrock Capacity Planner', 'AWS Bedrock Security Guard'],
+        workflows: ['AWS Bedrock Network Monitoring', 'AWS Bedrock Performance Analysis', 'AWS Bedrock Fault Detection', 'AWS Bedrock Customer Support', 'AWS Bedrock Capacity Planning', 'AWS Bedrock Security Monitoring']
       }
     ]
   },
@@ -210,23 +246,23 @@ interface IndustryProviderProps {
 export const IndustryProvider: React.FC<IndustryProviderProps> = ({ children }) => {
   // Initialize with custom configuration if available
   const getInitialIndustry = (): IndustryConfig => {
-    // Force Air Liquide industrial configuration as default
-    const industrialConfig = industryConfigurations.find(config => config.id === 'industrial');
-    if (!industrialConfig) {
-      console.error('Industrial configuration not found, falling back to first config');
+    // Force True Agent OS configuration as default
+    const trueConfig = industryConfigurations.find(config => config.id === 'true');
+    if (!trueConfig) {
+      console.error('True configuration not found, falling back to first config');
       return industryConfigurations[0];
     }
     
-    // Clear any cached healthcare/telco configurations
+    // Clear any cached configurations
     try {
       const savedConfig = localStorage.getItem('industryConfig');
       if (savedConfig) {
         const parsed = JSON.parse(savedConfig);
-        // Only use saved config if it's the industrial one
-        if (parsed.id === 'industrial' && parsed.name && parsed.displayName) {
+        // Only use saved config if it's the true one
+        if (parsed.id === 'true' && parsed.name && parsed.displayName) {
           return parsed;
         } else {
-          // Clear non-industrial cached configs
+          // Clear non-true cached configs
           localStorage.removeItem('industryConfig');
         }
       }
@@ -235,13 +271,13 @@ export const IndustryProvider: React.FC<IndustryProviderProps> = ({ children }) 
       localStorage.removeItem('industryConfig');
     }
     
-    const defaultIndustry = { ...industrialConfig };
+    const defaultIndustry = { ...trueConfig };
     const customLogo = localStorage.getItem('customLogo');
     if (customLogo) {
       defaultIndustry.logo = customLogo;
     }
     
-    // Save the industrial config to localStorage
+    // Save the true config to localStorage
     localStorage.setItem('industryConfig', JSON.stringify(defaultIndustry));
     
     return defaultIndustry;

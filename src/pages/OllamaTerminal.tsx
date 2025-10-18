@@ -12,10 +12,10 @@ export default function OllamaTerminalPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            🤖 Ollama Terminal
+            📡 Bedrock Terminal
           </h1>
           <p className="text-gray-300 text-lg">
-            Manage your local AI models and execute Ollama commands
+            Manage your AWS Bedrock AI models and execute cloud commands
           </p>
         </div>
 
@@ -71,24 +71,24 @@ export default function OllamaTerminalPage() {
 
         {/* Quick Commands */}
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Quick Commands</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Telco AI Commands</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gray-700/50 p-4 rounded-lg">
-              <h3 className="text-green-400 font-medium mb-2">List Models</h3>
+              <h3 className="text-green-400 font-medium mb-2">List Telco Models</h3>
               <code className="text-sm text-gray-300 bg-gray-900 px-2 py-1 rounded">
                 ollama list
               </code>
             </div>
             <div className="bg-gray-700/50 p-4 rounded-lg">
-              <h3 className="text-blue-400 font-medium mb-2">Pull Model</h3>
+              <h3 className="text-blue-400 font-medium mb-2">Pull Network Model</h3>
               <code className="text-sm text-gray-300 bg-gray-900 px-2 py-1 rounded">
-                ollama pull llama3.2
+                ollama pull granite4:micro
               </code>
             </div>
             <div className="bg-gray-700/50 p-4 rounded-lg">
               <h3 className="text-purple-400 font-medium mb-2">Show Model Info</h3>
               <code className="text-sm text-gray-300 bg-gray-900 px-2 py-1 rounded">
-                ollama show llama3.2
+                ollama show qwen3:1.7b
               </code>
             </div>
             <div className="bg-gray-700/50 p-4 rounded-lg">
@@ -102,12 +102,12 @@ export default function OllamaTerminalPage() {
 
         {/* Status Info */}
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-          <h3 className="text-blue-400 font-medium mb-2">Connection Status</h3>
+          <h3 className="text-blue-400 font-medium mb-2">Telco Backend Connection</h3>
           <p className="text-white">
-            Terminal connects to backend on <span className="font-mono bg-gray-800 px-2 py-1 rounded">localhost:5002</span>
+            Terminal connects to telco backend on <span className="font-mono bg-gray-800 px-2 py-1 rounded">localhost:5002</span>
           </p>
           <p className="text-gray-300 text-sm mt-2">
-            Make sure your backend server is running to execute Ollama commands
+            Make sure your telco backend server is running to execute telecommunications AI commands
           </p>
         </div>
 

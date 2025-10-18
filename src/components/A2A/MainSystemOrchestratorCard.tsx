@@ -35,7 +35,9 @@ import {
   Bot,
   Globe,
   Play,
-  BarChart
+  BarChart,
+  Lightbulb,
+  Palette
 } from 'lucide-react';
 
 export const MainSystemOrchestratorCard: React.FC = () => {
@@ -350,8 +352,8 @@ export const MainSystemOrchestratorCard: React.FC = () => {
   // Main System Orchestrator configuration
   const orchestratorConfig = {
     name: "Main System Orchestrator",
-    description: "Independent backend orchestrator using Qwen3:1.7b with A2A Strands SDK integration",
-    model: "qwen3:1.7b",
+    description: "Independent backend orchestrator using Granite4:micro with A2A Strands SDK integration",
+    model: "granite4:micro",
     status: healthStatus?.status || "unknown",
     connections: availableAgents.length,
     parameters: {
@@ -399,7 +401,7 @@ export const MainSystemOrchestratorCard: React.FC = () => {
                   {orchestratorConfig.name}
                   <Badge variant="outline" className="ml-2 text-purple-400 border-purple-400">
                     <Bot className="w-3 h-3 mr-1" />
-                    Qwen3:1.7b
+                    {orchestratorConfig.model}
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-gray-400 mt-1">
@@ -775,7 +777,14 @@ export const MainSystemOrchestratorCard: React.FC = () => {
                       Phase 4: Task Execution Details
                     </h4>
                     <div className="space-y-3">
-                      {Object.entries(orchestrationResult.orchestration_results).map(([agentName, result]: [string, any]) => (
+                      {Object.entries(orchestrationResult.orchestration_results)
+                        .sort(([, a], [, b]) => {
+                          // Sort by execution order if available, otherwise by name
+                          const orderA = a.execution_order || a.iteration || 0;
+                          const orderB = b.execution_order || b.iteration || 0;
+                          return orderA - orderB;
+                        })
+                        .map(([agentName, result]: [string, any]) => (
                         <div key={agentName} className="p-3 bg-gray-800/50 rounded border border-gray-600">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-white font-medium">{agentName}</span>
@@ -921,6 +930,7 @@ export const MainSystemOrchestratorCard: React.FC = () => {
                     </div>
                   </div>
                 )}
+
               </div>
             )}
           </div>

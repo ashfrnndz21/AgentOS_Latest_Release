@@ -218,16 +218,24 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
       // Add execution to list
       setExecutions(prev => [...prev, execution]);
 
+      // Debug: Log the execution object to see what we're getting
+      console.log('[StrandsSdkAgentChat] Execution object:', execution);
+      console.log('[StrandsSdkAgentChat] Raw response length:', (execution as any).raw_response?.length || 0);
+      console.log('[StrandsSdkAgentChat] Full response length:', (execution as any).full_response?.length || 0);
+      console.log('[StrandsSdkAgentChat] Response length:', execution.response?.length || 0);
+      
       // Create assistant message
       const assistantMessage: StrandsSdkMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: (execution as any).raw_response || execution.response || 'No response received',
+        content: (execution as any).raw_response || (execution as any).full_response || execution.response || 'No response received',
         timestamp: new Date(),
         execution_time: (execution as any).execution_time,
         operations: currentOperations,
         tools_used: (execution as any).tools_used || [],
       };
+      
+      console.log('[StrandsSdkAgentChat] Final message content length:', assistantMessage.content.length);
 
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -370,17 +378,18 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
                 style={{ 
-                  maxHeight: 'calc(100vh - 280px)', 
-                  minHeight: '350px',
+                  maxHeight: 'calc(100vh - 200px)', 
+                  minHeight: '400px',
                   overflowY: 'auto',
-                  scrollBehavior: 'smooth'
+                  scrollBehavior: 'smooth',
+                  height: 'auto'
                 }}
               >
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-visible">
                   {messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} overflow-visible`}
                     >
                       {message.role === 'assistant' && (
                         <div className="flex-shrink-0">
@@ -400,9 +409,9 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
                         </div>
                       )}
                       
-                      <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : ''}`}>
+                      <div className={`max-w-[85%] ${message.role === 'user' ? 'order-2' : ''} overflow-visible`}>
                         <div
-                          className={`rounded-lg p-3 ${
+                          className={`rounded-lg p-3 min-h-0 overflow-visible ${
                             message.role === 'user'
                               ? 'bg-purple-600 text-white'
                               : 'bg-gray-800 text-gray-100 border border-gray-700'
@@ -435,7 +444,9 @@ const StrandsSdkAgentChat: React.FC<StrandsSdkAgentChatProps> = ({ agent, onClos
                               })}
                             </div>
                           ) : (
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <div className="whitespace-pre-wrap break-words overflow-visible text-sm leading-relaxed">
+                              {message.content}
+                            </div>
                           )}
                         </div>
                         

@@ -9,10 +9,28 @@ import json
 import sqlite3
 import threading
 import time
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+# Load configuration
+def load_config():
+    """Load agent auto-registration configuration"""
+    config_file = "agent_auto_registration_config.env"
+    config = {}
+    
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip().lower() == 'true'
+    
+    # Default to false (no auto-registration)
+    return config.get('AGENT_REGISTRY_AUTO_REGISTER_DEFAULTS', False)
 
 app = Flask(__name__)
 CORS(app)
@@ -277,32 +295,49 @@ if __name__ == '__main__':
     print("📍 Port: 5010")
     print("🔍 Health monitoring enabled")
     
-    # Auto-register default agents
-    default_agents = [
-        {
-            "id": "calculator",
-            "name": "Calculator Agent",
-            "description": "Mathematical calculation specialist",
-            "url": "http://localhost:8001",
-            "capabilities": ["calculator", "think"]
-        },
-        {
-            "id": "research",
-            "name": "Research Agent", 
-            "description": "Research and analysis specialist",
-            "url": "http://localhost:8002",
-            "capabilities": ["current_time", "think"]
-        },
-        {
-            "id": "coordinator",
-            "name": "Coordinator Agent",
-            "description": "Multi-agent coordination specialist",
-            "url": "http://localhost:8000",
-            "capabilities": ["coordinate_agents", "think"]
-        }
-    ]
+    # Check configuration for auto-registration
+    auto_register_enabled = load_config()
     
-    for agent_data in default_agents:
-        registry.register_agent(agent_data)
+    if auto_register_enabled:
+        # Check if agents already exist before auto-registering
+        existing_agents = registry.get_agents()
+        if not existing_agents:
+            print("📝 No existing agents found, registering default agents...")
+            # Auto-register default agents only if none exist
+            default_agents = [
+                {
+                    "id": "calculator",
+                    "name": "Calculator Agent",
+                    "description": "Mathematical calculation specialist",
+                    "url": "http://localhost:8001",
+                    "capabilities": ["calculator", "think"]
+                },
+                {
+                    "id": "research",
+                    "name": "Research Agent", 
+                    "description": "Research and analysis specialist",
+                    "url": "http://localhost:8002",
+                    "capabilities": ["current_time", "think"]
+                },
+                {
+                    "id": "coordinator",
+                    "name": "Coordinator Agent",
+                    "description": "Multi-agent coordination specialist",
+                    "url": "http://localhost:8000",
+                    "capabilities": ["coordinate_agents", "think"]
+                }
+            ]
+            
+            for agent_data in default_agents:
+                registry.register_agent(agent_data)
+        else:
+            print(f"✅ Found {len(existing_agents)} existing agents, skipping auto-registration")
+    else:
+        print("🚫 Auto-registration disabled by configuration")
+        existing_agents = registry.get_agents()
+        if existing_agents:
+            print(f"✅ Found {len(existing_agents)} existing agents")
+        else:
+            print("📝 No existing agents found - agents will be registered manually")
     
     app.run(host='0.0.0.0', port=5010, debug=False)

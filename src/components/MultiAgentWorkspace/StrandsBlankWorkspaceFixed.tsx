@@ -2,20 +2,12 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 
 import { ModernWorkspaceHeader } from './ModernWorkspaceHeader';
-import { StrandsAgentPaletteFixed } from './StrandsAgentPaletteFixed';
-import { EnhancedPropertiesPanel } from './PropertiesPanel';
+import { StrandsAgentPalette } from './StrandsAgentPalette';
+import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { BankingWorkflowToolbar } from './BankingWorkflowToolbar';
 import StrandsWorkflowCanvas from './StrandsWorkflowCanvas';
 import { StrandsWorkflowOrchestrator, StrandsWorkflowNode, WorkflowExecution } from '@/lib/services/StrandsWorkflowOrchestrator';
 import { MCPTool } from '@/lib/services/MCPGatewayService';
-import { StrandsNativeTool } from '@/hooks/useStrandsNativeTools';
-import { DecisionNodeConfigDialog } from './config/DecisionNodeConfigDialog';
-import { HandoffNodeConfigDialog } from './config/HandoffNodeConfigDialog';
-import { MemoryNodeConfigDialog } from './config/MemoryNodeConfigDialog';
-import { GuardrailNodeConfigDialog } from './config/GuardrailNodeConfigDialog';
-import { AggregatorNodeConfigDialog } from './config/AggregatorNodeConfigDialog';
-import { MonitorNodeConfigDialog } from './config/MonitorNodeConfigDialog';
-import { HumanNodeConfigDialog } from './config/HumanNodeConfigDialog';
 
 export const StrandsBlankWorkspaceFixed = () => {
   const [orchestrator] = useState(() => new StrandsWorkflowOrchestrator());
@@ -28,16 +20,30 @@ export const StrandsBlankWorkspaceFixed = () => {
   const [configDialog, setConfigDialog] = useState<{ type: string; nodeId: string } | null>(null);
   const [canvasUpdateFunction, setCanvasUpdateFunction] = useState<((nodeId: string, newData: any) => void) | null>(null);
   
-  // Fallback agents for configuration dialogs
+  // Temporarily disabled Ollama integration
+  const paletteAgents: any[] = [];
+  const agentsLoading = false;
+  
+  // Transform palette agents for configuration dialogs
   const availableAgents = useMemo(() => {
-    return [
-      { id: 'agent-1', name: 'Customer Service Agent', expertise: ['customer_support', 'billing'] },
-      { id: 'agent-2', name: 'Technical Support Agent', expertise: ['technical_issues', 'troubleshooting'] },
-      { id: 'agent-3', name: 'Sales Agent', expertise: ['sales', 'product_info'] },
-      { id: 'agent-4', name: 'Escalation Agent', expertise: ['complex_issues', 'management'] },
-      { id: 'agent-5', name: 'Billing Specialist', expertise: ['billing', 'payments', 'refunds'] }
-    ];
-  }, []);
+    if (agentsLoading || !paletteAgents.length) {
+      // Fallback agents when palette agents are loading or empty
+      return [
+        { id: 'agent-1', name: 'Customer Service Agent', expertise: ['customer_support', 'billing'] },
+        { id: 'agent-2', name: 'Technical Support Agent', expertise: ['technical_issues', 'troubleshooting'] },
+        { id: 'agent-3', name: 'Sales Agent', expertise: ['sales', 'product_info'] },
+        { id: 'agent-4', name: 'Escalation Agent', expertise: ['complex_issues', 'management'] },
+        { id: 'agent-5', name: 'Billing Specialist', expertise: ['billing', 'payments', 'refunds'] }
+      ];
+    }
+    
+    // Transform palette agents to configuration format
+    return paletteAgents.map(agent => ({
+      id: agent.id,
+      name: agent.name,
+      expertise: agent.capabilities || []
+    }));
+  }, [paletteAgents, agentsLoading]);
 
   const [workflowMetrics] = useState({
     complianceScore: 100,
@@ -75,11 +81,6 @@ export const StrandsBlankWorkspaceFixed = () => {
 
   const handleSelectMCPTool = useCallback((tool: MCPTool) => {
     console.log('MCP Tool selected:', tool);
-    // Could auto-add to canvas or show in a dialog
-  }, []);
-
-  const handleSelectStrandsTool = useCallback((tool: StrandsNativeTool) => {
-    console.log('Strands Tool selected:', tool);
     // Could auto-add to canvas or show in a dialog
   }, []);
 
@@ -155,12 +156,15 @@ export const StrandsBlankWorkspaceFixed = () => {
       <ModernWorkspaceHeader />
       
       <div className="flex-1 flex w-full h-full overflow-hidden">
-        {/* Fixed Agent Palette with Strands Integration */}
-        <StrandsAgentPaletteFixed 
+        {/* Enhanced Agent Palette with Strands Integration */}
+        <StrandsAgentPalette 
           onAddAgent={addAgent}
           onAddUtility={addUtility}
           onSelectMCPTool={handleSelectMCPTool}
-          onSelectStrandsTool={handleSelectStrandsTool}
+          onSelectStrandsTool={(tool) => {
+            console.log('Strands tool selected:', tool);
+            // Handle Strands tool selection - could add to canvas or show configuration
+          }}
         />
         
         {/* Main Canvas */}
@@ -246,140 +250,7 @@ export const StrandsBlankWorkspaceFixed = () => {
             orchestrator={orchestrator}
           />
         )}
-
-        {/* Configuration Dialogs */}
-        {configDialog && configDialog.type === 'decision' && (
-          <DecisionNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving decision configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-            availableAgents={availableAgents}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'handoff' && (
-          <HandoffNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving handoff configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-            availableAgents={availableAgents}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'memory' && (
-          <MemoryNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving memory configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'guardrail' && (
-          <GuardrailNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving guardrail configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'aggregator' && (
-          <AggregatorNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving aggregator configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'monitor' && (
-          <MonitorNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving monitor configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-          />
-        )}
-
-        {configDialog && configDialog.type === 'human' && (
-          <HumanNodeConfigDialog
-            isOpen={true}
-            onClose={() => setConfigDialog(null)}
-            onSave={(config) => {
-              console.log('💾 Saving human configuration:', config);
-              updateNodeData(configDialog.nodeId, { 
-                config, 
-                isConfigured: true,
-                label: config.name 
-              });
-              setConfigDialog(null);
-            }}
-            initialConfig={selectedNode?.data?.config}
-          />
-        )}
       </div>
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-

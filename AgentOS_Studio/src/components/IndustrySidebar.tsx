@@ -80,8 +80,8 @@ export function IndustrySidebar() {
         { path: '/agent-command', label: 'Agent Command Centre', icon: 'Command' },
         { path: '/multi-agent-workspace', label: 'Multi Agent Workspace', icon: 'Bot' },
         { path: '/document-workspace', label: 'Document Chat', icon: 'FileText' },
-        { path: '/ollama-agents', label: 'Ollama Agents', icon: 'Bot' },
-        { path: '/ollama-terminal', label: 'Ollama Terminal', icon: 'Terminal' },
+        { path: '/ollama-agents', label: 'Telco Agents', icon: 'Bot' },
+        { path: '/ollama-terminal', label: 'Telco Terminal', icon: 'Terminal' },
         { path: '/mcp-dashboard', label: 'MCP Gateway', icon: 'Server' },
         { path: '/agent-exchange', label: 'AI Marketplace', icon: 'ShoppingBag' }
       ]

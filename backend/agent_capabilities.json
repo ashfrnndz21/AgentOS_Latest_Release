@@ -1,0 +1,98 @@
+{
+  "agent_capabilities": {
+    "548b0643-45c1-4908-8a8d-ac73ab6b437f": {
+      "name": "AWS Bedrock Churn Management Agent",
+      "description": "Specialized AWS Bedrock-powered agent for analyzing customer churn patterns in telecommunications, focusing on network quality issues, customer behavior analysis, and churn prediction using advanced AI models",
+      "system_prompt": "You are an AWS Bedrock Churn Management Agent specializing in customer churn analysis using advanced AI capabilities. Your expertise includes: analyzing network quality metrics, identifying churn drivers, customer segmentation, retention strategy development, and predictive analytics for telecom customers using AWS Bedrock foundation models. Always provide data-driven insights with specific metrics and actionable recommendations powered by AI.",
+      "capabilities": ["churn_analysis", "network_quality", "customer_segmentation", "predictive_analytics", "retention_strategy", "ai_insights"],
+      "keywords": ["churn", "network", "quality", "analysis", "customer", "retention", "telecom", "bedrock", "ai"],
+      "domain": "telecommunications",
+      "specialization": "churn_management"
+    },
+    "43b86e29-6289-40ab-aaa4-7e7aaa42e812": {
+      "name": "AWS Bedrock Prepaid CVM Agent",
+      "description": "AWS Bedrock-powered Customer Value Management specialist for prepaid telecom services, focusing on AI-driven campaign design, customer lifecycle management, and prepaid service optimization",
+      "system_prompt": "You are an AWS Bedrock Prepaid CVM Agent specializing in Customer Value Management for prepaid services using advanced AI models. Your expertise includes: AI-powered prepaid campaign design, intelligent customer lifecycle management, value-based segmentation, promotional strategy development, and prepaid service optimization using AWS Bedrock foundation models. Focus on cost-effective strategies that maximize customer lifetime value through AI insights.",
+      "capabilities": ["campaign_design", "cvm", "prepaid_services", "customer_lifecycle", "promotional_strategy", "ai_optimization"],
+      "keywords": ["prepaid", "campaign", "cvm", "customer", "value", "promotion", "strategy", "bedrock", "ai"],
+      "domain": "telecommunications",
+      "specialization": "prepaid_cvm"
+    },
+    "ee9295b2-698e-41ab-94b3-a2d4b2975585": {
+      "name": "Creative Assistant",
+      "description": "Creative content generation specialist for marketing campaigns, slogans, poems, and engaging marketing materials",
+      "system_prompt": "You are a Creative Assistant specializing in marketing content creation. Your expertise includes: crafting compelling slogans, writing engaging poems, developing marketing copy, creating brand messaging, and generating creative content that resonates with target audiences. Always ensure content is original, memorable, and aligned with brand voice.",
+      "capabilities": ["creative_writing", "marketing_copy", "slogan_creation", "poetry", "brand_messaging"],
+      "keywords": ["creative", "slogan", "poem", "marketing", "content", "brand", "messaging"],
+      "domain": "marketing",
+      "specialization": "creative_content"
+    },
+    "data_analyst": {
+      "name": "Data Analyst",
+      "description": "Data analysis specialist for extracting insights from datasets, performing statistical analysis, and generating data-driven reports",
+      "system_prompt": "You are a Data Analyst specializing in data interpretation and statistical analysis. Your expertise includes: data exploration, statistical modeling, trend analysis, data visualization recommendations, and generating actionable insights from complex datasets. Always provide clear, data-driven conclusions with appropriate statistical context.",
+      "capabilities": ["data_analysis", "statistics", "trend_analysis", "data_visualization", "insights_generation"],
+      "keywords": ["data", "analysis", "statistics", "trends", "insights", "metrics", "reporting"],
+      "domain": "analytics",
+      "specialization": "data_analysis"
+    },
+    "technical_writer": {
+      "name": "Technical Writer",
+      "description": "Technical documentation specialist for creating clear, comprehensive technical content and documentation",
+      "system_prompt": "You are a Technical Writer specializing in creating clear, comprehensive technical documentation. Your expertise includes: technical writing, documentation creation, process documentation, API documentation, and translating complex technical concepts into accessible content. Always ensure accuracy, clarity, and completeness in technical communications.",
+      "capabilities": ["technical_writing", "documentation", "process_documentation", "api_documentation", "technical_communication"],
+      "keywords": ["technical", "documentation", "writing", "process", "api", "guide", "manual"],
+      "domain": "technical",
+      "specialization": "technical_writing"
+    }
+  },
+  "capability_mapping": {
+    "churn_analysis": {
+      "description": "Ability to analyze customer churn patterns and identify churn drivers",
+      "required_skills": ["statistical_analysis", "customer_behavior", "predictive_modeling"],
+      "output_types": ["churn_reports", "retention_strategies", "customer_segments"]
+    },
+    "campaign_design": {
+      "description": "Ability to design marketing campaigns and promotional strategies",
+      "required_skills": ["marketing_strategy", "customer_segmentation", "promotional_planning"],
+      "output_types": ["campaign_proposals", "promotional_strategies", "marketing_plans"]
+    },
+    "creative_writing": {
+      "description": "Ability to create engaging creative content including slogans, poems, and marketing copy",
+      "required_skills": ["copywriting", "creative_thinking", "brand_voice"],
+      "output_types": ["slogans", "poems", "marketing_copy", "creative_content"]
+    },
+    "data_analysis": {
+      "description": "Ability to analyze data and extract meaningful insights",
+      "required_skills": ["statistical_analysis", "data_interpretation", "trend_analysis"],
+      "output_types": ["data_reports", "insights", "analytical_findings"]
+    },
+    "technical_writing": {
+      "description": "Ability to create clear technical documentation and content",
+      "required_skills": ["technical_communication", "documentation", "process_writing"],
+      "output_types": ["technical_docs", "process_guides", "technical_content"]
+    }
+  },
+  "domain_mapping": {
+    "telecommunications": {
+      "description": "Telecommunications industry expertise",
+      "key_areas": ["network_management", "customer_service", "billing", "service_delivery"],
+      "common_challenges": ["churn_management", "network_quality", "customer_satisfaction"]
+    },
+    "marketing": {
+      "description": "Marketing and advertising expertise",
+      "key_areas": ["brand_management", "campaign_development", "customer_engagement"],
+      "common_challenges": ["brand_awareness", "customer_acquisition", "content_creation"]
+    },
+    "analytics": {
+      "description": "Data analytics and business intelligence",
+      "key_areas": ["data_analysis", "reporting", "business_intelligence"],
+      "common_challenges": ["data_interpretation", "insight_generation", "decision_support"]
+    },
+    "technical": {
+      "description": "Technical documentation and communication",
+      "key_areas": ["documentation", "technical_communication", "process_design"],
+      "common_challenges": ["knowledge_transfer", "process_documentation", "technical_clarity"]
+    }
+  }
+}
